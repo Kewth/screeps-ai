@@ -1,14 +1,11 @@
 import { SimpleRole } from "./SimpleRole";
 
 export class Builder extends SimpleRole {
-    public static get_limit(): number {
-        return 2;
-    }
     public static get_name(): RoleString {
         return "builder";
     }
     public static get_body(): BodyPartConstant[] {
-        return [WORK, WORK, WORK, CARRY, MOVE];
+        return [WORK, WORK, CARRY, CARRY, MOVE, MOVE]; // 400
     }
     public static find_target_id(creep: Creep): string | null {
         const target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
@@ -24,5 +21,11 @@ export class Builder extends SimpleRole {
             creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
         }
         return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
+    }
+    public static need_spawn(room: Room, num: number, rich: boolean): boolean {
+        const limit = rich ? 4 : 2;
+        if (num >= limit) return false;
+        const sites = room.find(FIND_MY_CONSTRUCTION_SITES);
+        return sites.length > 0;
     }
 }

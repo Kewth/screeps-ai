@@ -1,18 +1,18 @@
 import { SimpleRole } from "./SimpleRole";
 
 export class Repairer extends SimpleRole {
-    public static get_limit(): number {
-        return 1;
-    }
     public static get_name(): RoleString {
         return "repairer";
     }
     public static get_body(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE];
+        return [WORK, CARRY, MOVE]; // 200
     }
     public static find_target_id(creep: Creep): string | null {
         const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-            filter: (obj: AnyStructure) => obj.hits < obj.hitsMax
+            filter: (obj: AnyStructure) =>
+                (obj.structureType == STRUCTURE_CONTAINER ||
+                    obj.structureType == STRUCTURE_ROAD)
+                && obj.hits < obj.hitsMax
         });
         if (target)
             return target.id;
@@ -26,5 +26,16 @@ export class Repairer extends SimpleRole {
             creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
         }
         return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
+    }
+    public static need_spawn(room: Room, num: number, rich: boolean): boolean {
+        if (num < 1) return true;
+        const coe = rich ? 0.9 : 0.65;
+        const targets = room.find(FIND_STRUCTURES, {
+            filter: (obj: AnyStructure) =>
+                (obj.structureType == STRUCTURE_CONTAINER ||
+                    obj.structureType == STRUCTURE_ROAD)
+                && obj.hits < obj.hitsMax * coe
+        });
+        return targets.length > 0;
     }
 }

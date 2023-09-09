@@ -1,14 +1,11 @@
 import { SimpleRole } from "./SimpleRole";
 
-export class Transfer extends SimpleRole {
-    public static get_limit(): number {
-        return 2;
-    }
+export class Carrier extends SimpleRole {
     public static get_name(): RoleString {
-        return "transfer";
+        return "carrier";
     }
     public static get_body(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE];
+        return [CARRY, CARRY, CARRY, CARRY, MOVE]; // 250
     }
     public static find_target_id(creep: Creep): string | null {
         // 保证 spawn/extension
@@ -30,5 +27,8 @@ export class Transfer extends SimpleRole {
             creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
         }
         return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
+    }
+    public static need_spawn(room: Room, num: number, rich: boolean): boolean {
+        return num < 1;
     }
 }

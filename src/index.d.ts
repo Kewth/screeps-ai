@@ -24,16 +24,25 @@ interface FlagMemory {
   is_sleep: boolean;
 }
 
+interface RoomMemory {
+  has_container: boolean;
+  container_used_energy_cap: number;
+  container_energy_cap: number;
+}
+
 type RoleString = "error_role" |
     "harvester" |
     "upgrader" |
     "builder" |
     "repairer" |
-    "transfer";
+    "carrier" |
+    "stealer" |
+    "cleaner";
 
 // Syntax for adding proprties to `global` (ex "global.log")
 declare namespace NodeJS {
   interface Global {
     log: any;
+    mainRoomName: string;
   }
 }

@@ -1,14 +1,11 @@
 import { SimpleRole } from "./SimpleRole";
 
 export class Upgrader extends SimpleRole {
-    public static get_limit(): number {
-        return 2;
-    }
     public static get_name(): RoleString {
         return "upgrader";
     }
     public static get_body(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE];
+        return [CARRY, CARRY, CARRY, WORK, WORK, WORK, MOVE]; // 500
     }
     public static find_target_id(creep: Creep): string | null {
         if (creep.room.controller)
@@ -23,5 +20,9 @@ export class Upgrader extends SimpleRole {
             creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
         }
         return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
+    }
+    public static need_spawn(room: Room, num: number, rich: boolean): boolean {
+        const limit = rich ? 8 : 1;
+        return num < limit;
     }
 }
