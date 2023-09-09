@@ -1,24 +1,25 @@
 import { SimpleRole } from "./SimpleRole";
 
-export class Harvester extends SimpleRole {
+export class Transfer extends SimpleRole {
     public static get_limit(): number {
         return 2;
     }
     public static get_name(): RoleString {
-        return "harvester";
+        return "transfer";
     }
     public static get_body(): BodyPartConstant[] {
         return [WORK, CARRY, MOVE];
     }
     public static find_target_id(creep: Creep): string | null {
-        // 填满 container (没有 transfer 不能考虑)
-        const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        // 保证 spawn/extension
+        const target = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
             filter: (obj: AnyStructure) =>
-                obj.structureType == STRUCTURE_CONTAINER &&
+                (obj.structureType == STRUCTURE_EXTENSION ||
+                    obj.structureType == STRUCTURE_SPAWN) &&
                 obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         });
-        if (container)
-            return container.id;
+        if (target)
+            return target.id;
         else
             return null;
     }
@@ -29,21 +30,5 @@ export class Harvester extends SimpleRole {
             creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
         }
         return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
-    }
-
-    public static get_can_sleep(): boolean {
-        // 完成任务了也要站在原地，不要离开工位
-        return false;
-    }
-    public static work_source(creep: Creep): boolean {
-        // 只挖 source
-        const source = creep.pos.findClosestByPath(FIND_SOURCES);
-        if (source) {
-            if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source, { visualizePathStyle: { stroke: '#ffaa00' } });
-            }
-        } else
-            return false;
-        return creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0;
     }
 }

@@ -1,5 +1,7 @@
 import { Builder } from "role/Builder";
 import { Harvester } from "role/Harvester";
+import { Repairer } from "role/Repairer";
+import { Transfer } from "role/Transfer";
 import { Upgrader } from "role/Upgrader";
 import { ErrorMapper } from "utils/ErrorMapper";
 
@@ -8,9 +10,12 @@ import { ErrorMapper } from "utils/ErrorMapper";
 export const loop = ErrorMapper.wrapLoop(() => {
   console.log(`Current game tick is ${Game.time}`);
 
-  Harvester.work();
-  Upgrader.work();
-  Builder.work();
+  // 孵化优先级从后往前
+  Upgrader.work_all_creeps();
+  Builder.work_all_creeps();
+  Repairer.work_all_creeps();
+  Transfer.work_all_creeps();
+  Harvester.work_all_creeps();
 
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {

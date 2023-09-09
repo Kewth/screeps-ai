@@ -8,15 +8,21 @@ export class Builder extends SimpleRole {
         return "builder";
     }
     public static get_body(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE];
+        return [WORK, WORK, WORK, CARRY, MOVE];
     }
-    public static update_mode(creep: Creep): void {
+    public static find_target_id(creep: Creep): string | null {
+        const target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
+        if (target)
+            return target.id;
+        else
+            return null;
     }
-    public static next_mode(mode: ModeString): ModeString {
-        if (mode == "sleep") return "getEnergy";
-        if (mode == "getEnergy") return "buildSite";
-        if (mode == "buildSite") return "getEnergy";
-        return "sleep";
+    public static work_target(creep: Creep, target_id: string): boolean {
+        const target = Game.getObjectById<ConstructionSite>(target_id);
+        if (!target) return false;
+        if (creep.build(target) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+        }
+        return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
     }
 }
-export const ROLE_HARVERSTER = 'harverster';

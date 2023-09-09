@@ -14,23 +14,22 @@ interface Memory {
 
 interface CreepMemory {
   role: RoleString;
-  mode: ModeString;
+  // mode: ModeString;
   // room: string;
   // working: boolean;
+  need_source: boolean;
 }
 
-type ModeString = "error_mode" |
-    "sleep" |
-    "getEnergy" |
-    "upgradeController" |
-    "buildSite" |
-    "storeEnergy";
+interface FlagMemory {
+  is_sleep: boolean;
+}
 
 type RoleString = "error_role" |
     "harvester" |
     "upgrader" |
     "builder" |
-    "builder";
+    "repairer" |
+    "transfer";
 
 // Syntax for adding proprties to `global` (ex "global.log")
 declare namespace NodeJS {
