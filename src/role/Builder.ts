@@ -5,7 +5,11 @@ export class Builder extends SimpleRole {
         return "builder";
     }
     public static get_body(): BodyPartConstant[] {
-        return [WORK, WORK, CARRY, CARRY, MOVE, MOVE]; // 400
+        return [
+            WORK, WORK, WORK, WORK,
+            CARRY, CARRY, CARRY, CARRY,
+            MOVE, MOVE, MOVE, MOVE,
+        ]; // 800
     }
     public static find_target_id(creep: Creep): string | null {
         const target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
@@ -23,7 +27,7 @@ export class Builder extends SimpleRole {
         return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
     }
     public static need_spawn(room: Room, num: number, rich: boolean): boolean {
-        const limit = rich ? 4 : 2;
+        const limit = rich ? 2 : 1;
         if (num >= limit) return false;
         const sites = room.find(FIND_MY_CONSTRUCTION_SITES);
         return sites.length > 0;

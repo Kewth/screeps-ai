@@ -38,16 +38,20 @@ export class Cleaner extends SimpleRole {
         if (tombstone) {
             if (creep.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(tombstone, { visualizePathStyle: { stroke: '#ffffff' } });
+                return false;
+            } else {
+                return true; // 只要拿到了就转走
             }
-            return creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0;
         } else {
-            // 没坟墓挖了就去睡觉
+            if (creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
+                return true;
+            // 没坟墓挖了且空了就去睡觉
             const target = creep.pos.findClosestByPath(FIND_FLAGS, {
                 filter: (flag: Flag) => flag.memory.is_sleep
             });
             if (target)
                 creep.moveTo(target, { visualizePathStyle: { stroke: "#ffffff" } });
-            return creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0;
+            return false;
         }
     }
 
