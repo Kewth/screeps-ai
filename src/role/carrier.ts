@@ -108,3 +108,10 @@ export const carrierLogic: creepLogic = {
         return false
     },
 }
+
+export function initCarrierMemory(): CreepMemory {
+    return {
+        role: 'carrier',
+        taskName: 'auto',
+    }
+}

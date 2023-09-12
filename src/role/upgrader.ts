@@ -27,3 +27,10 @@ export const upgraderLogic: creepLogic = {
         return false
     },
 }
+
+export function initUpgraderMemory(): CreepMemory {
+    return {
+        role: 'upgrader',
+        taskName: 'auto',
+    }
+}

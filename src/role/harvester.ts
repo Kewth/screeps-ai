@@ -43,3 +43,11 @@ export const harvesterLogic: creepLogic = {
         return false
     },
 }
+
+export function initHarvesterMemory(sourceFlagName: string): CreepMemory {
+    return {
+        role: 'harvester',
+        taskName: 'auto',
+        sourceFlagName: sourceFlagName,
+    }
+}

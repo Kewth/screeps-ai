@@ -63,3 +63,11 @@ export const farCarrierLogic: creepLogic = {
         return false
     },
 }
+
+export function initFarCarrierMemory(sourceFlagName: string): CreepMemory {
+    return {
+        role: 'farCarrier',
+        taskName: 'auto',
+        sourceFlagName: sourceFlagName,
+    }
+}

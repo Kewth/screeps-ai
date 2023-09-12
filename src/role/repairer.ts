@@ -66,3 +66,10 @@ export const repairerLogic: creepLogic = {
         return false
     },
 }
+
+export function initRepairerMemory(): CreepMemory {
+    return {
+        role: 'repairer',
+        taskName: 'auto',
+    }
+}
