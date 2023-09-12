@@ -6,43 +6,26 @@
   Types added in this `global` block are in an ambient, global context. This is needed because `main.ts` is a module file (uses import or export).
   Interfaces matching on name from @types/screeps will be merged. This is how you can extend the 'built-in' interfaces from @types/screeps.
 */
-// Memory extension samples
-interface Memory {
-  uuid: number;
-  log: any;
-}
-
-interface CreepMemory {
-  role: RoleString;
-  // mode: ModeString;
-  // room: string;
-  // working: boolean;
-  need_source: boolean;
-}
-
-interface FlagMemory {
-  is_sleep: boolean;
-}
-
-interface RoomMemory {
-  has_container: boolean;
-  container_used_energy_cap: number;
-  container_energy_cap: number;
-}
-
-type RoleString = "error_role" |
-    "harvester" |
-    "upgrader" |
-    "builder" |
-    "repairer" |
-    "carrier" |
-    "stealer" |
-    "cleaner";
 
 // Syntax for adding proprties to `global` (ex "global.log")
 declare namespace NodeJS {
   interface Global {
-    log: any;
-    mainRoomName: string;
+    log: any
+    mainRoomName: string
   }
+}
+
+interface creepLogic {
+  prepare_stage?: (creep: Creep) => boolean
+  source_stage?: (creep: Creep) => boolean
+  target_stage?: (creep: Creep) => boolean
+  needSpawn?: (task: spawnTask) => boolean
+}
+
+interface spawnTask {
+  roomName: string
+  creepName: string
+  body: BodyPartConstant[]
+  memory: CreepMemory
+  num: number
 }
