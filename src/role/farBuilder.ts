@@ -101,6 +101,11 @@ export const farBuilderLogic: creepLogic = {
             creep.moveTo(target)
         return false
     },
+    //
+    needSpawn: task => {
+        const room = Game.rooms[task.roomName]
+        return room && room.find(FIND_MY_CONSTRUCTION_SITES).length > 0
+    },
 }
 
 export function initFarBuilderMemory(targetFlagName: string): CreepMemory {

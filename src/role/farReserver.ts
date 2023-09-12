@@ -36,6 +36,13 @@ export const farResercerLogic: creepLogic = {
         if (creep.room.controller) creep.reserveController(creep.room.controller)
         return false
     },
+    //
+    needSpawn: task => {
+        const room = Game.rooms[task.roomName]
+        return Boolean(room && room.controller &&
+            room.controller.reservation &&
+            room.controller.reservation.ticksToEnd < 2000)
+    },
 }
 
 export function initFarReserverMemory(targetFlagName: string): CreepMemory {
