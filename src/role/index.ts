@@ -6,6 +6,7 @@ import { upgraderLogic } from "./upgrader";
 import { farHarvesterLogic } from "./farHarvester";
 import { farCarrierLogic } from "./farCarrier";
 import { farResercerLogic } from "./farReserver";
+import { farBuilderLogic } from "./farBuilder";
 
 const errorLogic: creepLogic = {
     prepare_stage: creep => {
@@ -25,6 +26,7 @@ export const getRoleLogic: {
     farHarvester: farHarvesterLogic,
     farCarrier: farCarrierLogic,
     farReserver: farResercerLogic,
+    farBuilder: farBuilderLogic,
 }
 
 declare global {
@@ -35,5 +37,6 @@ declare global {
         "upgrader" |
         "farHarvester" |
         "farCarrier" |
-        "farReserver"
+        "farReserver" |
+        "farBuilder"
 }

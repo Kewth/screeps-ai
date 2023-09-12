@@ -10,6 +10,7 @@ declare global {
         targetID?: string
         sourceFlagName?: string
         targetFlagName?: string
+        tickStore?: number
     }
 }
 

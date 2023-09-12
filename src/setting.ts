@@ -1,175 +1,48 @@
+import { makeBody, makeTask } from "utils/other";
+
 // 优先级从前往后
 export const maintainCreepList: spawnTask[] = [
 
     // 自定义房间
-    {
-        roomName: 'sim', creepName: 'C',
-        body: [CARRY, CARRY, MOVE],
-        memory: {
-            role: 'carrier',
-            taskName: 'auto',
-        },
-        num: 1,
-    },
-    {
-        roomName: 'sim', creepName: 'H',
-        body: [WORK, WORK, WORK, WORK, WORK, CARRY, MOVE],
-        memory: {
-            role: 'harvester',
-            taskName: 'auto',
-            sourceID: 'd98a6a98c8dad0aa374b16d2',
-        },
-        num: 1,
-    },
-    {
-        roomName: 'sim', creepName: 'R',
-        body: [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-        memory: {
-            role: 'repairer',
-            taskName: 'auto',
-        },
-        num: 2,
-    },
+    makeTask('sim', 'H', makeBody({work: 1, move: 1}), {
+        role: 'harvester', taskName: 'auto', sourceFlagName: 'source'
+    }, 1),
 
     // Shard3 世界
+
     // carrier
-    {
-        roomName: 'E26S27',
-        creepName: 'C',
-        body: [
-            CARRY, CARRY, CARRY, CARRY,
-            MOVE, MOVE,
-        ], // 300
-        memory: {
-            role: 'carrier',
-            taskName: 'auto',
-        },
-        num: 1,
-    },
+    makeTask('E26S27', 'C', makeBody({carry: 4, move: 2}), {
+        role: 'carrier', taskName: 'auto',
+    }, 1),
     // harvester
-    {
-        roomName: 'E26S27',
-        creepName: 'H',
-        body: [
-            WORK, WORK, WORK, WORK, WORK,
-            MOVE,
-        ], // 550
-        memory: {
-            role: 'harvester',
-            taskName: 'auto',
-            sourceFlagName: 'source1'
-        },
-        num: 1,
-    },
+    makeTask('E26S27', 'H', makeBody({work: 5, move: 1}), {
+        role: 'harvester', taskName: 'auto', sourceFlagName: 'source1'
+    }, 1),
     // repairer
-    {
-        roomName: 'E26S27',
-        creepName: 'R',
-        body: [
-            WORK, WORK,
-            CARRY, CARRY,
-            MOVE, MOVE,
-        ], // 200
-        memory: {
-            role: 'repairer',
-            taskName: 'auto',
-        },
-        num: 1,
-    },
+    makeTask('E26S27', 'R', makeBody({work: 2, carry: 2, move: 2}), {
+        role: 'repairer', taskName: 'auto',
+    }, 1),
     // upgrader
-    {
-        roomName: 'E26S27',
-        creepName: 'U',
-        body: [
-            WORK, WORK, WORK, WORK,
-            CARRY, CARRY,
-            MOVE, MOVE, MOVE,
-        ], // 650
-        memory: {
-            role: 'upgrader',
-            taskName: 'auto',
-        },
-        num: 1,
-    },
+    makeTask('E26S27', 'U', makeBody({work: 4, carry: 2, move: 3}), {
+        role: 'upgrader', taskName: 'auto',
+    }, 1),
     // 外矿开采
     // harvester
-    {
-        roomName: 'E26S27',
-        creepName: 'fH',
-        body: [
-            WORK, WORK, WORK, WORK, WORK,
-            MOVE, MOVE, MOVE,
-        ], // 700
-        memory: {
-            role: 'farHarvester',
-            taskName: 'auto',
-            sourceFlagName: 'source2'
-        },
-        num: 1,
-    },
-    // harvester
-    // {
-    //     roomName: 'E26S27',
-    //     creepName: 'ffH',
-    //     body: [
-    //         WORK, WORK, WORK, WORK, WORK,
-    //         MOVE, MOVE, MOVE,
-    //     ], // 700
-    //     memory: {
-    //         role: 'farHarvester',
-    //         taskName: 'auto',
-    //         sourceFlagName: 'source3'
-    //     },
-    //     num: 1,
-    // },
+    makeTask('E26S27', 'fH', makeBody({work: 5, move: 3}), {
+        role: 'farHarvester', taskName: 'auto', sourceFlagName: 'source2'
+    }, 1),
     // carrier
     // move:carry = 1:1 保证移动速度
-    // 一个来回约 120 tick
-    {
-        roomName: 'E26S27',
-        creepName: 'fC',
-        body: [
-            CARRY, CARRY, CARRY, CARRY, CARRY,
-            CARRY, CARRY, CARRY, CARRY, CARRY,
-            CARRY, CARRY,
-            MOVE, MOVE, MOVE, MOVE, MOVE,
-            MOVE, MOVE, MOVE, MOVE, MOVE,
-            MOVE, MOVE,
-        ], // 1200
-        memory: {
-            role: 'farCarrier',
-            taskName: 'auto',
-            sourceFlagName: 'source2'
-        },
-        num: 1,
-    },
-    // {
-    //     roomName: 'E26S27',
-    //     creepName: 'ffC',
-    //     body: [
-    //         CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY,
-    //         MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE,
-    //     ], // 700
-    //     memory: {
-    //         role: 'farCarrier',
-    //         taskName: 'auto',
-    //         sourceFlagName: 'source3'
-    //     },
-    //     num: 1,
-    // },
+    // 一个来回约 120 tick 以内
+    makeTask('E26S27', 'fC', makeBody({carry: 12, move: 12}), {
+        role: 'farCarrier', taskName: 'auto', sourceFlagName: 'source2'
+    }, 1),
     // reserver
-    {
-        roomName: 'E26S27',
-        creepName: 'RE',
-        body: [
-            CLAIM, CLAIM,
-            MOVE, MOVE,
-        ], // 1300
-        memory: {
-            role: 'farReserver',
-            taskName: 'auto',
-            targetFlagName: 'reserve1'
-        },
-        num: 1,
-    },
+    makeTask('E26S27', 'RE', makeBody({claim: 2, move: 2}), {
+        role: 'farReserver', taskName: 'auto', targetFlagName: 'reserve1'
+    }, 1),
+    // builder
+    makeTask('E26S27', 'fB', makeBody({work: 4, carry: 4, move: 4}), {
+        role: 'farBuilder', taskName: 'auto',
+    }, 1)
 ]

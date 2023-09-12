@@ -30,9 +30,8 @@ export const repairerLogic: creepLogic = {
         const mem = creep.memory as RepairerMemory
         // 拿满就走
         if (creep.store.getFreeCapacity(RESOURCE_ENERGY) <= 0) return true
-        // 检查 sourceID
-        const source = creep.room.storage
         // 移动/获取
+        const source = creep.room.storage
         if (source && creep.withdraw(source, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
             creep.moveTo(source)
         return false
