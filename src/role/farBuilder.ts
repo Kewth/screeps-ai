@@ -103,8 +103,9 @@ export const farBuilderLogic: creepLogic = {
     },
     //
     needSpawn: task => {
-        const room = Game.rooms[task.roomName]
-        return room && room.find(FIND_MY_CONSTRUCTION_SITES).length > 0
+        if (!task.memory.targetFlagName) return false
+        const room = Game.flags[task.memory.targetFlagName].room
+        return Boolean(room && room.find(FIND_MY_CONSTRUCTION_SITES).length > 0)
     },
 }
 
