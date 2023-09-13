@@ -40,9 +40,9 @@ export const farResercerLogic: creepLogic = {
     needSpawn: task => {
         if (!task.memory.targetFlagName) return false
         const room = Game.flags[task.memory.targetFlagName].room
-        return Boolean(room && room.controller &&
-            room.controller.reservation &&
-            room.controller.reservation.ticksToEnd < 2000)
+        if (!room || !room.controller) return false
+        if (!room.controller.reservation) return true
+        return room.controller.reservation.ticksToEnd < 2000
     },
 }
 

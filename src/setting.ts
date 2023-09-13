@@ -19,6 +19,7 @@ export const maintainCreepList: spawnTask[] = [
 
     // Shard3 世界
     // carrier
+    // 300 cost 适用于紧急情况
     makeTask('E26S27', 'C', makeBody({carry: 4, move: 2}), initCarrierMemory(), 1),
     // harvester
     makeTask('E26S27', 'H', makeBody({work: 5, move: 1}), initHarvesterMemory('source1'), 1),

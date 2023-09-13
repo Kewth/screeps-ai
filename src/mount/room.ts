@@ -1,10 +1,14 @@
 import { getRoleLogic } from "role"
 import { maintainCreepList } from "setting"
-import { calcTaskName, newCreepName } from "utils/other"
+import { calcTaskName, logConsole, newCreepName } from "utils/other"
 
 // TODO: 集中式孵化改为分布式
 export function mountRoom() {
     Room.prototype.work = function() {
+        // 检查统计
+        const statInterval = 3000
+        if (!this.memory.statTime || Game.time >= this.memory.statTime + statInterval)
+            this.stats()
         // 检查孵化
         const taskList = maintainCreepList.filter(
             task => {
@@ -32,6 +36,29 @@ export function mountRoom() {
         // TODO: 一个 Tick 指定多个 Spawn
     }
 
+    Room.prototype.stats = function() {
+        // 统计
+        const storageEnergy = this.storage ?
+            this.storage.store.getUsedCapacity(RESOURCE_ENERGY) :
+            0
+        const RCLprogress = this.controller ?
+            this.controller.progress :
+            0
+        // 输出
+        if (this.memory.statTime) {
+            const interval = Game.time - this.memory.statTime
+            logConsole(
+                `${this.name}-stats(${interval} ticks):` +
+                ` storage/T=${(storageEnergy - this.memory.storageEnergy) / interval}` +
+                ` upgrade/T=${(RCLprogress - this.memory.RCLprogress) / interval}`
+            )
+        }
+        // 存储
+        this.memory.statTime = Game.time
+        this.memory.storageEnergy = storageEnergy
+        this.memory.RCLprogress = RCLprogress
+    }
+
     Room.prototype.work_spawnCreep = function() {
         if (this.memory.spawnTaskList.length == 0) return false
         const spawns = this.find(FIND_MY_SPAWNS, {
@@ -49,6 +76,7 @@ export function mountRoom() {
 declare global {
     interface Room {
         work(): void
+        stats(): void
         work_spawnCreep(): boolean
         addSpawnTask(): void
     }

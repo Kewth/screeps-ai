@@ -17,6 +17,13 @@ function calcTargetID(creep: Creep): Id<targetType> | undefined {
             obj.hits < obj.hitsMax * 0.9
     }) as targetType
     if (broken) return broken.id
+    // 其次 spawn (避免紧急情况)
+    const spawn = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: obj =>
+            obj.structureType == STRUCTURE_SPAWN &&
+            obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+    }) as targetType
+    if (spawn) return spawn.id
     // 其次 upgrade
     if (creep.room.controller) return creep.room.controller.id
     // 寄
@@ -57,6 +64,10 @@ export const repairerLogic: creepLogic = {
         if (target) {
             if (target instanceof StructureController) {
                 if (creep.upgradeController(target) == ERR_NOT_IN_RANGE)
+                    creep.moveTo(target)
+            }
+            else if (target instanceof StructureSpawn) {
+                if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
                     creep.moveTo(target)
             } else {
                 if (creep.repair(target) == ERR_NOT_IN_RANGE)

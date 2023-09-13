@@ -32,14 +32,19 @@ function checkFlagMemory() {
 declare global {
     interface RoomMemory {
         spawnTaskList: string[]
+        // 统计量 (只要 statTime 存在其他量也必须存在)
+        statTime?: number
+        storageEnergy: number
+        RCLprogress: number
     }
 }
 
 function checkRoomMemory() {
     // 不能直接访问全局 Memory !
-    for (const name in Game.rooms)
+    for (const name in Game.rooms) {
         if (!Game.rooms[name].memory.spawnTaskList)
             Game.rooms[name].memory.spawnTaskList = []
+    }
 }
 
 /* ===== GLOBAL ===== */
