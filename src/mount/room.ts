@@ -8,7 +8,7 @@ export function mountRoom() {
         // 检查统计
         const statInterval = 3000
         if (!this.memory.statTime || Game.time >= this.memory.statTime + statInterval)
-            this.stats()
+            this.stats(true)
         // 检查孵化
         const taskList = maintainCreepList.filter(
             task => {
@@ -36,7 +36,7 @@ export function mountRoom() {
         // TODO: 一个 Tick 指定多个 Spawn
     }
 
-    Room.prototype.stats = function() {
+    Room.prototype.stats = function(store: boolean) {
         // 统计
         const storageEnergy = this.storage ?
             this.storage.store.getUsedCapacity(RESOURCE_ENERGY) :
@@ -54,9 +54,11 @@ export function mountRoom() {
             )
         }
         // 存储
-        this.memory.statTime = Game.time
-        this.memory.storageEnergy = storageEnergy
-        this.memory.RCLprogress = RCLprogress
+        if (store) {
+            this.memory.statTime = Game.time
+            this.memory.storageEnergy = storageEnergy
+            this.memory.RCLprogress = RCLprogress
+        }
     }
 
     Room.prototype.work_spawnCreep = function() {
@@ -76,7 +78,7 @@ export function mountRoom() {
 declare global {
     interface Room {
         work(): void
-        stats(): void
+        stats(store: boolean): void
         work_spawnCreep(): boolean
         addSpawnTask(): void
     }

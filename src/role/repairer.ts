@@ -2,7 +2,8 @@ import { logConsole, logError } from "utils/other"
 
 // assumption: 房间里有 storage
 
-type targetType = StructureContainer | StructureRoad | StructureController
+type repairType = StructureRoad | StructureController
+type targetType = StructureContainer | StructureSpawn | repairType
 
 interface RepairerMemory extends CreepMemory {
     targetID: Id<targetType> | undefined

@@ -44,14 +44,15 @@ export const maintainCreepList: spawnTask[] = [
     makeTask('E26S27', 'fB', makeBody({work: 2, carry: 1, move: 1}), initFarBuilderMemory('secondRoom'), 1),
 
     // 外矿开采
+    // 预定该房间会被 ycgg 打死，暂时不派人预定
     // harvester
-    makeTask('E26S27', 'ffH', makeBody({work: 5, move: 3}), initFarHarvesterMemory('source3'), 1),
+    makeTask('E26S27', 'ffH', makeBody({work: 3, move: 2}), initFarHarvesterMemory('source3'), 1),
     // carrier
     // move:carry = 1:1 保证移动速度
     // 一个来回约 110-130 tick
-    makeTask('E26S27', 'ffC', makeBody({carry: 10, move: 10}), initFarCarrierMemory('source3'), 2),
+    makeTask('E26S27', 'ffC', makeBody({carry: 10, move: 10}), initFarCarrierMemory('source3'), 1),
     // reserver
-    makeTask('E26S27', 'ffRE', makeBody({claim: 2, move: 2}), initFarReserverMemory('thirdRoom'), 1),
+    makeTask('E26S27', 'ffRE', makeBody({claim: 2, move: 2}), initFarReserverMemory('thirdRoom'), 0),
     // builder
     // 该配置只合适用来建 container
     makeTask('E26S27', 'ffB', makeBody({work: 2, carry: 1, move: 1}), initFarBuilderMemory('thirdRoom'), 1),
