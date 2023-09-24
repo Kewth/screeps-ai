@@ -15,17 +15,20 @@ declare namespace NodeJS {
   }
 }
 
-interface creepLogic {
+interface CreepLogic {
   prepare_stage?: (creep: Creep) => boolean
   source_stage?: (creep: Creep) => boolean
   target_stage?: (creep: Creep) => boolean
-  needSpawn?: (task: spawnTask) => boolean
+  needSpawn?: (task: SpawnTask) => boolean
 }
 
-interface spawnTask {
+interface SpawnTask {
   roomName: string
   creepName: string
   body: BodyPartConstant[]
   memory: CreepMemory
   num: number
 }
+
+// type energySourceType = Tombstone | StructureStorage | StructureContainer | StructureLink
+// type energyTargetType = StructureStorage | StructureSpawn | StructureExtension | StructureTower

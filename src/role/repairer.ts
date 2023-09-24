@@ -2,11 +2,11 @@ import { logConsole, logError } from "utils/other"
 
 // assumption: 房间里有 storage
 
-type repairType = StructureRoad | StructureController
-type targetType = StructureContainer | StructureSpawn | repairType
+type repairType = StructureRoad | StructureContainer
+type targetType = StructureWall | StructureRampart | repairType
 
 interface RepairerMemory extends CreepMemory {
-    targetID: Id<targetType> | undefined
+    targetID?: Id<targetType>
 }
 
 function calcTargetID(creep: Creep): Id<targetType> | undefined {
@@ -16,23 +16,33 @@ function calcTargetID(creep: Creep): Id<targetType> | undefined {
             (obj.structureType == STRUCTURE_CONTAINER ||
                 obj.structureType == STRUCTURE_ROAD) &&
             obj.hits < obj.hitsMax * 0.9
-    }) as targetType
+    }) as repairType
     if (broken) return broken.id
-    // 其次 spawn (避免紧急情况)
-    const spawn = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+    // 其次刷墙
+    const walls = creep.room.find(FIND_STRUCTURES, {
         filter: obj =>
-            obj.structureType == STRUCTURE_SPAWN &&
-            obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-    }) as targetType
-    if (spawn) return spawn.id
-    // 其次 upgrade
-    if (creep.room.controller) return creep.room.controller.id
+            (obj.structureType == STRUCTURE_WALL || obj.structureType == STRUCTURE_RAMPART)
+            && obj.hits < obj.hitsMax * 0.9
+    }) as (StructureWall | StructureRampart)[]
+    if (walls.length > 0) {
+        const wall = _.min(walls, obj => obj.hits)
+        return wall.id
+    }
     // 寄
     logError('no target', creep.name)
     return undefined
 }
 
-export const repairerLogic: creepLogic = {
+function checkTargetID(id: Id<targetType> | undefined): boolean {
+    if (!id) return false
+    const test = Game.getObjectById<targetType>(id)
+    if (!test) return false
+    if (test instanceof StructureWall) return true
+    // repairType
+    return test.hits < test.hitsMax
+}
+
+export const repairerLogic: CreepLogic = {
     // source: 从 storage 拿能量
     source_stage: creep => {
         const mem = creep.memory as RepairerMemory
@@ -54,27 +64,13 @@ export const repairerLogic: creepLogic = {
             return true
         }
         // 检查 targetID
-        if (!mem.targetID) mem.targetID = calcTargetID(creep)
-        if (!mem.targetID) return false
-        const test = Game.getObjectById<targetType>(mem.targetID)
-        if (!test || (!(test instanceof StructureController) && test.hits >= test.hitsMax))
+        if (!checkTargetID(mem.targetID))
             mem.targetID = calcTargetID(creep)
         if (!mem.targetID) return false
         const target = Game.getObjectById<targetType>(mem.targetID)
         // 移动/工作
-        if (target) {
-            if (target instanceof StructureController) {
-                if (creep.upgradeController(target) == ERR_NOT_IN_RANGE)
-                    creep.moveTo(target)
-            }
-            else if (target instanceof StructureSpawn) {
-                if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
-                    creep.moveTo(target)
-            } else {
-                if (creep.repair(target) == ERR_NOT_IN_RANGE)
-                    creep.moveTo(target)
-            }
-        }
+        if (target && creep.repair(target) == ERR_NOT_IN_RANGE)
+            creep.moveTo(target)
         return false
     },
 }

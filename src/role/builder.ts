@@ -16,7 +16,7 @@ function calcTargetID(creep: Creep): Id<targetType> | undefined {
     return undefined
 }
 
-export const builderLogic: creepLogic = {
+export const builderLogic: CreepLogic = {
     // source:
     source_stage: creep => {
         const mem = creep.memory as BuilderMemory
@@ -37,12 +37,9 @@ export const builderLogic: creepLogic = {
             return true
         }
         // 计算 targetID
-        if (!mem.targetID) mem.targetID = calcTargetID(creep)
-        if (!mem.targetID) return false
-        const test = Game.getObjectById<targetType>(mem.targetID)
+        const test = mem.targetID && Game.getObjectById<targetType>(mem.targetID)
         if (!test) mem.targetID = calcTargetID(creep)
-        if (!mem.targetID) return false
-        const target = Game.getObjectById<targetType>(mem.targetID)
+        const target = mem.targetID && Game.getObjectById<targetType>(mem.targetID)
         // 移动/建造
         if (target && creep.build(target) == ERR_NOT_IN_RANGE)
             creep.moveTo(target)

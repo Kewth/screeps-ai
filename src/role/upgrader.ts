@@ -2,7 +2,7 @@ import { logConsole, logError } from "utils/other"
 
 // assumption: 房间里有 storage
 
-export const upgraderLogic: creepLogic = {
+export const upgraderLogic: CreepLogic = {
     // source: 从 storage 拿能量
     source_stage: creep => {
         const mem = creep.memory

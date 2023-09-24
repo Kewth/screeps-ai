@@ -1,4 +1,4 @@
-import { logConsole, logError } from "utils/other"
+import { logConsole, logError, noInvader } from "utils/other"
 
 // 走到目标预定到死
 
@@ -6,20 +6,11 @@ interface FarReserverMemory extends CreepMemory {
     targetFlagName: string
 }
 
-export const farResercerLogic: creepLogic = {
+export const farResercerLogic: CreepLogic = {
     // prepare:
     prepare_stage: creep => {
         const mem = creep.memory as FarReserverMemory
-        if (!mem.targetFlagName) {
-            logError('no targetFlagName', creep.name)
-            return false
-        }
-        // 走到 flag 所在房间
-        const flag = Game.flags[mem.targetFlagName]
-        if (creep.room != flag.room) {
-            creep.moveTo(flag)
-            return false
-        }
+        if (!creep.goToRoomByFlag(mem.targetFlagName)) return false
         // 移动到 controller
         if (!creep.room.controller) {
             logError('no controller', creep.name)
@@ -38,11 +29,11 @@ export const farResercerLogic: creepLogic = {
     },
     //
     needSpawn: task => {
-        if (!task.memory.targetFlagName) return false
-        const room = Game.flags[task.memory.targetFlagName].room
-        if (!room || !room.controller) return false
-        if (!room.controller.reservation) return true
-        return room.controller.reservation.ticksToEnd < 2000
+        const flagName = task.memory.targetFlagName
+        if (!flagName || !noInvader(flagName)) return false
+        const room = Game.flags[flagName].room
+        return Boolean(room && room.controller &&
+            (!room.controller.reservation || room.controller.reservation.ticksToEnd < 3000))
     },
 }
 

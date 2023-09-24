@@ -8,7 +8,7 @@ interface HarvesterMemory extends CreepMemory {
     sourceFlagName: string
 }
 
-export const harvesterLogic: creepLogic = {
+export const harvesterLogic: CreepLogic = {
     // prepare: 移动到 sourceFlag 位置
     prepare_stage: creep => {
         const mem = creep.memory as HarvesterMemory
@@ -23,7 +23,7 @@ export const harvesterLogic: creepLogic = {
         }
         // 移动到位后
         const source_list = creep.pos.findInRange(FIND_SOURCES, 1)
-        if (source_list.length == 0) {
+        if (source_list.length <= 0) {
             logError('no source', creep.name)
             return false
         }
@@ -36,9 +36,13 @@ export const harvesterLogic: creepLogic = {
     source_stage: creep => {
         const mem = creep.memory as HarvesterMemory
         const source = Game.getObjectById<Source>(mem.sourceID)
+        const targets = creep.pos.findInRange(FIND_STRUCTURES, 1, {
+            filter: obj => obj.structureType == STRUCTURE_CONTAINER &&
+                obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+        })
         // const target = Game.getObjectById<StructureContainer>(mem.targetID)
         // transfer/harvest 可以在同一 tick 完成
-        // if (target) creep.transfer(target, RESOURCE_ENERGY)
+        if (targets.length > 0) creep.transfer(targets[0], RESOURCE_ENERGY)
         if (source) creep.harvest(source)
         return false
     },

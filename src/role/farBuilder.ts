@@ -1,7 +1,9 @@
-import { logError } from "utils/other"
+import { logError, noInvader } from "utils/other"
+
+// 修工地 + 修路
 
 type sourceType = StructureContainer | Resource
-type targetType = ConstructionSite
+type targetType = ConstructionSite | StructureRoad
 
 interface FarBuilderMemory extends CreepMemory {
     sourceID: Id<sourceType> | undefined
@@ -16,7 +18,7 @@ function calcSourceID(creep: Creep): Id<sourceType> | undefined {
     const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: obj =>
             obj.structureType == STRUCTURE_CONTAINER &&
-            obj.store.getUsedCapacity() >= obj.store.getCapacity() * 0.25 // 500
+            obj.store[RESOURCE_ENERGY] > 0
     }) as StructureContainer
     if (container) return container.id
     // 寄
@@ -25,33 +27,24 @@ function calcSourceID(creep: Creep): Id<sourceType> | undefined {
 }
 
 function calcTargetID(creep: Creep): Id<targetType> | undefined {
-    // 寻找工地
-    const target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
-    if (target) return target.id
+    // 优先修路
+    const road = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: obj => obj.structureType == STRUCTURE_ROAD && obj.hits < obj.hitsMax * 0.95
+    }) as StructureRoad;
+    if (road) return road.id
+    // 其次工地
+    const site = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
+    if (site) return site.id
     // 寄
     logError('no target', creep.name)
     return undefined
 }
 
-export const farBuilderLogic: creepLogic = {
+export const farBuilderLogic: CreepLogic = {
     // prepare:
     prepare_stage: creep => {
         const mem = creep.memory as FarBuilderMemory
-        if (!mem.targetFlagName) {
-            logError('no targetFlagName', creep.name)
-            return false
-        }
-        const flag = Game.flags[mem.targetFlagName]
-        if (!flag) {
-            logError('no flag', creep.name)
-            return false
-        }
-        // 走到 flag 所在房间
-        if (creep.room != flag.room) {
-            creep.moveTo(flag)
-            return false
-        }
-        return true
+        return creep.goToRoomByFlag(mem.targetFlagName)
     },
     // source:
     source_stage: creep => {
@@ -62,12 +55,9 @@ export const farBuilderLogic: creepLogic = {
             return true
         }
         // 计算 sourceID
-        if (!mem.sourceID) mem.sourceID = calcSourceID(creep)
-        if (!mem.sourceID) return false
-        const test = Game.getObjectById<sourceType>(mem.sourceID)
+        const test = mem.sourceID && Game.getObjectById<sourceType>(mem.sourceID)
         if (!test) mem.sourceID = calcSourceID(creep)
-        if (!mem.sourceID) return false
-        const source = Game.getObjectById<sourceType>(mem.sourceID)
+        const source = mem.sourceID && Game.getObjectById<sourceType>(mem.sourceID)
         // 移动/获取
         if (source) {
             if (source instanceof StructureContainer) {
@@ -90,22 +80,32 @@ export const farBuilderLogic: creepLogic = {
             return true
         }
         // 计算 targetID
-        if (!mem.targetID) mem.targetID = calcTargetID(creep)
-        if (!mem.targetID) return false
-        const test = Game.getObjectById<targetType>(mem.targetID)
-        if (!test) mem.targetID = calcTargetID(creep)
-        if (!mem.targetID) return false
-        const target = Game.getObjectById<targetType>(mem.targetID)
+        const test = mem.targetID && Game.getObjectById<targetType>(mem.targetID)
+        if (!test || (test instanceof StructureRoad && test.hits == test.hitsMax)) mem.targetID = calcTargetID(creep)
+        const target = mem.targetID && Game.getObjectById<targetType>(mem.targetID)
         // 移动/建造
-        if (target && creep.build(target) == ERR_NOT_IN_RANGE)
-            creep.moveTo(target)
+        if (target) {
+            if (target instanceof ConstructionSite) {
+                if (creep.build(target) == ERR_NOT_IN_RANGE)
+                    creep.moveTo(target)
+            }
+            if (target instanceof StructureRoad) {
+                if (creep.repair(target) == ERR_NOT_IN_RANGE)
+                    creep.moveTo(target)
+            }
+        }
         return false
     },
     //
     needSpawn: task => {
-        if (!task.memory.targetFlagName) return false
-        const room = Game.flags[task.memory.targetFlagName].room
-        return Boolean(room && room.find(FIND_MY_CONSTRUCTION_SITES).length > 0)
+        const flagName = task.memory.targetFlagName
+        if (!flagName || !noInvader(flagName)) return false
+        const room = Game.flags[flagName].room
+        if (!room) return false
+        return room.find(FIND_MY_CONSTRUCTION_SITES).length > 0 ||
+            room.find(FIND_STRUCTURES, {
+                filter: obj => obj.structureType == STRUCTURE_ROAD && obj.hits < obj.hitsMax * 0.8
+            }).length > 0
     },
 }
 
