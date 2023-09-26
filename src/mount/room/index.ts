@@ -12,7 +12,10 @@ export function mountRoom() {
             this.stats(true)
         // 检查入侵
         const invaders = this.find(FIND_HOSTILE_CREEPS, { filter: isInvader })
-        if (invaders.length > 0) {
+        const invaderCores = this.find(FIND_STRUCTURES, {
+            filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level > 0
+        })
+        if (invaders.length > 0 || invaderCores.length > 0) {
             // 设置 invaderTime
             if (!this.memory.invaderTime)
                 this.memory.invaderTime = Game.time

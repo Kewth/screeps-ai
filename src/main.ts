@@ -10,10 +10,6 @@ mountAll()
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  if (Game.cpu.bucket >= 10000) {
-    Game.cpu.generatePixel()
-  }
-
   checkMemory()
 
   // Automatically delete memory of missing creeps
@@ -39,4 +35,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   // memory stats
   statsMemory()
+
+  // 获取 pixel
+  if (Game.cpu.bucket >= 10000) {
+    Game.cpu.generatePixel()
+  }
 })

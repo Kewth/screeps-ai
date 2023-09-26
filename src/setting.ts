@@ -1,5 +1,6 @@
 import { initBuilderMemory } from "role/builder";
 import { initCarrierMemory } from "role/carrier";
+import { initCoreKillerMemory } from "role/coreKiller";
 import { initExtraUpgraderMemory } from "role/extraUpgrader";
 import { initFarBuilderMemory } from "role/farBuilder";
 import { initFarCarrierMemory } from "role/farCarrier";
@@ -33,6 +34,9 @@ export const maintainCreepList: SpawnTask[] = [
     makeTask('E26S27', 'U', makeBody({work: 7, carry: 3, move: 5}), initUpgraderMemory(), 1),
     // extra upgrader
     makeTask('E26S27', 'Uex', makeBody({work: 15, carry: 5, move: 10}), initExtraUpgraderMemory(), 2),
+
+    // invader core
+    makeTask('E26S27', 'core', makeBody({attack: 10, move: 10}), initCoreKillerMemory('secondRoom'), 1),
 
     //
     // source killer

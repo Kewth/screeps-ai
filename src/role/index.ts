@@ -10,6 +10,8 @@ import { farBuilderLogic } from "./farBuilder";
 import { builderLogic } from "./builder";
 import { extraUpgraderLogic } from "./extraUpgrader";
 import { sourceKillerLogic } from "./sourceKiller";
+import { viewerLogic } from "./viewer";
+import { coreKillerLogic } from "./coreKiller";
 
 const errorLogic: CreepLogic = {
     prepare_stage: creep => {
@@ -33,6 +35,8 @@ export const getRoleLogic: {
     farReserver: farResercerLogic,
     farBuilder: farBuilderLogic,
     sourceKiller: sourceKillerLogic,
+    viewer: viewerLogic,
+    coreKiller: coreKillerLogic,
 }
 
 declare global {
@@ -47,5 +51,7 @@ declare global {
         "farReserver" |
         "farBuilder" |
         "builder" |
-        "sourceKiller"
+        "sourceKiller" |
+        "viewer" |
+        "coreKiller"
 }

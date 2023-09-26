@@ -24,7 +24,13 @@ export const farResercerLogic: CreepLogic = {
     },
     // source: 不停预定
     source_stage: creep => {
-        if (creep.room.controller) creep.reserveController(creep.room.controller)
+        const ctrl = creep.room.controller
+        if (ctrl) {
+            if (ctrl.reservation && ctrl.reservation.username != 'Kewth')
+                creep.attackController(ctrl)
+            else
+                creep.reserveController(ctrl)
+        }
         return false
     },
     //
