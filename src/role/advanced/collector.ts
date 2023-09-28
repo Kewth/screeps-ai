@@ -11,7 +11,7 @@ function calcFrom (creep: Creep) {
     let from = data.fromID && Game.getObjectById(data.fromID)
     if (!from || !hasResource(from)) from =
         creep.pos.findClosestByPath(creep.room.dropResources()) ||
-        creep.room.centralLink() ||
+        [creep.room.centralLink()].find(obj => obj && obj.store[RESOURCE_ENERGY] > 0) ||
         creep.pos.findClosestByPath(creep.room.tombstones(), {
             filter: obj => obj.store.getUsedCapacity() > 0
         }) ||
@@ -32,11 +32,10 @@ export const collectorLogic: CreepLogic = {
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(from)
             else if (res == OK) { // 预测下一步转到 storage
-                data.fromID = undefined
                 creep.room.storage && creep.moveTo(creep.room.storage)
             }
             else
-                logError("cannot get resource", creep.name)
+                logError(`cannot get resource: ${res}`, creep.name)
         }
         return false
     },
@@ -44,7 +43,7 @@ export const collectorLogic: CreepLogic = {
     target_stage: creep => {
         if (creep.store.getUsedCapacity() <= 0) return true
         const to = creep.room.storage
-        const resource = anyStore(creep.store)
+        const resource = anyStore(creep)
         if (to && resource) {
             const res = creep.transfer(to, resource)
             if (res == ERR_NOT_IN_RANGE)
@@ -54,7 +53,7 @@ export const collectorLogic: CreepLogic = {
                 from && creep.moveTo(from)
             }
             else
-                logError("cannot send resource to storage", creep.name)
+                logError(`cannot send resource to storage: ${res}`, creep.name)
         }
         return false
     },

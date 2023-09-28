@@ -26,8 +26,8 @@ export function isInvader (creep: Creep): boolean {
     return !creep.my && creep.owner.username != 'Source Keeper'
 }
 
-export function anyStore (store: StoreDefinition | StoreDefinitionUnlimited): ResourceConstant | undefined {
-    return _.findKey(store) as ResourceConstant | undefined
+export function anyStore (obj: TypeWithStore): ResourceConstant | undefined {
+    return _.findKey(obj.store, (v: number) => v > 0) as ResourceConstant | undefined
 }
 
 // export function makeBody
@@ -44,10 +44,8 @@ export function anyStore (store: StoreDefinition | StoreDefinitionUnlimited): Re
 //     return res
 // }
 
-export function hasResource(obj: StructureLink | StructureContainer | Tombstone | Resource): boolean {
+export function hasResource(obj: Resource | TypeWithStore): boolean {
     if (obj instanceof Resource) return obj.amount > 0
-    // 非通用型存储
-    if (obj instanceof StructureLink) return obj.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     // 通用型存储
-    return obj.store.getUsedCapacity() > 0
+    return anyStore(obj) !== undefined
 }

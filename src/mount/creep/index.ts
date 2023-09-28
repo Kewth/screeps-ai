@@ -64,15 +64,23 @@ export function mountCreep() {
             this.memory.readyUsedTime = 150
     }
 
-    Creep.prototype.goToRoomByFlag = function(flagName: string | undefined) {
-        const flag = flagName && Game.flags[flagName]
-        if (!flag) {
-            logError('no flag', this.name)
-            return false
-        }
-        // 走到 flag 所在房间
-        if (this.room != flag.room || this.atExit()) {
-            this.moveTo(flag)
+    // Creep.prototype.goToRoomByFlag = function(flagName: string | undefined) {
+    //     const flag = flagName && Game.flags[flagName]
+    //     if (!flag) {
+    //         logError('no flag', this.name)
+    //         return false
+    //     }
+    //     // 走到 flag 所在房间
+    //     if (this.room != flag.room || this.atExit()) {
+    //         this.moveTo(flag)
+    //         return false
+    //     }
+    //     return true
+    // }
+
+    Creep.prototype.goToRoom = function(roomName: string) {
+        if (this.room.name != roomName) {
+            this.moveTo(new RoomPosition(25, 25, roomName))
             return false
         }
         return true
@@ -115,16 +123,17 @@ export function mountCreep() {
     Creep.prototype.gainAnyResourceFrom = function(from: Resource | TypeWithStore) {
         if (from instanceof Resource)
             return this.pickup(from)
-        else {
-            const resource = anyStore(from.store)
-            return resource ? this.withdraw(from, resource) : ERR_NOT_ENOUGH_RESOURCES
-        }
+        if (from instanceof Creep)
+            return ERR_INVALID_TARGET
+        const resource = anyStore(from)
+        return resource ? this.withdraw(from, resource) : ERR_NOT_ENOUGH_RESOURCES
     }
     Creep.prototype.gainResourceFrom = function(from: Resource | TypeWithStore, resourceType: ResourceConstant) {
         if (from instanceof Resource)
             return resourceType == from.resourceType ? this.pickup(from) : ERR_NOT_ENOUGH_RESOURCES
-        else
-            return this.withdraw(from, resourceType)
+        if (from instanceof Creep)
+            return ERR_INVALID_TARGET
+        return this.withdraw(from, resourceType)
     }
 }
 
@@ -136,7 +145,8 @@ declare global {
         updateReadyUsedTime(): void
         // getEnergy(with_priority: boolean): void
         // releaseEnergySource(): void
-        goToRoomByFlag(flagName: string | undefined): boolean
+        // goToRoomByFlag(flagName: string | undefined): boolean
+        goToRoom(roomName: string): boolean
         atExit(): boolean
         goAwayEnemy(): boolean
         gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode
