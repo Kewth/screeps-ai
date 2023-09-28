@@ -1,7 +1,8 @@
 import { marketWork } from "market";
-import { checkMemory, releaseCreep } from "memory";
+import { checkMemory } from "memory";
 import { statsMemory } from "memory/stats";
 import { mountAll } from "mount";
+import { reSpawn } from "mount/room/spawn";
 import { ErrorMapper } from "utils/ErrorMapper";
 
 // 挂载只需执行一次
@@ -15,7 +16,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {
     if (!(name in Game.creeps)) {
-      releaseCreep(name)
+      reSpawn(Memory.creeps[name])
       delete Memory.creeps[name]
     }
   }

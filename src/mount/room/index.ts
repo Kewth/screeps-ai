@@ -1,10 +1,21 @@
-import { addStat_spawn } from "memory/stats"
-import { getRoleLogic } from "role"
-import { maintainCreepList } from "setting"
-import { calcTaskName, isInvader, logConsole, logError, newCreepName } from "utils/other"
+import { isInvader, logConsole, logError } from "utils/other"
+import { mountTower } from "./tower"
+import { mountLink } from "./link"
+import { mountSpawn } from "./spawn"
+import { creepApi } from "creepApi"
+import { HarvesterData } from "role/base/harvester"
+import { CollectorData } from "role/advanced/collector"
+import { FillerData } from "role/advanced/filler"
+import { BuilderData } from "role/base/builder"
+import { calcBodyCost, makeBody, parseGeneralBodyConf } from "utils/bodyConfig"
+import { UpgraderData } from "role/base/upgrader"
 
 // TODO: 集中式孵化改为分布式
 export function mountRoom() {
+    mountTower()
+    mountLink()
+    mountSpawn()
+
     Room.prototype.work = function() {
         // 检查统计
         const statInterval = 3000
@@ -13,7 +24,7 @@ export function mountRoom() {
         // 检查入侵
         const invaders = this.find(FIND_HOSTILE_CREEPS, { filter: isInvader })
         const invaderCores = this.find(FIND_STRUCTURES, {
-            filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level > 0
+            filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 0
         })
         if (invaders.length > 0 || invaderCores.length > 0) {
             // 设置 invaderTime
@@ -24,124 +35,25 @@ export function mountRoom() {
             if (this.memory.invaderTime)
                 this.memory.invaderTime = undefined
         }
-        // tower 集中式逻辑
-        this.work_tower()
-        // link 集中式逻辑
-        this.work_link()
-        // spawn 集中式逻辑
-        this.work_spawn()
-    }
-
-    Room.prototype.work_tower = function() {
-        const towers = this.find(FIND_MY_STRUCTURES, {
-            filter: obj => obj.structureType == STRUCTURE_TOWER
-        }) as StructureTower[]
-        // 集中攻击
-        const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isInvader })
-        if (enemys.length > 0) {
-            const enemy = _.min(enemys, e => e.hits)
-            towers.forEach(tower => tower.attack(enemy))
-            return
+        if (this.controller?.my) {
+            // 紧急发布 filler 判定
+            if (this.storage && this.storage && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
+                this.memory.noFillerTickCount ++
+                if (this.memory.noFillerTickCount >= 100) {
+                    creepApi.add(this.name, 'filler', 'emergencyFILLER',
+                        { carry: 2, move: 1 }, <FillerData>{ emergency: true }, 1, creepApi.EMERGENCY_PRIORITY)
+                    this.memory.noFillerTickCount = 0
+                }
+            } else
+                this.memory.noFillerTickCount = 0
+            // tower 集中式逻辑
+            this.work_tower()
+            // link 集中式逻辑
+            this.work_link()
+            // spawn 集中式逻辑
+            this.work_spawn()
         }
-        // 维修
-        let busy_tower_list: Id<StructureTower>[] = []
-        // 维护刚建出来的 rampart
-        this.find(FIND_MY_STRUCTURES, {
-            filter: obj =>
-                obj.structureType == STRUCTURE_RAMPART && obj.hits < 800
-        }).forEach(rampart => {
-            const free_tower = towers.find(t => !(t.id in busy_tower_list))
-            if (free_tower) {
-                busy_tower_list.push(free_tower.id)
-                free_tower.repair(rampart)
-            }
-        })
-        // 修复 tower 附近的建筑
-        const brokens = this.find(FIND_STRUCTURES, {
-            filter: obj =>
-                (obj.structureType == STRUCTURE_CONTAINER ||
-                    obj.structureType == STRUCTURE_ROAD) &&
-                obj.hits < obj.hitsMax - 800
-        })
-        brokens.forEach(broken => {
-            const free_towers = broken.pos.findInRange(towers, 5, {
-                filter: (t: StructureTower) => !(t.id in busy_tower_list)
-            })
-            if (free_towers.length > 0) {
-                const free_tower = free_towers[0]
-                busy_tower_list.push(free_tower.id)
-                free_tower.repair(broken)
-            }
-        })
     }
-
-    Room.prototype.work_link = function() {
-        const links = this.find(FIND_STRUCTURES, {
-                filter: obj => obj.structureType == STRUCTURE_LINK
-        }) as StructureLink[]
-        if (!this.memory.centeralLinkID) {
-            if (!this.storage) return
-            const centralLink = this.storage.pos.findClosestByPath(links)
-            if (!centralLink) return
-            this.memory.centeralLinkID = centralLink.id
-        }
-        const centralLink = Game.getObjectById<StructureLink>(this.memory.centeralLinkID)
-        if (!centralLink) return
-        // 非中央 link
-        const free_count = 200 // 自由调节的值
-        let centralBusy: boolean = (centralLink.store[RESOURCE_ENERGY] > free_count)
-        links.forEach(link => {
-            if (link.id == this.memory.centeralLinkID) return
-            if (!centralBusy && link.store.getUsedCapacity(RESOURCE_ENERGY) > free_count) {
-                centralBusy = (link.transferEnergy(centralLink) == OK)
-            }
-            // link 建在要道上，回来的 creep 一定会经过，直接从过路者身上扒下来
-            // const creeps = link.pos.findInRange(FIND_MY_CREEPS, 1, {
-            //     filter: obj => obj.memory.allowLink
-            // })
-            // creeps.forEach(c => c.transfer(link, RESOURCE_ENERGY))
-        })
-    }
-
-    Room.prototype.work_spawn = function() {
-        const taskList = maintainCreepList.filter(
-            task => {
-                if (task.roomName != this.name) return false
-                if (Memory.creepSpawningTaskLiveCount[calcTaskName(task)] >= task.num) return false
-                const logic = getRoleLogic[task.memory.role]
-                return !logic.needSpawn || logic.needSpawn(task)
-            }
-        )
-        if (taskList.length <= 0) return
-        const spawnList = this.find(FIND_MY_SPAWNS, {
-            filter: (obj: StructureSpawn) => !obj.spawning
-        })
-        if (spawnList.length <= 0) return
-        const task = taskList[0]
-        const spawn = spawnList[0]
-        let mem = task.memory
-        mem.taskName = calcTaskName(task)
-        const creepName = newCreepName(task.creepName)
-        if (Memory.creeps[creepName]) {
-            logError("Memory is not deleted before spawning", this.name)
-            delete Memory.creeps[creepName]
-        }
-        if (spawn.spawnCreep(task.body, creepName, { memory: mem }) == OK) {
-            logConsole(`${this.name} starts spawning ${creepName} @ ${Game.time}, queue: ${taskList.map(t => t.creepName)}`)
-            addStat_spawn(task.body)
-            if (!Memory.creepSpawningTaskLiveCount[mem.taskName])
-                Memory.creepSpawningTaskLiveCount[mem.taskName] = 1
-            else
-                Memory.creepSpawningTaskLiveCount[mem.taskName] ++
-        }
-        // TODO: 一个 Tick 指定多个 Spawn
-    }
-
-    // Room.prototype.getFocusWall = function() {
-    //     const id = this.memory.focusWallID
-    //     const wall = id && Game.getObjectById<StructureWall>(id)
-    //     return wall ? wall : undefined
-    // }
 
     Room.prototype.stats = function(store: boolean) {
         // 统计
@@ -172,6 +84,14 @@ export function mountRoom() {
         }
     }
 
+    Room.prototype.addSpawnTask = function(configName: string) {
+        if (configName in this.memory.spawnTaskList) return ERR_NAME_EXISTS
+        // const config = Memory.creepConfigs[configName]
+        // if (!config) return ERR_INVALID_ARGS
+        this.memory.spawnTaskList.push(configName)
+        return OK
+    }
+
     // Room.prototype.getEnergySourceList = function() {
     //     roomUpdateEnergyTransfer(this)
     //     return energySourceList[this.name]
@@ -180,6 +100,147 @@ export function mountRoom() {
     //     roomUpdateEnergyTransfer(this)
     //     return energyTargetList[this.name]
     // }
+
+    // Room.prototype.spawnEnergyLimit = function() {
+    //     return this.spawns().length * 300 + this.extensions().length * 50
+    // }
+
+    Room.prototype.registerHarvester = function() {
+        let index = 0
+        this.sources().forEach(source => {
+            logConsole(`register harvester for source ${source.id}`)
+            creepApi.add(this.name, 'harvester', `har${index}`, 'harvester', <HarvesterData>{ sourceID: source.id }, 1)
+            index++
+        })
+        return OK
+    }
+    Room.prototype.registerBuilder = function() {
+        logConsole(`register builder`)
+        creepApi.add(this.name, 'builder', `bui`, 'builder', <BuilderData>{}, 1)
+        return OK
+    }
+    Room.prototype.registerUpgrader = function() {
+        logConsole(`register upgrader`)
+        creepApi.add(this.name, 'upgrader', `upg`, 'upgrader', <UpgraderData>{}, 1)
+        return OK
+    }
+    Room.prototype.registerBase = function() {
+        this.registerHarvester()
+        this.registerBuilder()
+        this.registerUpgrader()
+        return OK
+    }
+
+    Room.prototype.registerCollector = function() {
+        logConsole(`register collector`)
+        creepApi.add(this.name, 'collector', `col`, 'carrier', <CollectorData>{}, 1)
+        return OK
+    }
+    Room.prototype.registerFiller = function() {
+        logConsole(`register filler`)
+        creepApi.add(this.name, 'filler', `fil`, 'carrier', <FillerData>{}, 1, creepApi.FILLER_PRIORITY)
+        return OK
+    }
+
+    // 在终端跟踪此房间孵化的 creeps
+    Room.prototype.showCreeps = function() {
+        let str: string = '' //`${this.name} show Creeps:\n`
+        for (const configName in Memory.creepConfigs) {
+            const config = Memory.creepConfigs[configName]
+            if (config.spawnRoomName == this.name) {
+                const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
+                const bodys = bodyConf ? makeBody(bodyConf) : []
+                str += `${configName}: ${config.role}, cost${calcBodyCost(bodys)}, ${config.live}/${config.num}\n`
+            }
+        }
+        this.memory.spawnTaskList.sort((a, b) => Memory.creepConfigs[b].priority - Memory.creepConfigs[a].priority)
+        str += `spawnList (${this.energyAvailable}/${this.energyCapacityAvailable}): ${this.memory.spawnTaskList}\n`
+        logConsole(str)
+    }
+
+    Room.prototype.structures = function() {
+        if (!this._structures)
+            this._structures =  this.find(FIND_STRUCTURES)
+        return this._structures
+    }
+    Room.prototype.myStructures = function() {
+        if (!this._myStructures)
+            this._myStructures =  this.find(FIND_MY_STRUCTURES)
+        return this._myStructures
+    }
+    Room.prototype.myExtensions = function() {
+        if (!this._myExtensions) {
+            this._myExtensions = this.myStructures().filter(
+                obj => obj.structureType == STRUCTURE_EXTENSION
+            ) as StructureExtension[]
+        }
+        return this._myExtensions
+    }
+    Room.prototype.mySpawns = function() {
+        if (!this._mySpawns)
+            this._mySpawns = this.find(FIND_MY_SPAWNS)
+        return this._mySpawns
+    }
+    Room.prototype.myTowers = function() {
+        if (!this._myTowers)
+            this._myTowers = this.myStructures().filter(
+                obj => obj.structureType == STRUCTURE_TOWER
+            ) as StructureTower[]
+        return this._myTowers
+    }
+    Room.prototype.sources = function() {
+        if (!this._sources)
+            this._sources = this.find(FIND_SOURCES)
+        return this._sources
+    }
+    Room.prototype.myCreeps = function() {
+        if (!this._myCreeps)
+            this._myCreeps = this.find(FIND_MY_CREEPS)
+        return this._myCreeps
+    }
+    Room.prototype.dropResources = function() {
+        if (!this._dropResources)
+            this._dropResources = this.find(FIND_DROPPED_RESOURCES)
+        return this._dropResources
+    }
+    Room.prototype.tombstones = function() {
+        if (!this._tombstones)
+            this._tombstones = this.find(FIND_TOMBSTONES)
+        return this._tombstones
+    }
+    Room.prototype.containers = function() {
+        if (!this._containers)
+            this._containers = this.structures().filter(
+                obj => obj.structureType == STRUCTURE_CONTAINER
+            ) as StructureContainer[]
+        return this._containers
+    }
+    Room.prototype.roads = function() {
+        if (!this._roads)
+            this._roads = this.structures().filter(
+                obj => obj.structureType == STRUCTURE_ROAD
+            ) as StructureRoad[]
+        return this._roads
+    }
+    Room.prototype.walls = function() {
+        if (!this._walls)
+            this._walls = this.structures().filter(
+                obj => obj.structureType == STRUCTURE_WALL
+            ) as StructureWall[]
+        return this._walls
+    }
+    Room.prototype.myConstructionSites = function() {
+        if (!this._myConstructionSites)
+            this._myConstructionSites = this.find(FIND_MY_CONSTRUCTION_SITES)
+        return this._myConstructionSites
+    }
+    Room.prototype.anyEnergySource = function() {
+        if (!this._anyEnergySource)
+            this._anyEnergySource = this.storage ||
+                this.containers().find(obj => obj.store[RESOURCE_ENERGY] > 500) ||
+                this.dropResources().find(obj => obj.resourceType == RESOURCE_ENERGY)
+        return this._anyEnergySource
+    }
 }
 
 declare global {
@@ -191,8 +252,50 @@ declare global {
         // getFocusWall(): StructureWall | undefined
         stats(store: boolean): void
         // work_spawnCreep(): boolean
-        // addSpawnTask(): void
+
+        addSpawnTask(configName: string): OK | ERR_NAME_EXISTS | ERR_INVALID_ARGS
+        getActiveSpawnConfigName(): string | undefined
         // getEnergySourceList(): energySourceType[]
         // getEnergyTargetList(): energyTargetType[]
+
+        // 终端控制 creeps
+        registerHarvester(): OK
+        registerBuilder(): OK
+        registerUpgrader(): OK
+        registerBase(): OK
+
+        registerCollector(): OK
+        registerFiller(): OK
+        showCreeps(): void
+
+        // 缓存
+        structures(): AnyStructure[]
+        _structures: AnyStructure[]
+        myStructures(): OwnedStructure[]
+        _myStructures: OwnedStructure[]
+        mySpawns(): StructureSpawn[]
+        _mySpawns: StructureSpawn[]
+        myExtensions(): StructureExtension[]
+        _myExtensions: StructureExtension[]
+        myTowers(): StructureTower[]
+        _myTowers: StructureTower[]
+        sources(): Source[]
+        _sources: Source[]
+        myCreeps(): Creep[]
+        _myCreeps: Creep[]
+        dropResources(): Resource[]
+        _dropResources: Resource[]
+        tombstones(): Tombstone[]
+        _tombstones: Tombstone[]
+        containers(): StructureContainer[]
+        _containers: StructureContainer[]
+        roads(): StructureRoad[]
+        _roads: StructureRoad[]
+        walls(): StructureWall[]
+        _walls: StructureWall[]
+        myConstructionSites(): ConstructionSite[]
+        _myConstructionSites: ConstructionSite[]
+        anyEnergySource(): StructureStorage | StructureContainer | Resource | undefined
+        _anyEnergySource: StructureStorage | StructureContainer | Resource | undefined
     }
 }

@@ -1,4 +1,5 @@
-import { calcBodyCost, logConsole } from "utils/other"
+import { calcBodyCost } from "utils/bodyConfig"
+import { logConsole } from "utils/other"
 
 const PACK_TICK = 50
 const PACK_LIM = 12

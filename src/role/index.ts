@@ -1,57 +1,30 @@
-import { logError } from "utils/other";
-import { harvesterLogic } from "./harvester";
-import { carrierLogic } from "./carrier";
-import { repairerLogic } from "./repairer";
-import { upgraderLogic } from "./upgrader";
-import { farHarvesterLogic } from "./farHarvester";
-import { farCarrierLogic } from "./farCarrier";
-import { farResercerLogic } from "./farReserver";
-import { farBuilderLogic } from "./farBuilder";
-import { builderLogic } from "./builder";
-import { extraUpgraderLogic } from "./extraUpgrader";
-import { sourceKillerLogic } from "./sourceKiller";
-import { viewerLogic } from "./viewer";
-import { coreKillerLogic } from "./coreKiller";
-
-const errorLogic: CreepLogic = {
-    prepare_stage: creep => {
-        logError('error role prepare', creep.name)
-        return false
-    }
- }
+import { CollectorData, collectorLogic } from "./advanced/collector";
+import { FillerData, fillerLogic } from "./advanced/filler";
+import { BuilderData, builderLogic } from "./base/builder";
+import { HarvesterData, harvesterLogic } from "./base/harvester";
+import { UpgraderData, upgraderLogic } from "./base/upgrader";
 
 export const getRoleLogic: {
-    [role in RoleString]: CreepLogic
+    [role in RoleConstant]: CreepLogic
 } = {
-    error_role: errorLogic,
     harvester: harvesterLogic,
-    carrier: carrierLogic,
-    repairer: repairerLogic,
-    upgrader: upgraderLogic,
-    extraUpgrader: extraUpgraderLogic,
     builder: builderLogic,
-    farHarvester: farHarvesterLogic,
-    farCarrier: farCarrierLogic,
-    farReserver: farResercerLogic,
-    farBuilder: farBuilderLogic,
-    sourceKiller: sourceKillerLogic,
-    viewer: viewerLogic,
-    coreKiller: coreKillerLogic,
+    upgrader: upgraderLogic,
+    collector: collectorLogic,
+    filler: fillerLogic,
 }
 
 declare global {
-    type RoleString = "error_role" |
+    type RoleConstant =
         "harvester" |
-        "carrier" |
-        "repairer" |
-        "upgrader" |
-        "extraUpgrader" |
-        "farHarvester" |
-        "farCarrier" |
-        "farReserver" |
-        "farBuilder" |
         "builder" |
-        "sourceKiller" |
-        "viewer" |
-        "coreKiller"
+        "upgrader" |
+        "collector" |
+        "filler"
+    type CreepData =
+        HarvesterData |
+        BuilderData |
+        UpgraderData |
+        CollectorData |
+        FillerData
 }

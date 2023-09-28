@@ -1,31 +1,22 @@
-import { logError } from "utils/other"
 import { checkStatsMemory } from "./stats"
 
 /* ===== CREEP ===== */
 declare global {
     interface CreepMemory {
-        role: RoleString
-        taskName: string
-        // 从孵化开始到准备结束的用时，用于提前自动释放
+        // 角色名
+        role: RoleConstant
+        // creep 自己需要的数据
+        data: CreepData
+        // config 名
+        configName: string
+        // 从孵化开始到准备结束的用时，用于提前孵化
         readyUsedTime?: number
-        // 是否释放了工作位置 (没有的话死后自动释放)
-        release?: boolean
+        // 是否已经重新孵化
+        reSpawnAlready?: boolean
         // 是否完成 prepare stage
         ready?: boolean
         // 是否正在 target stage
         working?: boolean
-        // 较为通用的内存
-        sourceID?: string
-        targetID?: string
-        // otherID?: string
-        sourceFlagName?: string
-        targetFlagName?: string
-        extraFlagName?: string
-        // 物流相关
-        // energySourceID?: Id<energySourceType>
-        // energyTargetID?: Id<energyTargetType>
-        // 是否允许 link 偷取能量
-        // allowLink?: boolean
     }
 }
 
@@ -67,6 +58,8 @@ declare global {
         // focusWallID?: Id<StructureWall>
         // 中央 link
         centeralLinkID?: Id<StructureLink>
+        // filler 停摆的时间
+        noFillerTickCount: number
     }
 }
 
@@ -75,6 +68,8 @@ function checkRoomMemory() {
     for (const name in Game.rooms) {
         if (!Game.rooms[name].memory.spawnTaskList)
             Game.rooms[name].memory.spawnTaskList = []
+        if (!Game.rooms[name].memory.noFillerTickCount)
+            Game.rooms[name].memory.noFillerTickCount = 0
         // if (!Game.rooms[name].memory.transferSourceTaskList)
         //     Game.rooms[name].memory.transferSourceTaskList = []
         // if (!Game.rooms[name].memory.transferTargetTaskList)
@@ -84,24 +79,24 @@ function checkRoomMemory() {
 
 /* ===== GLOBAL ===== */
 declare global {
+    interface CreepConfig {
+        spawnRoomName: string
+        role: RoleConstant
+        data: CreepData
+        gBodyConf: GeneralBodyConfig
+        num: number
+        live: number
+        priority: number
+    }
     interface Memory {
-        // uuid: number;
-        // log: any;
-        creepSpawningTaskLiveCount: { [key: string]: number }
+        creepConfigs: { [name: string]: CreepConfig }
     }
 }
 
 export function checkMemory() {
-    if (!Memory.creepSpawningTaskLiveCount) Memory.creepSpawningTaskLiveCount = {}
+    if (!Memory.creepConfigs) Memory.creepConfigs = {}
     checkStatsMemory()
     checkCreepMemory()
     checkFlagMemory()
     checkRoomMemory()
-}
-
-export function releaseCreep(name: string) {
-    if (!Memory.creeps[name].release) {
-        Memory.creeps[name].release = true
-        Memory.creepSpawningTaskLiveCount[Memory.creeps[name].taskName]--
-    }
 }

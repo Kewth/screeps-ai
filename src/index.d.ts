@@ -19,15 +19,7 @@ interface CreepLogic {
   prepare_stage?: (creep: Creep) => boolean
   source_stage?: (creep: Creep) => boolean
   target_stage?: (creep: Creep) => boolean
-  needSpawn?: (task: SpawnTask) => boolean
-}
-
-interface SpawnTask {
-  roomName: string
-  creepName: string
-  body: BodyPartConstant[]
-  memory: CreepMemory
-  num: number
+  stopSpawn?: (spawnRoom: Room, data: CreepData) => boolean
 }
 
 // type energySourceType = Tombstone | StructureStorage | StructureContainer | StructureLink

@@ -1,6 +1,6 @@
-import { releaseCreep } from "memory"
+import { reSpawn } from "mount/room/spawn"
 import { getRoleLogic } from "role"
-import { logConsole, logError } from "utils/other"
+import { anyStore, logConsole, logError } from "utils/other"
 
 export function mountCreep() {
     Creep.prototype.work = function() {
@@ -33,8 +33,8 @@ export function mountCreep() {
                 logError('change stage twice a tick', this.name)
         }
         // 快死了提前孵化
-        if (!this.memory.release && this.memory.readyUsedTime && this.ticksToLive && this.ticksToLive < this.memory.readyUsedTime)
-            this.release()
+        if (!this.memory.reSpawnAlready && this.memory.readyUsedTime && this.ticksToLive && this.ticksToLive < this.memory.readyUsedTime)
+            reSpawn(this.memory)
     }
 
     Creep.prototype.moveAway = function(pos: RoomPosition) {
@@ -48,10 +48,6 @@ export function mountCreep() {
         if (x < 0) x = 0
         if (y < 0) y = 0
         return this.moveTo(x, y)
-    }
-
-    Creep.prototype.release = function() {
-        releaseCreep(this.name)
     }
 
     Creep.prototype.moveRandom = function() {
@@ -115,13 +111,29 @@ export function mountCreep() {
     //         this.memory.energySourceID = undefined
     //     }
     // }
+
+    Creep.prototype.gainAnyResourceFrom = function(from: any) {
+        if (from instanceof Resource)
+            return this.pickup(from)
+        if (from instanceof Tombstone || from instanceof StructureContainer) {
+            const resource = anyStore(from.store)
+            return resource ? this.withdraw(from, resource) : ERR_NOT_ENOUGH_RESOURCES
+        }
+        return ERR_INVALID_TARGET
+    }
+    Creep.prototype.gainResourceFrom = function(from: any, resourceType: ResourceConstant) {
+        if (from instanceof Resource)
+            return resourceType == from.resourceType ? this.pickup(from) : ERR_NOT_ENOUGH_RESOURCES
+        if (from instanceof Tombstone || from instanceof StructureContainer || from instanceof StructureStorage)
+            return this.withdraw(from, resourceType)
+        return ERR_INVALID_TARGET
+    }
 }
 
 declare global {
     interface Creep {
         work(): void
         moveAway(pos: RoomPosition): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET
-        release(): void
         moveRandom(): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET
         updateReadyUsedTime(): void
         // getEnergy(with_priority: boolean): void
@@ -129,5 +141,7 @@ declare global {
         goToRoomByFlag(flagName: string | undefined): boolean
         atExit(): boolean
         goAwayEnemy(): boolean
+        gainAnyResourceFrom(from: any): ScreepsReturnCode
+        gainResourceFrom(from: any, resourceType: ResourceConstant): ScreepsReturnCode
     }
 }
