@@ -44,7 +44,10 @@ export function anyStore (store: StoreDefinition | StoreDefinitionUnlimited): Re
 //     return res
 // }
 
-export function hasResource(obj: StructureContainer | Tombstone | Resource): boolean {
-    if (obj instanceof Resource) return true
+export function hasResource(obj: StructureLink | StructureContainer | Tombstone | Resource): boolean {
+    if (obj instanceof Resource) return obj.amount > 0
+    // 非通用型存储
+    if (obj instanceof StructureLink) return obj.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+    // 通用型存储
     return obj.store.getUsedCapacity() > 0
 }

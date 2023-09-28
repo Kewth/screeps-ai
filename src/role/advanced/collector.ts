@@ -3,7 +3,7 @@
 import { anyStore, hasResource, logError } from "utils/other"
 
 export interface CollectorData {
-    fromID?: Id<Resource | Tombstone | StructureContainer>
+    fromID?: Id<Resource | Tombstone | StructureContainer | StructureLink>
 }
 
 function calcFrom (creep: Creep) {
@@ -11,6 +11,7 @@ function calcFrom (creep: Creep) {
     let from = data.fromID && Game.getObjectById(data.fromID)
     if (!from || !hasResource(from)) from =
         creep.pos.findClosestByPath(creep.room.dropResources()) ||
+        creep.room.centralLink() ||
         creep.pos.findClosestByPath(creep.room.tombstones(), {
             filter: obj => obj.store.getUsedCapacity() > 0
         }) ||

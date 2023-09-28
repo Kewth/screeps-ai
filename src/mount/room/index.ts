@@ -188,6 +188,13 @@ export function mountRoom() {
             ) as StructureTower[]
         return this._myTowers
     }
+    Room.prototype.myLinks = function() {
+        if (!this._myLinks)
+            this._myLinks = this.myStructures().filter(
+                obj => obj.structureType == STRUCTURE_LINK
+            ) as StructureLink[]
+        return this._myLinks
+    }
     Room.prototype.sources = function() {
         if (!this._sources)
             this._sources = this.find(FIND_SOURCES)
@@ -241,6 +248,16 @@ export function mountRoom() {
                 this.dropResources().find(obj => obj.resourceType == RESOURCE_ENERGY)
         return this._anyEnergySource
     }
+
+    Room.prototype.centralLink = function() {
+        if (!this.memory.centeralLinkID || Game.time % 1000 > 0) {
+            if (!this.storage) return undefined
+            const centralLink = this.storage.pos.findClosestByPath(this.myLinks())
+            if (!centralLink) return undefined
+            this.memory.centeralLinkID = centralLink.id
+        }
+        return Game.getObjectById(this.memory.centeralLinkID) || undefined
+    }
 }
 
 declare global {
@@ -268,7 +285,7 @@ declare global {
         registerFiller(): OK
         showCreeps(): void
 
-        // 缓存
+        // tick 级别缓存
         structures(): AnyStructure[]
         _structures: AnyStructure[]
         myStructures(): OwnedStructure[]
@@ -279,6 +296,8 @@ declare global {
         _myExtensions: StructureExtension[]
         myTowers(): StructureTower[]
         _myTowers: StructureTower[]
+        myLinks(): StructureLink[]
+        _myLinks: StructureLink[]
         sources(): Source[]
         _sources: Source[]
         myCreeps(): Creep[]
@@ -297,5 +316,8 @@ declare global {
         _myConstructionSites: ConstructionSite[]
         anyEnergySource(): StructureStorage | StructureContainer | Resource | undefined
         _anyEnergySource: StructureStorage | StructureContainer | Resource | undefined
+
+        // memory 级别缓存
+        centralLink(): StructureLink | undefined
     }
 }

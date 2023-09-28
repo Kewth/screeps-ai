@@ -112,21 +112,19 @@ export function mountCreep() {
     //     }
     // }
 
-    Creep.prototype.gainAnyResourceFrom = function(from: any) {
+    Creep.prototype.gainAnyResourceFrom = function(from: Resource | TypeWithStore) {
         if (from instanceof Resource)
             return this.pickup(from)
-        if (from instanceof Tombstone || from instanceof StructureContainer) {
+        else {
             const resource = anyStore(from.store)
             return resource ? this.withdraw(from, resource) : ERR_NOT_ENOUGH_RESOURCES
         }
-        return ERR_INVALID_TARGET
     }
-    Creep.prototype.gainResourceFrom = function(from: any, resourceType: ResourceConstant) {
+    Creep.prototype.gainResourceFrom = function(from: Resource | TypeWithStore, resourceType: ResourceConstant) {
         if (from instanceof Resource)
             return resourceType == from.resourceType ? this.pickup(from) : ERR_NOT_ENOUGH_RESOURCES
-        if (from instanceof Tombstone || from instanceof StructureContainer || from instanceof StructureStorage)
+        else
             return this.withdraw(from, resourceType)
-        return ERR_INVALID_TARGET
     }
 }
 
@@ -141,7 +139,7 @@ declare global {
         goToRoomByFlag(flagName: string | undefined): boolean
         atExit(): boolean
         goAwayEnemy(): boolean
-        gainAnyResourceFrom(from: any): ScreepsReturnCode
-        gainResourceFrom(from: any, resourceType: ResourceConstant): ScreepsReturnCode
+        gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode
+        gainResourceFrom(from: Resource | TypeWithStore, resourceType: ResourceConstant): ScreepsReturnCode
     }
 }
