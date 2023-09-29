@@ -16,7 +16,7 @@ function calcFrom (creep: Creep) {
             filter: obj => obj.store.getUsedCapacity() > 0
         }) ||
         creep.pos.findClosestByPath(creep.room.containers(), {
-            filter: obj => obj.store.getUsedCapacity() > 0
+            filter: obj => obj.store.getUsedCapacity() > 500
         })
     data.fromID = from?.id
     return from
