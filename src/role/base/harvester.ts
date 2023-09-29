@@ -1,10 +1,11 @@
-import { logError } from "utils/other"
+import {  logError } from "utils/other"
 
 declare global {
     interface HarvesterData extends EmptyData {
         sourceID: Id<Source>
         containerIDs?: Id<StructureContainer>[]
-        workPos?: RoomPosition
+        workPosX?: number
+        workPosY?: number
     }
 }
 
@@ -15,19 +16,22 @@ export const harvesterLogic: CreepLogic = {
         const source = Game.getObjectById(data.sourceID)
         if (!source) { logError('no source', creep.name); return false }
         // 计算工位
-        if (data.workPos === undefined) {
+        if (data.workPosX === undefined || data.workPosY === undefined) {
             const sourceContainers = source.pos.findInRange(FIND_STRUCTURES, 1, {
                 filter: obj => obj.structureType == STRUCTURE_CONTAINER
             }) as StructureContainer[]
-            data.workPos = sourceContainers.length > 0 ? sourceContainers[0].pos : source.pos
+            // NOTE: 不能直接存储 RoomPosition (或者说存在 Memory 里的 RoomPosition 不能拿来用)
+            const workPos = sourceContainers.length > 0 ? sourceContainers[0].pos : source.pos
+            data.workPosX = workPos.x
+            data.workPosY = workPos.y
         }
         // 移动到工位
-        const range = data.workPos == source.pos ? 1 : 0
-        if (!creep.pos.inRangeTo(data.workPos, range)) {
-            creep.moveTo(data.workPos)
+        const range = data.workPosX == source.pos.x && data.workPosY == source.pos.y ? 1 : 0
+        if (!creep.pos.inRangeTo(data.workPosX, data.workPosY, range)) {
+            const res = creep.moveTo(data.workPosX, data.workPosY)
+            logError(res, creep.name)
             return false
         }
-        // 到工位后
         // 如果有 carry 就可以 transfer/harvester
         const carryBody = creep.body.find(obj => obj.type == CARRY)
         if (carryBody)
