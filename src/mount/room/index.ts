@@ -1,4 +1,4 @@
-import { isInvader, logConsole, logError } from "utils/other"
+import { isEnemyOrInvader, isEvil, logConsole, logError } from "utils/other"
 import { mountTower } from "./tower"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
@@ -22,7 +22,7 @@ export function mountRoom() {
         if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
             this.stats(true)
         // 检查入侵
-        const invaders = this.find(FIND_HOSTILE_CREEPS, { filter: isInvader })
+        const invaders = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
         const invaderCores = this.find(FIND_STRUCTURES, {
             filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 0
         })

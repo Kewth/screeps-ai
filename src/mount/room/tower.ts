@@ -1,4 +1,4 @@
-import { isInvader } from "utils/other"
+import { isEnemyOrInvader, isEvil } from "utils/other"
 
 export function mountTower() {
     Room.prototype.work_tower = function() {
@@ -6,7 +6,7 @@ export function mountTower() {
             filter: obj => obj.structureType == STRUCTURE_TOWER
         }) as StructureTower[]
         // 集中攻击
-        const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isInvader })
+        const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
         if (enemys.length > 0) {
             const enemy = _.min(enemys, e => e.hits)
             towers.forEach(tower => tower.attack(enemy))

@@ -22,8 +22,31 @@ export function noInvader (roomFlag: string): boolean {
     return !mem.invaderTime || Game.time > mem.invaderTime + 1500
 }
 
-export function isInvader (creep: Creep): boolean {
-    return !creep.my && creep.owner.username != 'Source Keeper'
+// all:     enemy | invader | source keeper | friend | my
+// hostile: enemy | invader | source keeper | friend
+// evil:    enemy | invader | source keeper
+export function isMy (obj: {owner: Owner}): boolean {
+    return obj.owner.username == 'Kewth'
+}
+export function isFriend (obj: {owner: Owner}): boolean {
+    return obj.owner.username in [
+        'SodiumH',
+    ]
+}
+export function isSourceKeeper (obj: {owner: Owner}): boolean {
+    return obj.owner.username == 'Source Keeper'
+}
+export function isInvader (obj: {owner: Owner}): boolean {
+    return obj.owner.username == 'Invader'
+}
+export function isEnemy (obj: {owner: Owner}): boolean {
+    return !isMy(obj) && !isFriend(obj) && !isSourceKeeper(obj) && !isInvader(obj)
+}
+export function isEnemyOrInvader (obj: {owner: Owner}): boolean {
+    return !isMy(obj) && !isFriend(obj) && !isSourceKeeper(obj)
+}
+export function isEvil (obj: {owner: Owner}): boolean {
+    return !isMy(obj) && !isFriend(obj)
 }
 
 export function anyStore (obj: TypeWithStore): ResourceConstant | undefined {

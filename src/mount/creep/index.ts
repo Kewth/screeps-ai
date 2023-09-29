@@ -90,11 +90,11 @@ export function mountCreep() {
         return this.pos.x == 0 || this.pos.y == 0 || this.pos.x == 49 || this.pos.y == 49
     }
 
-    Creep.prototype.goAwayEnemy = function () {
-        const enemys = this.pos.findInRange(FIND_HOSTILE_CREEPS, 5)
-        if (enemys.length > 0) {
-            if (enemys.length > 1) logError("Too many enemy", this.name)
-            this.moveAway(enemys[0].pos)
+    Creep.prototype.goAwayHostileCreeps = function () {
+        const hostileCreeps = this.pos.findInRange(FIND_HOSTILE_CREEPS, 5)
+        if (hostileCreeps.length > 0) {
+            if (hostileCreeps.length > 1) logError("Too many hostileCreeps", this.name)
+            this.moveAway(hostileCreeps[0].pos)
             return true
         }
         return false
@@ -148,7 +148,7 @@ declare global {
         // goToRoomByFlag(flagName: string | undefined): boolean
         goToRoom(roomName: string): boolean
         atExit(): boolean
-        goAwayEnemy(): boolean
+        goAwayHostileCreeps(): boolean
         gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode
         gainResourceFrom(from: Resource | TypeWithStore, resourceType: ResourceConstant): ScreepsReturnCode
     }
