@@ -1,6 +1,8 @@
 import { logError } from "utils/other"
 
-export interface UpgraderData {
+declare global {
+    interface UpgraderData extends EmptyData {
+    }
 }
 
 export const upgraderLogic: CreepLogic = {

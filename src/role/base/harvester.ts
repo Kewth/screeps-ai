@@ -1,9 +1,11 @@
 import { logError } from "utils/other"
 
-export interface HarvesterData {
-    sourceID: Id<Source>
-    containerIDs?: Id<StructureContainer>[]
-    workPos?: RoomPosition
+declare global {
+    interface HarvesterData extends EmptyData {
+        sourceID: Id<Source>
+        containerIDs?: Id<StructureContainer>[]
+        workPos?: RoomPosition
+    }
 }
 
 export const harvesterLogic: CreepLogic = {

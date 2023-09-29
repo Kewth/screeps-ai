@@ -2,8 +2,10 @@
 
 import { anyStore, hasResource, logError } from "utils/other"
 
-export interface CollectorData {
-    fromID?: Id<Resource | Tombstone | StructureContainer | StructureLink>
+declare global {
+    interface CollectorData extends EmptyData {
+        fromID?: Id<Resource | Tombstone | StructureContainer | StructureLink>
+    }
 }
 
 function calcFrom (creep: Creep) {

@@ -1,7 +1,9 @@
 import { logError } from "utils/other"
 
-export interface BuilderData {
-    toID?: Id<AnyStructure | ConstructionSite>
+declare global {
+    interface BuilderData extends EmptyData {
+        toID?: Id<AnyStructure | ConstructionSite>
+    }
 }
 
 function calcTo (creep: Creep) {

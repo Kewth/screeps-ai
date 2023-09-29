@@ -52,27 +52,44 @@ const getBodyConfigByAuto: {
     [name in AutoBodyConstant]: (energy: number) => BodyConfig | undefined
 } = {
     harvester: energy => {
-        if (energy >= 600) return {work: 5, carry: 1, move: 1}
-        if (energy >= 550) return {work: 5, move: 1}
-        if (energy >= 200) return {work: 1, carry: 1, move: 1}
+        if (energy >= 600) return { work: 5, carry: 1, move: 1 } // RCL 3
+        if (energy >= 550) return { work: 5, move: 1 } // RCL 2
+        if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
         return undefined
     },
     builder: energy => {
-        if (energy >= 850) return {work: 5, carry: 3, move: 4}
-        if (energy >= 650) return {work: 4, carry: 2, move: 3}
-        if (energy >= 200) return {work: 1, carry: 1, move: 1}
+        if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
+        if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
+        if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
         return undefined
     },
     upgrader: energy => {
-        if (energy >= 850) return {work: 5, carry: 3, move: 4}
-        if (energy >= 650) return {work: 4, carry: 2, move: 3}
-        if (energy >= 200) return {work: 1, carry: 1, move: 1}
+        if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
+        if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
+        if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
         return undefined
     },
     carrier: energy => {
-        if (energy >= 750) return {carry: 10, move: 5}
-        if (energy >= 450) return {carry: 6, move: 3}
-        if (energy >= 150) return {carry: 2, move: 1}
+        if (energy >= 750) return { carry: 10, move: 5 } // RCL 3
+        if (energy >= 450) return { carry: 6, move: 3 } // RCL 2
+        if (energy >= 150) return { carry: 2, move: 1 } // RCL 1
+        return undefined
+    },
+    viewer: energy => {
+        if (energy >= 50) return { move: 1 }
+        return undefined
+    },
+    reserver: energy => {
+        if (energy >= 1300) return { claim: 2, move: 2 } // RCL 4
+        return undefined
+    },
+    remoteHarvester: energy => {
+        if (energy >= 850) return { work: 6, carry: 1, move: 4 } // RCL 4
+        if (energy >= 700) return { work: 5, carry: 1, move: 3 } // RCL 3
+        return undefined
+    },
+    remoteCarrier: energy => {
+        if (energy >= 950) return { work: 1, carry: 11, move: 6 } // RCL 4
         return undefined
     }
 }
@@ -86,7 +103,11 @@ declare global {
         "harvester" |
         "builder" |
         "upgrader" |
-        "carrier"
+        "carrier" |
+        "viewer" |
+        "reserver" |
+        "remoteHarvester" |
+        "remoteCarrier"
     interface BodyConfig {
         work?: number
         carry?: number

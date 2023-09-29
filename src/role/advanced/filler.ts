@@ -2,9 +2,11 @@
 
 import { logError } from "utils/other"
 
-export interface FillerData {
-    emergency?: boolean
-    toID?: Id<StructureSpawn | StructureExtension | StructureTower>
+declare global {
+    interface FillerData extends EmptyData {
+        emergency?: boolean
+        toID?: Id<StructureSpawn | StructureExtension | StructureTower>
+    }
 }
 
 function calcTo (creep: Creep, banID?: string) {

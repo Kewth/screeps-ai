@@ -3,12 +3,7 @@ import { mountTower } from "./tower"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
 import { creepApi } from "creepApi"
-import { HarvesterData } from "role/base/harvester"
-import { CollectorData } from "role/advanced/collector"
-import { FillerData } from "role/advanced/filler"
-import { BuilderData } from "role/base/builder"
 import { calcBodyCost, makeBody, parseGeneralBodyConf } from "utils/bodyConfig"
-import { UpgraderData } from "role/base/upgrader"
 
 // TODO: 集中式孵化改为分布式
 export function mountRoom() {
@@ -40,8 +35,8 @@ export function mountRoom() {
             if (this.storage && this.storage && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
                 this.memory.noFillerTickCount ++
                 if (this.memory.noFillerTickCount >= 100) {
-                    creepApi.add(this.name, 'filler', 'emergencyFILLER',
-                        { carry: 2, move: 1 }, <FillerData>{ emergency: true }, 1, creepApi.EMERGENCY_PRIORITY)
+                    creepApi.add<FillerData>(this.name, 'filler', 'emergencyFILLER',
+                        { carry: 2, move: 1 }, { emergency: true }, 1, creepApi.EMERGENCY_PRIORITY)
                     this.memory.noFillerTickCount = 0
                 }
             } else
@@ -114,25 +109,55 @@ export function mountRoom() {
         let index = 0
         this.sources().forEach(source => {
             logConsole(`register harvester for source ${source.id}`)
-            creepApi.add(this.name, 'harvester', `har${index}`, 'harvester', <HarvesterData>{ sourceID: source.id }, 1)
+            creepApi.add<HarvesterData>(this.name, 'harvester', `har${index}`, 'harvester', { sourceID: source.id }, 1)
             index++
         })
         return OK
     }
     Room.prototype.registerBuilder = function() {
         logConsole(`register builder`)
-        creepApi.add(this.name, 'builder', `bui`, 'builder', <BuilderData>{}, 1)
+        creepApi.add<BuilderData>(this.name, 'builder', `bui`, 'builder', {}, 1)
         return OK
     }
     Room.prototype.registerUpgrader = function() {
         logConsole(`register upgrader`)
-        creepApi.add(this.name, 'upgrader', `upg`, 'upgrader', <UpgraderData>{}, 1)
+        creepApi.add<UpgraderData>(this.name, 'upgrader', `upg`, 'upgrader', {}, 1)
         return OK
     }
     Room.prototype.registerBase = function() {
         this.registerHarvester()
         this.registerBuilder()
         this.registerUpgrader()
+        return OK
+    }
+
+    Room.prototype.registerRemoteSourceRoom = function(roomName: string) {
+        // 注册 viewer
+        logConsole(`register viewer`)
+        creepApi.add<ViewerData>(this.name, 'viewer', `vie`, 'viewer', {
+            targetRoomName: roomName
+        }, 1, creepApi.VIEWER_PRIORITY)
+        // 注册 reserver
+        logConsole(`register reserver`)
+        creepApi.add<ReserverData>(this.name, 'reserver', `res`, 'reserver', {
+            targetRoomName: roomName
+        }, 1)
+        // 注册 remoteHarvester
+        for (let i = 0; i < 2; i ++) { // 房间最多两个 source
+            const workFlag = Game.flags[`${roomName}_source${i}`]
+            const buildFlag = Game.flags[`${roomName}_container${i}`] || workFlag
+            if (workFlag && buildFlag) {
+                logConsole(`register remoteHarvester ${i}`)
+                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `rHar`, 'remoteHarvester', {
+                    workFlagName: workFlag.name,
+                    buildFlagName: buildFlag.name,
+                }, 1)
+                logConsole(`register remoteCarrier ${i}`)
+                creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `rCar`, 'remoteCarrier', {
+                    containerFlagName: buildFlag.name,
+                }, 1)
+            }
+        }
         return OK
     }
 
@@ -159,9 +184,10 @@ export function mountRoom() {
             }
         }
         this.memory.spawnTaskList.sort((a, b) => Memory.creepConfigs[b].priority - Memory.creepConfigs[a].priority)
-        str += `spawn energy (${this.energyAvailable}/${this.energyCapacityAvailable})\n`
-        str += `spawnList ${this.memory.spawnTaskList}\n`
-        str += `hangList ${this.memory.hangSpawnTaskList}\n`
+        str += `==========\n`
+        str += `spawn energy: (${this.energyAvailable}/${this.energyCapacityAvailable})\n`
+        str += `spawnList: ${this.memory.spawnTaskList}\n`
+        str += `hangList: ${this.memory.hangSpawnTaskList}\n`
         logConsole(str)
     }
 
@@ -211,6 +237,16 @@ export function mountRoom() {
         if (!this._myCreeps)
             this._myCreeps = this.find(FIND_MY_CREEPS)
         return this._myCreeps
+    }
+    Room.prototype.hostileCreeps = function() {
+        if (!this._hostileCreeps)
+            this._hostileCreeps = this.find(FIND_HOSTILE_CREEPS)
+        return this._hostileCreeps
+    }
+    Room.prototype.enemyOrInvaderCreeps = function() {
+        if (!this._enemyOrInvaderCreeps)
+            this._enemyOrInvaderCreeps = this.hostileCreeps().filter(isEnemyOrInvader)
+        return this._enemyOrInvaderCreeps
     }
     Room.prototype.dropResources = function() {
         if (!this._dropResources)
@@ -289,6 +325,9 @@ declare global {
         registerBuilder(): OK
         registerUpgrader(): OK
         registerBase(): OK
+        // registerRemoteRoom(): OK
+        // registerReserver(): OK
+        registerRemoteSourceRoom(roomName: string): OK
 
         registerCollector(): OK
         registerFiller(): OK
@@ -311,6 +350,10 @@ declare global {
         _sources: Source[]
         myCreeps(): Creep[]
         _myCreeps: Creep[]
+        hostileCreeps(): Creep[]
+        _hostileCreeps: Creep[]
+        enemyOrInvaderCreeps(): Creep[]
+        _enemyOrInvaderCreeps: Creep[]
         dropResources(): Resource[]
         _dropResources: Resource[]
         tombstones(): Tombstone[]

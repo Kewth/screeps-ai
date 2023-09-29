@@ -5,8 +5,9 @@ import { calcConfigName } from "utils/other"
 
 export const creepApi = {
     // 添加 creepConfig 如果已经有直接覆盖 (live 保持不变)
-    add(spawnRoomName: string, role: RoleConstant, name: string, gBodyConf: GeneralBodyConfig,
-        data: CreepData, num: number, priority?: number):
+    add<dataType extends CreepData>(
+        spawnRoomName: string, role: RoleConstant, name: string, gBodyConf: GeneralBodyConfig,
+        data: dataType, num: number, priority?: number):
         OK | ERR_NOT_OWNER
     {
         const room = Game.rooms[spawnRoomName]
@@ -40,6 +41,7 @@ export const creepApi = {
 
 
     DEFAULT_PRIORITY: 0,
+    VIEWER_PRIORITY: 9,
     FILLER_PRIORITY: 10,
     EMERGENCY_PRIORITY: 11,
 }
