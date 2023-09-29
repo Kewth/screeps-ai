@@ -3,18 +3,30 @@ import { logError } from "utils/other"
 export interface HarvesterData {
     sourceID: Id<Source>
     containerIDs?: Id<StructureContainer>[]
+    workPos?: RoomPosition
 }
 
 export const harvesterLogic: CreepLogic = {
-    // prepare: 移动到 source
+    // prepare: 移动到 source 周边，优先站在 container 上
     prepare_stage: creep => {
         const data = creep.memory.data as HarvesterData
         const source = Game.getObjectById(data.sourceID)
         if (!source) { logError('no source', creep.name); return false }
-        if (!creep.pos.inRangeTo(source, 1)) {
-            creep.moveTo(source)
+        // 计算工位
+        if (data.workPos === undefined) {
+            const sourceContainers = source.pos.findInRange(FIND_STRUCTURES, 1, {
+                filter: obj => obj.structureType == STRUCTURE_CONTAINER
+            }) as StructureContainer[]
+            data.workPos = sourceContainers.length > 0 ? sourceContainers[0].pos : source.pos
+        }
+        // 移动到工位
+        const range = data.workPos == source.pos ? 1 : 0
+        if (!creep.pos.inRangeTo(data.workPos, range)) {
+            creep.moveTo(data.workPos)
             return false
         }
+        // 到工位后
+        // 如果有 carry 就可以 transfer/harvester
         const carryBody = creep.body.find(obj => obj.type == CARRY)
         if (carryBody)
             data.containerIDs = (creep.pos.findInRange(FIND_STRUCTURES, 1, {
