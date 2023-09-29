@@ -45,6 +45,7 @@ declare global {
     }
     interface RoomMemory {
         spawnTaskList: string[]
+        hangSpawnTaskList: string[]
         // energySourceLocks: { [id: Id<energySourceType>]: number }
         // energyTargetLocks: { [id: Id<energyTargetType>]: number }
         // transferSourceTaskList: TransferSourceTask[]
@@ -68,6 +69,8 @@ function checkRoomMemory() {
     for (const name in Game.rooms) {
         if (!Game.rooms[name].memory.spawnTaskList)
             Game.rooms[name].memory.spawnTaskList = []
+        if (!Game.rooms[name].memory.hangSpawnTaskList)
+            Game.rooms[name].memory.hangSpawnTaskList = []
         if (!Game.rooms[name].memory.noFillerTickCount)
             Game.rooms[name].memory.noFillerTickCount = 0
         // if (!Game.rooms[name].memory.transferSourceTaskList)

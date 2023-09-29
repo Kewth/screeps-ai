@@ -86,9 +86,14 @@ export function mountRoom() {
 
     Room.prototype.addSpawnTask = function(configName: string) {
         if (configName in this.memory.spawnTaskList) return ERR_NAME_EXISTS
-        // const config = Memory.creepConfigs[configName]
-        // if (!config) return ERR_INVALID_ARGS
+        if (configName in this.memory.hangSpawnTaskList) return ERR_NAME_EXISTS
         this.memory.spawnTaskList.push(configName)
+        return OK
+    }
+    Room.prototype.addHangSpawnTask = function(configName: string) {
+        if (configName in this.memory.spawnTaskList) return ERR_NAME_EXISTS
+        if (configName in this.memory.hangSpawnTaskList) return ERR_NAME_EXISTS
+        this.memory.hangSpawnTaskList.push(configName)
         return OK
     }
 
@@ -154,7 +159,9 @@ export function mountRoom() {
             }
         }
         this.memory.spawnTaskList.sort((a, b) => Memory.creepConfigs[b].priority - Memory.creepConfigs[a].priority)
-        str += `spawnList (${this.energyAvailable}/${this.energyCapacityAvailable}): ${this.memory.spawnTaskList}\n`
+        str += `spawn energy (${this.energyAvailable}/${this.energyCapacityAvailable})\n`
+        str += `spawnList ${this.memory.spawnTaskList}\n`
+        str += `hangList ${this.memory.hangSpawnTaskList}\n`
         logConsole(str)
     }
 
@@ -270,8 +277,10 @@ declare global {
         stats(store: boolean): void
         // work_spawnCreep(): boolean
 
+        addHangSpawnTask(configName: string): OK | ERR_NAME_EXISTS | ERR_INVALID_ARGS
         addSpawnTask(configName: string): OK | ERR_NAME_EXISTS | ERR_INVALID_ARGS
         getActiveSpawnConfigName(): string | undefined
+        checkHangSpawnTasks(): void
         // getEnergySourceList(): energySourceType[]
         // getEnergyTargetList(): energyTargetType[]
 

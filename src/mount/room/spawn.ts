@@ -10,12 +10,14 @@ export function reSpawn(memory: CreepMemory) {
     const config = Memory.creepConfigs[memory.configName]
     if (!config) { logError("no config", memory.configName); return }
     config.live--
-    if (config.live >= config.num) return
+    if (config.live >= config.num) return // num 减小了，多出来的 creep 就不再孵化了
     const spawnRoom = Game.rooms[config.spawnRoomName]
     const logic = getRoleLogic[memory.role]
-    if (logic.stopSpawn && logic.stopSpawn(spawnRoom, config.data)) {
+    if (logic.stopSpawn && logic.stopSpawn(spawnRoom, config.data))
         creepApi.dec(memory.configName)
-    } else
+    else if (logic.hangSpawn && logic.hangSpawn(spawnRoom, config.data))
+        spawnRoom && spawnRoom.addHangSpawnTask(memory.configName)
+    else
         spawnRoom && spawnRoom.addSpawnTask(memory.configName)
 }
 
@@ -42,7 +44,24 @@ export function mountSpawn() {
         return configName
     }
 
+    Room.prototype.checkHangSpawnTasks = function() {
+        this.memory.hangSpawnTaskList.forEach(configName => {
+            const config = Memory.creepConfigs[configName]
+            if (config) {
+                const logic = getRoleLogic[config.role]
+                // 结束挂起
+                if (!logic.hangSpawn || !logic.hangSpawn(this, config.data))
+                    this.memory.spawnTaskList.push(configName)
+            }
+        })
+        // 清理
+        this.memory.hangSpawnTaskList = this.memory.hangSpawnTaskList.filter(
+            configName => !(configName in this.memory.spawnTaskList)
+        )
+    }
+
     Room.prototype.work_spawn = function() {
+        if (Game.time % 20 == 0) this.checkHangSpawnTasks()
         const configName = this.getActiveSpawnConfigName()
         const config = configName && Memory.creepConfigs[configName]
         if (!config) return
@@ -51,7 +70,7 @@ export function mountSpawn() {
         const spawn = spawnList[0]
         const creepName = newCreepName(configName)
         const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
-        if (!bodyConf) return // 无法孵化 TODO: 扔到队列末尾
+        if (!bodyConf) return // 无法孵化
         const bodys = makeBody(bodyConf)
         if (spawn.spawnCreep(bodys, creepName, { memory: {
             role: config.role,
