@@ -2,13 +2,13 @@ import { creepApi } from "creepApi"
 import { addStat_spawn } from "memory/stats"
 import { getRoleLogic } from "role"
 import { makeBody, parseGeneralBodyConf } from "utils/bodyConfig"
-import { newCreepName } from "utils/other"
+import { logError, newCreepName } from "utils/other"
 
 export function reSpawn(memory: CreepMemory) {
     if (memory.reSpawnAlready) return
     memory.reSpawnAlready = true
     const config = Memory.creepConfigs[memory.configName]
-    if (!config) return
+    if (!config) { logError("no config", memory.configName); return }
     config.live--
     if (config.live >= config.num) return
     const spawnRoom = Game.rooms[config.spawnRoomName]

@@ -30,12 +30,11 @@ export const creepApi = {
         Memory.creepConfigs[configName].num += 1
         return OK
     },
-    dec(configName: string): OK | ERR_NOT_FOUND {
+    dec(configName: string): OK | ERR_NOT_FOUND | ERR_INVALID_TARGET {
         if (!Memory.creepConfigs[configName]) return ERR_NOT_FOUND
-        if (Memory.creepConfigs[configName].num == 1)
-            delete Memory.creepConfigs[configName]
-        else
-            Memory.creepConfigs[configName].num -= 1
+        if (Memory.creepConfigs[configName].num <= 0) return ERR_INVALID_TARGET
+        Memory.creepConfigs[configName].num -= 1
+        // 将在 Memory 模块里自动清理 live = 0, num = 0 的 config
         return OK
     },
 
