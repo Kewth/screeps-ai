@@ -11,4 +11,8 @@ export function mountGlobal() {
     Object.defineProperty(global, 'showC', { set: (roomName: string) => {
         logConsole(`return ${Game.rooms[roomName].showCreeps()}`)
     } })
+    Object.defineProperty(global, 'markClaim', { set: (roomName: string) => {
+        Memory.rooms[roomName].needClaim = true
+        logConsole(`OK`)
+    } })
 }

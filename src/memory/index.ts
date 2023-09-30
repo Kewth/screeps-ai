@@ -61,6 +61,8 @@ declare global {
         centeralLinkID?: Id<StructureLink>
         // filler 停摆的时间
         noFillerTickCount: number
+        // 需要 claim
+        needClaim: boolean
     }
 }
 
