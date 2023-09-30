@@ -19,7 +19,7 @@ export function mountTower() {
             filter: obj =>
                 obj.structureType == STRUCTURE_RAMPART && obj.hits < 800
         }).forEach(rampart => {
-            const free_tower = towers.find(t => !(t.id in busy_tower_list))
+            const free_tower = towers.find(t => !busy_tower_list.includes(t.id))
             if (free_tower) {
                 busy_tower_list.push(free_tower.id)
                 free_tower.repair(rampart)
@@ -34,7 +34,7 @@ export function mountTower() {
         })
         brokens.forEach(broken => {
             const free_towers = broken.pos.findInRange(towers, 5, {
-                filter: (t: StructureTower) => !(t.id in busy_tower_list)
+                filter: (t: StructureTower) => !busy_tower_list.includes(t.id)
             })
             if (free_towers.length > 0) {
                 const free_tower = free_towers[0]

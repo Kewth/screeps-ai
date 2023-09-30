@@ -29,9 +29,9 @@ export function isMy (obj: {owner: Owner}): boolean {
     return obj.owner.username == 'Kewth'
 }
 export function isFriend (obj: {owner: Owner}): boolean {
-    return obj.owner.username in [
+    return [
         'SodiumH',
-    ]
+    ].includes(obj.owner.username)
 }
 export function isSourceKeeper (obj: {owner: Owner}): boolean {
     return obj.owner.username == 'Source Keeper'

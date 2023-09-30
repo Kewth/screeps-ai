@@ -80,14 +80,14 @@ export function mountRoom() {
     }
 
     Room.prototype.addSpawnTask = function(configName: string) {
-        if (configName in this.memory.spawnTaskList) return ERR_NAME_EXISTS
-        if (configName in this.memory.hangSpawnTaskList) return ERR_NAME_EXISTS
+        if (this.memory.spawnTaskList.includes(configName)) return ERR_NAME_EXISTS
+        if (this.memory.hangSpawnTaskList.includes(configName)) return ERR_NAME_EXISTS
         this.memory.spawnTaskList.push(configName)
         return OK
     }
     Room.prototype.addHangSpawnTask = function(configName: string) {
-        if (configName in this.memory.spawnTaskList) return ERR_NAME_EXISTS
-        if (configName in this.memory.hangSpawnTaskList) return ERR_NAME_EXISTS
+        if (this.memory.spawnTaskList.includes(configName)) return ERR_NAME_EXISTS
+        if (this.memory.hangSpawnTaskList.includes(configName)) return ERR_NAME_EXISTS
         this.memory.hangSpawnTaskList.push(configName)
         return OK
     }
