@@ -72,3 +72,34 @@ export function hasResource(obj: Resource | TypeWithStore): boolean {
     // 通用型存储
     return anyStore(obj) !== undefined
 }
+
+export function strLim(str: string, num: number): string {
+    while (str.length < num) str += ' '
+    return str
+}
+
+export class PrintTable {
+    table: (string[])[]
+    constructor() {
+        this.table = [[]]
+    }
+    add(str: string) {
+        _.last(this.table).push(str)
+    }
+    newLine() {
+        this.table.push([])
+    }
+    toString() {
+        const colNum = _.max(this.table, lis => lis.length).length
+        let colLims: number[] = []
+        for (let i = 0; i < colNum; i ++)
+            colLims.push(_.max(this.table, lis => lis[i]?.length)[i].length + 3)
+        let res = ''
+        this.table.forEach(lis => {
+            for (let i = 0; i < lis.length; i++)
+                res += strLim(lis[i], colLims[i])
+            res += '\n'
+        })
+        return res
+    }
+}

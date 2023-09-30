@@ -93,7 +93,7 @@ export function mountCreep() {
     Creep.prototype.goAwayHostileCreeps = function () {
         const hostileCreeps = this.pos.findInRange(FIND_HOSTILE_CREEPS, 5)
         if (hostileCreeps.length > 0) {
-            if (hostileCreeps.length > 1) logError("Too many hostileCreeps", this.name)
+            // if (hostileCreeps.length > 1) logError("Too many hostileCreeps", this.name)
             this.moveAway(hostileCreeps[0].pos)
             return true
         }

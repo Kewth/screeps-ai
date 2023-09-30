@@ -1,4 +1,4 @@
-import { isEnemyOrInvader, isEvil, logConsole, logError } from "utils/other"
+import { PrintTable, isEnemyOrInvader, isEvil, logConsole, logError, strLim } from "utils/other"
 import { mountTower } from "./tower"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
@@ -134,12 +134,12 @@ export function mountRoom() {
     Room.prototype.registerRemoteSourceRoom = function(roomName: string) {
         // 注册 viewer
         logConsole(`register viewer`)
-        creepApi.add<ViewerData>(this.name, 'viewer', `vie`, 'viewer', {
+        creepApi.add<ViewerData>(this.name, 'viewer', `${roomName}_vie`, 'viewer', {
             targetRoomName: roomName
         }, 1, creepApi.VIEWER_PRIORITY)
         // 注册 reserver
         logConsole(`register reserver`)
-        creepApi.add<ReserverData>(this.name, 'reserver', `res`, 'reserver', {
+        creepApi.add<ReserverData>(this.name, 'reserver', `${roomName}_res`, 'reserver', {
             targetRoomName: roomName
         }, 1)
         // 注册 remoteHarvester/remoteCarrier
@@ -148,12 +148,12 @@ export function mountRoom() {
             const buildFlag = Game.flags[`${roomName}_container${i}`] || workFlag
             if (workFlag && buildFlag) {
                 logConsole(`register remoteHarvester ${i}`)
-                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `rHar`, 'remoteHarvester', {
+                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `${roomName}_har${i}`, 'remoteHarvester', {
                     workFlagName: workFlag.name,
                     buildFlagName: buildFlag.name,
                 }, 1)
                 logConsole(`register remoteCarrier ${i}`)
-                creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `rCar`, 'remoteCarrier', {
+                creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `${roomName}_car${i}`, 'remoteCarrier', {
                     containerFlagName: buildFlag.name,
                 }, 1)
             }
@@ -164,7 +164,7 @@ export function mountRoom() {
     Room.prototype.registerRemoteSourceKeeperRoom = function(roomName: string) {
         // 注册 viewer
         logConsole(`register viewer`)
-        creepApi.add<ViewerData>(this.name, 'viewer', `vie`, 'viewer', {
+        creepApi.add<ViewerData>(this.name, 'viewer', `${roomName}_vie`, 'viewer', {
             targetRoomName: roomName
         }, 1, creepApi.VIEWER_PRIORITY)
         let guardFlagNames: string[] = []
@@ -175,21 +175,23 @@ export function mountRoom() {
             const guardFlag = Game.flags[`${roomName}_sourceGuard${i}`]
             if (workFlag && buildFlag) {
                 logConsole(`register remoteHarvester ${i}`)
-                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `rHar`, 'remoteHarvester', {
+                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `${roomName}_har${i}`, 'remoteHarvester', {
                     workFlagName: workFlag.name,
                     buildFlagName: buildFlag.name,
                 }, 1)
                 logConsole(`register remoteCarrier ${i}`)
-                creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `rCar`, 'remoteCarrier', {
+                creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `${roomName}_car${i}`, 'remoteCarrier', {
                     containerFlagName: buildFlag.name,
                 }, 1)
             }
-            if (guardFlag)
+            if (guardFlag) {
+                guardFlag.memory.lairCheck = true
                 guardFlagNames.push(guardFlag.name)
+            }
         }
         // 注册 keeperAttacker
         logConsole(`register keeperAttacker`)
-        creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `kAtt`, 'keeperAttacker', {
+        creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperAttacker', {
             guardFlagNames: guardFlagNames
         }, 3, creepApi.KEEPERATTACKER_PRIORITY)
         return OK
@@ -208,15 +210,27 @@ export function mountRoom() {
 
     // 在终端跟踪此房间孵化的 creeps
     Room.prototype.showCreeps = function() {
-        let str: string = '' //`${this.name} show Creeps:\n`
+        const t = new PrintTable()
+        t.add('Config Name')
+        t.add('Role')
+        t.add('Bodys')
+        t.add('Body Cost')
+        t.add('Live / Num')
+        t.newLine()
         for (const configName in Memory.creepConfigs) {
             const config = Memory.creepConfigs[configName]
             if (config.spawnRoomName == this.name) {
                 const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
                 const bodys = bodyConf ? makeBody(bodyConf) : []
-                str += `${configName}: ${config.role}, cost${calcBodyCost(bodys)}, ${config.live}/${config.num}\n`
+                t.add(configName)
+                t.add(config.role)
+                t.add(JSON.stringify(bodyConf))
+                t.add(`${calcBodyCost(bodys)}`)
+                t.add(`${config.live}/${config.num}`)
+                t.newLine()
             }
         }
+        let str = t.toString()
         this.memory.spawnTaskList.sort((a, b) => Memory.creepConfigs[b].priority - Memory.creepConfigs[a].priority)
         str += `==========\n`
         str += `spawn energy: (${this.energyAvailable}/${this.energyCapacityAvailable})\n`

@@ -98,6 +98,12 @@ declare global {
 
 export function checkMemory() {
     if (!Memory.creepConfigs) Memory.creepConfigs = {}
+    if (Game.time % 20 == 0) {
+        for (const configName in Memory.creepConfigs) {
+            if (Memory.creepConfigs[configName].live <= 0 && Memory.creepConfigs[configName].num <= 0)
+                delete Memory.creepConfigs[configName]
+        }
+    }
     checkStatsMemory()
     checkCreepMemory()
     checkFlagMemory()

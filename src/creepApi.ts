@@ -23,7 +23,8 @@ export const creepApi = {
             live: live ? live : 0,
             priority: priority ? priority : this.DEFAULT_PRIORITY
         }
-        if (!live || live < num) room.addSpawnTask(configName)
+        // 先挂起，下次 Spawn 检查的时候加进队列 (因为可能这个时候还不满足孵化要求)
+        if (!live || live < num) room.addHangSpawnTask(configName)
         return OK
     },
     inc(configName: string): OK | ERR_NOT_FOUND {
@@ -38,7 +39,13 @@ export const creepApi = {
         // 将在 Memory 模块里自动清理 live = 0, num = 0 的 config
         return OK
     },
-
+    remove(configName: string): OK | ERR_NOT_FOUND | ERR_INVALID_TARGET {
+        if (!Memory.creepConfigs[configName]) return ERR_NOT_FOUND
+        if (Memory.creepConfigs[configName].num <= 0) return ERR_INVALID_TARGET
+        Memory.creepConfigs[configName].num = 0
+        // 将在 Memory 模块里自动清理 live = 0, num = 0 的 config
+        return OK
+    },
 
     DEFAULT_PRIORITY: 0,
     KEEPERATTACKER_PRIORITY: 1,
