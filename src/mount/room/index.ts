@@ -142,7 +142,7 @@ export function mountRoom() {
         creepApi.add<ReserverData>(this.name, 'reserver', `res`, 'reserver', {
             targetRoomName: roomName
         }, 1)
-        // 注册 remoteHarvester
+        // 注册 remoteHarvester/remoteCarrier
         for (let i = 0; i < 2; i ++) { // 房间最多两个 source
             const workFlag = Game.flags[`${roomName}_source${i}`]
             const buildFlag = Game.flags[`${roomName}_container${i}`] || workFlag
@@ -158,6 +158,40 @@ export function mountRoom() {
                 }, 1)
             }
         }
+        return OK
+    }
+
+    Room.prototype.registerRemoteSourceKeeperRoom = function(roomName: string) {
+        // 注册 viewer
+        logConsole(`register viewer`)
+        creepApi.add<ViewerData>(this.name, 'viewer', `vie`, 'viewer', {
+            targetRoomName: roomName
+        }, 1, creepApi.VIEWER_PRIORITY)
+        let guardFlagNames: string[] = []
+        // 注册 remoteHarvester/remoteCarrier
+        for (let i = 0; i < 4; i ++) { // 房间最多四个 source
+            const workFlag = Game.flags[`${roomName}_source${i}`]
+            const buildFlag = Game.flags[`${roomName}_container${i}`] || workFlag
+            const guardFlag = Game.flags[`${roomName}_sourceGuard${i}`]
+            if (workFlag && buildFlag) {
+                logConsole(`register remoteHarvester ${i}`)
+                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `rHar`, 'remoteHarvester', {
+                    workFlagName: workFlag.name,
+                    buildFlagName: buildFlag.name,
+                }, 1)
+                logConsole(`register remoteCarrier ${i}`)
+                creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `rCar`, 'remoteCarrier', {
+                    containerFlagName: buildFlag.name,
+                }, 1)
+            }
+            if (guardFlag)
+                guardFlagNames.push(guardFlag.name)
+        }
+        // 注册 keeperAttacker
+        logConsole(`register keeperAttacker`)
+        creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `kAtt`, 'keeperAttacker', {
+            guardFlagNames: guardFlagNames
+        }, 3, creepApi.KEEPERATTACKER_PRIORITY)
         return OK
     }
 
@@ -242,6 +276,11 @@ export function mountRoom() {
         if (!this._hostileCreeps)
             this._hostileCreeps = this.find(FIND_HOSTILE_CREEPS)
         return this._hostileCreeps
+    }
+    Room.prototype.evilCreeps = function() {
+        if (!this._evilCreeps)
+            this._evilCreeps = this.hostileCreeps().filter(isEvil)
+        return this._evilCreeps
     }
     Room.prototype.enemyOrInvaderCreeps = function() {
         if (!this._enemyOrInvaderCreeps)
@@ -328,6 +367,7 @@ declare global {
         // registerRemoteRoom(): OK
         // registerReserver(): OK
         registerRemoteSourceRoom(roomName: string): OK
+        registerRemoteSourceKeeperRoom(roomName: string): OK
 
         registerCollector(): OK
         registerFiller(): OK
@@ -352,6 +392,8 @@ declare global {
         _myCreeps: Creep[]
         hostileCreeps(): Creep[]
         _hostileCreeps: Creep[]
+        evilCreeps(): Creep[]
+        _evilCreeps: Creep[]
         enemyOrInvaderCreeps(): Creep[]
         _enemyOrInvaderCreeps: Creep[]
         dropResources(): Resource[]

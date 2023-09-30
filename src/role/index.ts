@@ -3,6 +3,7 @@ import { fillerLogic } from "./advanced/filler";
 import { builderLogic } from "./base/builder";
 import { harvesterLogic } from "./base/harvester";
 import { upgraderLogic } from "./base/upgrader";
+import { keeperAttackerLogic } from "./remote/keeperAttacker";
 import { remoteCarrierLogic } from "./remote/remoteCarrier";
 import { remoteHarvesterLogic } from "./remote/remoteHarvester";
 import { reserverLogic } from "./remote/reserver";
@@ -20,6 +21,7 @@ export const getRoleLogic: {
     reserver: reserverLogic,
     remoteHarvester: remoteHarvesterLogic,
     remoteCarrier: remoteCarrierLogic,
+    keeperAttacker: keeperAttackerLogic,
 }
 
 // 用于类型检查 (TODO: find a better solution)
@@ -36,7 +38,8 @@ declare global {
         "viewer" |
         "reserver" |
         "remoteHarvester" |
-        "remoteCarrier"
+        "remoteCarrier" |
+        "keeperAttacker"
     type CreepData =
         EmptyData |
         HarvesterData |
@@ -47,5 +50,6 @@ declare global {
         ViewerData |
         ReserverData |
         RemoteHarvesterData |
-        RemoteCarrierData
+        RemoteCarrierData |
+        KeeperAttackerData
 }

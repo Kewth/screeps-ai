@@ -1,5 +1,3 @@
-import { object } from "lodash"
-
 function lairCheck(flag: Flag) {
     const lair = flag.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: obj => obj.structureType == STRUCTURE_KEEPER_LAIR

@@ -45,8 +45,8 @@ export function calcBodyCost(b: BodyPartConstant[]): number {
 // RCL 4: 1300
 // RCL 5: 1800
 // RCL 6: 2300
-// RCL 7: 5300
-// RCL 8: 12300
+// RCL 7: 5600
+// RCL 8: 12900
 
 const getBodyConfigByAuto: {
     [name in AutoBodyConstant]: (energy: number) => BodyConfig | undefined
@@ -91,7 +91,11 @@ const getBodyConfigByAuto: {
     remoteCarrier: energy => {
         if (energy >= 950) return { work: 1, carry: 11, move: 6 } // RCL 4
         return undefined
-    }
+    },
+    keeperAttacker: energy => {
+        if (energy >= 2080) return { tough: 3, ranged_attack: 5, heal: 4, move: 6 } // RCL 6
+        return undefined
+    },
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
@@ -107,7 +111,8 @@ declare global {
         "viewer" |
         "reserver" |
         "remoteHarvester" |
-        "remoteCarrier"
+        "remoteCarrier" |
+        "keeperAttacker"
     interface BodyConfig {
         work?: number
         carry?: number
