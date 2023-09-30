@@ -173,15 +173,17 @@ export function mountRoom() {
             }
         }
         // 注册 keeperAttacker
-        if (this.controller && this.controller.level <= 6) {
-            creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperAttacker', {
-                guardFlagNames: guardFlagNames
-            }, 3, creepApi.KEEPERATTACKER_PRIORITY)
-        }
-        else {
-            creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperSingleAttacker', {
-                guardFlagNames: guardFlagNames
-            }, 1, creepApi.KEEPERATTACKER_PRIORITY)
+        if (guardFlagNames.length > 0) {
+            if (this.controller && this.controller.level <= 6) {
+                creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperAttacker', {
+                    guardFlagNames: guardFlagNames
+                }, 3, creepApi.KEEPERATTACKER_PRIORITY)
+            }
+            else {
+                creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperSingleAttacker', {
+                    guardFlagNames: guardFlagNames
+                }, 1, creepApi.KEEPERATTACKER_PRIORITY)
+            }
         }
         return OK
     }

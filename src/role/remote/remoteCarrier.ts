@@ -8,6 +8,10 @@ declare global {
     interface RemoteCarrierData extends EmptyData {
         containerFlagName: string
         toID?: Id<StructureStorage | StructureLink>
+        // TODO: 统计信息并自适应地更新 body
+        fullCount?: number
+        totalCount?: number
+        emptyCount?: number
     }
 }
 
@@ -51,19 +55,21 @@ export const remoteCarrierLogic: CreepLogic = {
         const container = containerFlag.pos.lookFor(LOOK_STRUCTURES).find(
             obj => obj.structureType == STRUCTURE_CONTAINER
         ) as StructureContainer | undefined
-        if (!container || container.store[RESOURCE_ENERGY] <= 0) {
-            // container 空了，跑路，避免堵塞 (但是不能直接转 stage ，因为可能自己 carry 是空的转了又转回来)
-            const to = data.toID && Game.getObjectById(data.toID)
-            to && creep.moveTo(to)
-            return false
-        }
-        const res = creep.withdraw(container, RESOURCE_ENERGY)
-        if (res == OK) {
+        if (!container || container.store[RESOURCE_ENERGY] <= 100) {
+            // container 空了，跑路，避免堵塞 (carry 空的时候不能直接转 stage ，否则会来回切换 stage)
+            if (creep.store.getUsedCapacity() > 0) return true
             const to = data.toID && Game.getObjectById(data.toID)
             to && creep.moveTo(to)
         }
-        else
-            logError("cannot get energy", creep.name)
+        else {
+            const res = creep.withdraw(container, RESOURCE_ENERGY)
+            if (res == OK) {
+                const to = data.toID && Game.getObjectById(data.toID)
+                to && creep.moveTo(to)
+            }
+            else
+                logError("cannot get energy", creep.name)
+        }
         return false
     },
     // target:
@@ -95,6 +101,8 @@ export const remoteCarrierLogic: CreepLogic = {
             else if (res == OK) { // 预测下一步返回
                 const containerFlag = Game.flags[data.containerFlagName]
                 creep.moveTo(containerFlag)
+            }
+            else if (res == ERR_FULL && (to instanceof StructureLink)) { // link 堵了，原地等待 link 恢复
             }
             else
                 logError("cannot send energy", creep.name)

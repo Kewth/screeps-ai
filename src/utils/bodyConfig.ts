@@ -78,6 +78,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     carrier: energy => {
+        if (energy >= 900) return { carry: 12, move: 6 } // RCL 4
         if (energy >= 750) return { carry: 10, move: 5 } // RCL 3
         if (energy >= 450) return { carry: 6, move: 3 } // RCL 2
         if (energy >= 150) return { carry: 2, move: 1 } // RCL 1
@@ -97,6 +98,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     remoteCarrier: energy => {
+        // if (energy >= 1700) return { work: 1, carry: 21, move: 11 } // RCL 5
         if (energy >= 1400) return { work: 1, carry: 17, move: 9 } // RCL 5
         if (energy >= 950) return { work: 1, carry: 11, move: 6 } // RCL 4
         return undefined
