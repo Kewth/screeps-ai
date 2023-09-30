@@ -84,7 +84,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     remoteHarvester: energy => {
-        if (energy >= 850) return { work: 6, carry: 1, move: 4 } // RCL 4
+        if (energy >= 950) return { work: 7, carry: 1, move: 4 } // RCL 4
         if (energy >= 700) return { work: 5, carry: 1, move: 3 } // RCL 3
         return undefined
     },
