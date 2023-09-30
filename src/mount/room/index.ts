@@ -175,7 +175,7 @@ export function mountRoom() {
             const guardFlag = Game.flags[`${roomName}_sourceGuard${i}`]
             if (workFlag && buildFlag) {
                 logConsole(`register remoteHarvester ${i}`)
-                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `${roomName}_har${i}`, 'remoteHarvester', {
+                creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `${roomName}_har${i}`, 'keeperHarvester', {
                     workFlagName: workFlag.name,
                     buildFlagName: buildFlag.name,
                 }, 1)
@@ -190,10 +190,18 @@ export function mountRoom() {
             }
         }
         // 注册 keeperAttacker
-        logConsole(`register keeperAttacker`)
-        creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperAttacker', {
-            guardFlagNames: guardFlagNames
-        }, 3, creepApi.KEEPERATTACKER_PRIORITY)
+        if (this.controller && this.controller.level <= 6) {
+            logConsole(`register keeperAttacker`)
+            creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperAttacker', {
+                guardFlagNames: guardFlagNames
+            }, 3, creepApi.KEEPERATTACKER_PRIORITY)
+        }
+        else {
+            logConsole(`register keeperAttacker`)
+            creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperSingleAttacker', {
+                guardFlagNames: guardFlagNames
+            }, 1, creepApi.KEEPERATTACKER_PRIORITY)
+        }
         return OK
     }
 
@@ -205,6 +213,11 @@ export function mountRoom() {
     Room.prototype.registerFiller = function() {
         logConsole(`register filler`)
         creepApi.add(this.name, 'filler', `fil`, 'carrier', <FillerData>{}, 1, creepApi.FILLER_PRIORITY)
+        return OK
+    }
+    Room.prototype.registerAdvanced = function() {
+        this.registerFiller()
+        this.registerCollector()
         return OK
     }
 
@@ -385,6 +398,7 @@ declare global {
 
         registerCollector(): OK
         registerFiller(): OK
+        registerAdvanced(): OK
         showCreeps(): void
 
         // tick 级别缓存

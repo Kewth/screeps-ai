@@ -51,7 +51,12 @@ export const remoteCarrierLogic: CreepLogic = {
         const container = containerFlag.pos.lookFor(LOOK_STRUCTURES).find(
             obj => obj.structureType == STRUCTURE_CONTAINER
         ) as StructureContainer | undefined
-        if (!container || container.store[RESOURCE_ENERGY] <= 0) return true // container 空了，跑路，避免堵塞
+        if (!container || container.store[RESOURCE_ENERGY] <= 0) {
+            // container 空了，跑路，避免堵塞 (但是不能直接转 stage ，因为可能自己 carry 是空的转了又转回来)
+            const to = data.toID && Game.getObjectById(data.toID)
+            to && creep.moveTo(to)
+            return false
+        }
         const res = creep.withdraw(container, RESOURCE_ENERGY)
         if (res == OK) {
             const to = data.toID && Game.getObjectById(data.toID)

@@ -29,7 +29,6 @@ export const harvesterLogic: CreepLogic = {
         const range = data.workPosX == source.pos.x && data.workPosY == source.pos.y ? 1 : 0
         if (!creep.pos.inRangeTo(data.workPosX, data.workPosY, range)) {
             const res = creep.moveTo(data.workPosX, data.workPosY)
-            logError(res, creep.name)
             return false
         }
         // 如果有 carry 就可以 transfer/harvester

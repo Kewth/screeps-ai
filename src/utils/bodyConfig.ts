@@ -92,10 +92,18 @@ const getBodyConfigByAuto: {
         if (energy >= 950) return { work: 1, carry: 11, move: 6 } // RCL 4
         return undefined
     },
+    keeperHarvester: energy => {
+        if (energy >= 1200) return { work: 9, carry: 1, move: 5 } // RCL 4
+        return undefined
+    },
     keeperAttacker: energy => {
         if (energy >= 2080) return { tough: 3, ranged_attack: 5, heal: 4, move: 6 } // RCL 6
         return undefined
     },
+    keeperSingleAttacker: energy => {
+        if (energy >= 4280) return { tough: 3, ranged_attack: 10, heal: 9, move: 10 } // RCL 7
+        return undefined
+    }
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
@@ -111,8 +119,10 @@ declare global {
         "viewer" |
         "reserver" |
         "remoteHarvester" |
+        "keeperHarvester" |
         "remoteCarrier" |
-        "keeperAttacker"
+        "keeperAttacker" |
+        "keeperSingleAttacker"
     interface BodyConfig {
         work?: number
         carry?: number
