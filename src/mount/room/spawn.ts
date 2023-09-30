@@ -48,10 +48,12 @@ export function mountSpawn() {
         this.memory.hangSpawnTaskList.forEach(configName => {
             const config = Memory.creepConfigs[configName]
             if (config) {
+                // 结束挂起判定
                 const logic = getRoleLogic[config.role]
-                // 结束挂起
-                if (!logic.hangSpawn || !logic.hangSpawn(this, config.data))
-                    this.memory.spawnTaskList.push(configName)
+                if (!logic.hangSpawn || !logic.hangSpawn(this, config.data)) {
+                    const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
+                    if (bodyConf) this.memory.spawnTaskList.push(configName)
+                }
             }
         })
         // 清理
@@ -61,7 +63,7 @@ export function mountSpawn() {
     }
 
     Room.prototype.work_spawn = function() {
-        if (Game.time % 20 == 0) this.checkHangSpawnTasks()
+        if (Game.time % 50 == 0) this.checkHangSpawnTasks()
         const configName = this.getActiveSpawnConfigName()
         const config = configName && Memory.creepConfigs[configName]
         if (!config) return
@@ -70,16 +72,24 @@ export function mountSpawn() {
         const spawn = spawnList[0]
         const creepName = newCreepName(configName)
         const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
-        if (!bodyConf) return // 无法孵化
-        const bodys = makeBody(bodyConf)
-        if (spawn.spawnCreep(bodys, creepName, { memory: {
-            role: config.role,
-            data: config.data,
-            configName: configName,
-        } }) == OK) {
-            addStat_spawn(bodys)
-            config.live++
-            // 不需要移除队首
+        if (!bodyConf) {
+            // 无法孵化，挂起
+            this.memory.spawnTaskList.shift()
+            this.addHangSpawnTask(configName)
+        }
+        else {
+            const bodys = makeBody(bodyConf)
+            if (spawn.spawnCreep(bodys, creepName, {
+                memory: {
+                    role: config.role,
+                    data: config.data,
+                    configName: configName,
+                }
+            }) == OK) {
+                addStat_spawn(bodys)
+                config.live++
+                // 不需要移除队首
+            }
         }
     }
 }

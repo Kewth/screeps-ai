@@ -57,9 +57,10 @@ const getBodyConfigByAuto: {
         if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
         return undefined
     },
-    builder: energy => {
+    repairer: energy => {
         if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
         if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
+        if (energy >= 400) return { work: 2, carry: 2, move: 2 } // RCL 2
         if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
         return undefined
     },
@@ -67,6 +68,13 @@ const getBodyConfigByAuto: {
         if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
         if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
         if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
+        return undefined
+    },
+    builder: energy => {
+        if (energy >= 3000) return { work: 15, carry: 15, move: 15 } // RCL 7
+        if (energy >= 1700) return { work: 10, carry: 6, move: 8 } // RCL 5
+        if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
+        if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
         return undefined
     },
     carrier: energy => {
@@ -89,6 +97,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     remoteCarrier: energy => {
+        if (energy >= 1400) return { work: 1, carry: 17, move: 9 } // RCL 5
         if (energy >= 950) return { work: 1, carry: 11, move: 6 } // RCL 4
         return undefined
     },
@@ -113,8 +122,9 @@ export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConf
 declare global {
     type AutoBodyConstant =
         "harvester" |
-        "builder" |
+        "repairer" |
         "upgrader" |
+        "builder" |
         "carrier" |
         "viewer" |
         "reserver" |

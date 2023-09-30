@@ -1,6 +1,6 @@
 import { collectorLogic } from "./advanced/collector";
 import { fillerLogic } from "./advanced/filler";
-import { builderLogic } from "./base/builder";
+import { repairerLogic } from "./base/repairer";
 import { harvesterLogic } from "./base/harvester";
 import { upgraderLogic } from "./base/upgrader";
 import { keeperAttackerLogic } from "./remote/keeperAttacker";
@@ -8,13 +8,15 @@ import { remoteCarrierLogic } from "./remote/remoteCarrier";
 import { remoteHarvesterLogic } from "./remote/remoteHarvester";
 import { reserverLogic } from "./remote/reserver";
 import { viewerLogic } from "./remote/viewer";
+import { builderLogic } from "./base/builder";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
 } = {
     harvester: harvesterLogic,
-    builder: builderLogic,
+    repairer: repairerLogic,
     upgrader: upgraderLogic,
+    builder: builderLogic,
     collector: collectorLogic,
     filler: fillerLogic,
     viewer: viewerLogic,
@@ -31,8 +33,9 @@ declare global {
     interface EmptyData { placeHolder?: boolean }
     type RoleConstant =
         "harvester" |
-        "builder" |
+        "repairer" |
         "upgrader" |
+        "builder" |
         "collector" |
         "filler" |
         "viewer" |
@@ -43,8 +46,9 @@ declare global {
     type CreepData =
         EmptyData |
         HarvesterData |
-        BuilderData |
+        RepairerData |
         UpgraderData |
+        BuilderData |
         CollectorData |
         FillerData |
         ViewerData |

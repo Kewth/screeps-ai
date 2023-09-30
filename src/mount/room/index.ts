@@ -12,10 +12,6 @@ export function mountRoom() {
     mountSpawn()
 
     Room.prototype.work = function() {
-        // 检查统计
-        const statInterval = 3000
-        if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
-            this.stats(true)
         // 检查入侵
         const invaders = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
         const invaderCores = this.find(FIND_STRUCTURES, {
@@ -31,6 +27,10 @@ export function mountRoom() {
                 this.memory.invaderTime = undefined
         }
         if (this.controller?.my) {
+            // 检查统计
+            const statInterval = 3000
+            if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
+                this.stats(true)
             // 紧急发布 filler 判定
             if (this.storage && this.storage && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
                 this.memory.noFillerTickCount ++
@@ -105,40 +105,28 @@ export function mountRoom() {
     //     return this.spawns().length * 300 + this.extensions().length * 50
     // }
 
-    Room.prototype.registerHarvester = function() {
+    Room.prototype.registerBase = function() {
+        // 注册 harvester
         let index = 0
         this.sources().forEach(source => {
-            logConsole(`register harvester for source ${source.id}`)
             creepApi.add<HarvesterData>(this.name, 'harvester', `har${index}`, 'harvester', { sourceID: source.id }, 1)
             index++
         })
-        return OK
-    }
-    Room.prototype.registerBuilder = function() {
-        logConsole(`register builder`)
-        creepApi.add<BuilderData>(this.name, 'builder', `bui`, 'builder', {}, 1)
-        return OK
-    }
-    Room.prototype.registerUpgrader = function() {
-        logConsole(`register upgrader`)
+        // 注册 repairer
+        creepApi.add<RepairerData>(this.name, 'repairer', `rep`, 'repairer', {}, 1)
+        // 注册 upgrader
         creepApi.add<UpgraderData>(this.name, 'upgrader', `upg`, 'upgrader', {}, 1)
-        return OK
-    }
-    Room.prototype.registerBase = function() {
-        this.registerHarvester()
-        this.registerBuilder()
-        this.registerUpgrader()
+        // 注册 builder
+        creepApi.add<BuilderData>(this.name, 'builder', `bui`, 'builder', {}, 1)
         return OK
     }
 
     Room.prototype.registerRemoteSourceRoom = function(roomName: string) {
         // 注册 viewer
-        logConsole(`register viewer`)
         creepApi.add<ViewerData>(this.name, 'viewer', `${roomName}_vie`, 'viewer', {
             targetRoomName: roomName
         }, 1, creepApi.VIEWER_PRIORITY)
         // 注册 reserver
-        logConsole(`register reserver`)
         creepApi.add<ReserverData>(this.name, 'reserver', `${roomName}_res`, 'reserver', {
             targetRoomName: roomName
         }, 1)
@@ -147,12 +135,10 @@ export function mountRoom() {
             const workFlag = Game.flags[`${roomName}_source${i}`]
             const buildFlag = Game.flags[`${roomName}_container${i}`] || workFlag
             if (workFlag && buildFlag) {
-                logConsole(`register remoteHarvester ${i}`)
                 creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `${roomName}_har${i}`, 'remoteHarvester', {
                     workFlagName: workFlag.name,
                     buildFlagName: buildFlag.name,
                 }, 1)
-                logConsole(`register remoteCarrier ${i}`)
                 creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `${roomName}_car${i}`, 'remoteCarrier', {
                     containerFlagName: buildFlag.name,
                 }, 1)
@@ -163,7 +149,6 @@ export function mountRoom() {
 
     Room.prototype.registerRemoteSourceKeeperRoom = function(roomName: string) {
         // 注册 viewer
-        logConsole(`register viewer`)
         creepApi.add<ViewerData>(this.name, 'viewer', `${roomName}_vie`, 'viewer', {
             targetRoomName: roomName
         }, 1, creepApi.VIEWER_PRIORITY)
@@ -174,12 +159,10 @@ export function mountRoom() {
             const buildFlag = Game.flags[`${roomName}_container${i}`] || workFlag
             const guardFlag = Game.flags[`${roomName}_sourceGuard${i}`]
             if (workFlag && buildFlag) {
-                logConsole(`register remoteHarvester ${i}`)
                 creepApi.add<RemoteHarvesterData>(this.name, 'remoteHarvester', `${roomName}_har${i}`, 'keeperHarvester', {
                     workFlagName: workFlag.name,
                     buildFlagName: buildFlag.name,
                 }, 1)
-                logConsole(`register remoteCarrier ${i}`)
                 creepApi.add<RemoteCarrierData>(this.name, 'remoteCarrier', `${roomName}_car${i}`, 'remoteCarrier', {
                     containerFlagName: buildFlag.name,
                 }, 1)
@@ -191,13 +174,11 @@ export function mountRoom() {
         }
         // 注册 keeperAttacker
         if (this.controller && this.controller.level <= 6) {
-            logConsole(`register keeperAttacker`)
             creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperAttacker', {
                 guardFlagNames: guardFlagNames
             }, 3, creepApi.KEEPERATTACKER_PRIORITY)
         }
         else {
-            logConsole(`register keeperAttacker`)
             creepApi.add<KeeperAttackerData>(this.name, 'keeperAttacker', `${roomName}_att`, 'keeperSingleAttacker', {
                 guardFlagNames: guardFlagNames
             }, 1, creepApi.KEEPERATTACKER_PRIORITY)
@@ -206,12 +187,10 @@ export function mountRoom() {
     }
 
     Room.prototype.registerCollector = function() {
-        logConsole(`register collector`)
         creepApi.add(this.name, 'collector', `col`, 'carrier', <CollectorData>{}, 1)
         return OK
     }
     Room.prototype.registerFiller = function() {
-        logConsole(`register filler`)
         creepApi.add(this.name, 'filler', `fil`, 'carrier', <FillerData>{}, 1, creepApi.FILLER_PRIORITY)
         return OK
     }
@@ -387,9 +366,6 @@ declare global {
         // getEnergyTargetList(): energyTargetType[]
 
         // 终端控制 creeps
-        registerHarvester(): OK
-        registerBuilder(): OK
-        registerUpgrader(): OK
         registerBase(): OK
         // registerRemoteRoom(): OK
         // registerReserver(): OK

@@ -1,17 +1,23 @@
 import { logError } from "utils/other"
 
-// 修建筑，修完了跑去刷会墙
+// 修建筑 > 建工地 > 刷墙
 
 declare global {
-    interface BuilderData extends EmptyData {
-        toID?: Id<StructureWall | ConstructionSite>
+    interface RepairerData extends EmptyData {
+        toID?: Id<AnyStructure | ConstructionSite>
     }
 }
 
 function calcTo (creep: Creep) {
-    const data = creep.memory.data as BuilderData
+    const data = creep.memory.data as RepairerData
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to || (!(to instanceof ConstructionSite) && to.hits >= to.hitsMax)) to =
+        creep.pos.findClosestByPath(creep.room.containers(), {
+            filter: obj => obj.hits < obj.hitsMax * 0.9
+        }) ||
+        creep.pos.findClosestByPath(creep.room.roads(), {
+            filter: obj => obj.hits < obj.hitsMax * 0.9
+        }) ||
         creep.pos.findClosestByPath(creep.room.myConstructionSites()) ||
         creep.pos.findClosestByPath(creep.room.walls(), {
             filter: obj => obj.hits < obj.hitsMax * 0.9
@@ -20,7 +26,7 @@ function calcTo (creep: Creep) {
     return to
 }
 
-export const builderLogic: CreepLogic = {
+export const repairerLogic: CreepLogic = {
     source_stage: creep => {
         if (creep.store.getFreeCapacity() <= 0) return true
         const from = creep.room.anyEnergySource()
@@ -38,7 +44,7 @@ export const builderLogic: CreepLogic = {
         return false
     },
     target_stage: creep => {
-        const data = creep.memory.data as BuilderData
+        const data = creep.memory.data as RepairerData
         if (creep.store.getUsedCapacity() <= 0) { delete data.toID; return true }
         const to = calcTo(creep)
         if (to) {
@@ -52,8 +58,4 @@ export const builderLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        if (spawnRoom.myConstructionSites().length <= 0) return true // 没工地了
-        return false
-    }
 }

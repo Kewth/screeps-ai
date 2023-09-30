@@ -5,7 +5,7 @@ import { logError } from "utils/other"
 declare global {
     interface FillerData extends EmptyData {
         emergency?: boolean
-        toID?: Id<StructureSpawn | StructureExtension | StructureTower>
+        toID?: Id<StructureSpawn | StructureExtension | StructureTower | Creep>
     }
 }
 
@@ -21,7 +21,10 @@ function calcTo (creep: Creep, banID?: string) {
         }) ||
         creep.pos.findClosestByPath(creep.room.myExtensions(), {
             filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && obj.id != banID
-        })
+        }) ||
+        creep.pos.findInRange(creep.room.myCreeps(), 1).find(
+            obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && obj.memory.role != 'collector' && obj.id != banID
+        )
     data.toID = to?.id
     return to
 }

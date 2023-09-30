@@ -1,4 +1,4 @@
-import { calcConfigName } from "utils/other"
+import { calcConfigName, logConsole } from "utils/other"
 
 // 尽量不要让 num > 1 以及绝对不要让保持孵化的 creeps 和可能停止孵化的 creeps 共用 config
 // 计划在未来去掉 live, num 的设计
@@ -13,6 +13,7 @@ export const creepApi = {
         const room = Game.rooms[spawnRoomName]
         if (!room) return ERR_NOT_OWNER
         const configName = calcConfigName(spawnRoomName, name)
+        const update = Memory.creepConfigs[configName] ? true : false
         const live = Memory.creepConfigs[configName]?.live as number | undefined
         Memory.creepConfigs[configName] = {
             spawnRoomName: spawnRoomName,
@@ -25,6 +26,10 @@ export const creepApi = {
         }
         // 先挂起，下次 Spawn 检查的时候加进队列 (因为可能这个时候还不满足孵化要求)
         if (!live || live < num) room.addHangSpawnTask(configName)
+        if (update)
+            logConsole(`update CreepConfig: ${configName}`)
+        else
+            logConsole(`add new CreepConfig: ${configName}`)
         return OK
     },
     inc(configName: string): OK | ERR_NOT_FOUND {
