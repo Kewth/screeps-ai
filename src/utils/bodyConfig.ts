@@ -1,10 +1,10 @@
 export function makeBody(b: BodyConfig): BodyPartConstant[] {
     let res: BodyPartConstant[] = []
     if (b.tough) for (let i = 0; i < b.tough; i++) res.push(TOUGH)
-    if (b.carry) for (let i = 0; i < b.carry; i++) res.push(CARRY)
     if (b.work) for (let i = 0; i < b.work; i++) res.push(WORK)
-    if (b.move) for (let i = 0; i < b.move; i++) res.push(MOVE)
+    if (b.carry) for (let i = 0; i < b.carry; i++) res.push(CARRY)
     if (b.claim) for (let i = 0; i < b.claim; i++) res.push(CLAIM)
+    if (b.move) for (let i = 0; i < b.move; i++) res.push(MOVE)
     if (b.attack) for (let i = 0; i < b.attack; i++) res.push(ATTACK)
     if (b.ranged_attack) for (let i = 0; i < b.ranged_attack; i++) res.push(RANGED_ATTACK)
     if (b.heal) for (let i = 0; i < b.heal; i++) res.push(HEAL)
@@ -85,7 +85,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     viewer: energy => {
-        if (energy >= 50) return { move: 1 }
+        if (energy >= 60) return { tough: 1, move: 1 }
         return undefined
     },
     reserver: energy => {
@@ -112,7 +112,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     keeperSingleAttacker: energy => {
-        if (energy >= 4280) return { tough: 3, ranged_attack: 10, heal: 9, move: 10 } // RCL 7
+        if (energy >= 4330) return { tough: 3, ranged_attack: 10, heal: 9, move: 11 } // RCL 7
         return undefined
     }
 }

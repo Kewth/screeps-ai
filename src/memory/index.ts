@@ -42,6 +42,7 @@ declare global {
         time: number
         storageEnergy: number
         RCLprogress: number
+        WallHits: number
     }
     interface RoomMemory {
         spawnTaskList: string[]

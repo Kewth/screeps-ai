@@ -58,6 +58,7 @@ export function mountRoom() {
         const RCLprogress = this.controller ?
             this.controller.progress :
             0
+        const WallHits = _.sum(this.walls(), obj => obj.hits)
         // 输出
         const stat = this.memory.lastStat ? this.memory.lastStat : this.memory.nowStat
         if (stat) {
@@ -65,7 +66,8 @@ export function mountRoom() {
             logConsole(
                 `${this.name}-stats(${interval} ticks):` +
                 ` storage/T=${(storageEnergy - stat.storageEnergy) / interval}` +
-                ` upgrade/T=${(RCLprogress - stat.RCLprogress) / interval}`
+                ` upgrade/T=${(RCLprogress - stat.RCLprogress) / interval}` +
+                ` wall/T=${(WallHits - stat.WallHits) / 100 / interval}`
             )
         }
         // 存储
@@ -75,6 +77,7 @@ export function mountRoom() {
                 time: Game.time,
                 storageEnergy: storageEnergy,
                 RCLprogress: RCLprogress,
+                WallHits: WallHits,
             }
         }
     }
