@@ -12,10 +12,13 @@ function calcFrom (creep: Creep) {
     const data = creep.memory.data as CollectorData
     let from = data.fromID && Game.getObjectById(data.fromID)
     if (!from || !hasResource(from)) from =
-        creep.pos.findClosestByPath(creep.room.dropResources()) ||
+        creep.pos.findClosestByPath(creep.room.dropResources(), {
+            filter: obj => obj.amount >= 50
+        }) ||
         [creep.room.centralLink()].find(obj => obj && obj.store[RESOURCE_ENERGY] > 0) ||
         creep.pos.findClosestByPath(creep.room.tombstones(), {
-            filter: obj => obj.store.getUsedCapacity() > 0
+            filter: obj => obj.store.getUsedCapacity() - obj.store[RESOURCE_ENERGY] > 0 ||
+                obj.store[RESOURCE_ENERGY] >= 50
         }) ||
         creep.pos.findClosestByPath(creep.room.containers(), {
             filter: obj => obj.store.getUsedCapacity() > 500

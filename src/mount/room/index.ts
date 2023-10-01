@@ -58,7 +58,7 @@ export function mountRoom() {
         const RCLprogress = this.controller ?
             this.controller.progress :
             0
-        const WallHits = _.sum(this.walls(), obj => obj.hits)
+        const WallHits = _.sum(this.walls(), obj => obj.hits) + _.sum(this.myRamparts(), obj => obj.hits)
         // 输出
         const stat = this.memory.lastStat ? this.memory.lastStat : this.memory.nowStat
         if (stat) {
@@ -199,6 +199,20 @@ export function mountRoom() {
         return OK
     }
 
+    Room.prototype.makeViewer = function(roomName: string, tough: number = 0) {
+        let move = tough
+        if (move <= 0) move = 1
+        creepApi.add<ViewerData>(this.name, 'viewer', `${roomName}_oVie`, {
+            tough: tough,
+            move: move,
+        }, {
+            onlyOnce: true,
+            targetRoomName: roomName,
+        },
+        1, creepApi.VIEWER_PRIORITY)
+        return OK
+    }
+
     // 在终端跟踪此房间孵化的 creeps
     Room.prototype.showCreeps = function() {
         const t = new PrintTable()
@@ -266,6 +280,13 @@ export function mountRoom() {
                 obj => obj.structureType == STRUCTURE_LINK
             ) as StructureLink[]
         return this._myLinks
+    }
+    Room.prototype.myRamparts = function() {
+        if (!this._myRamparts)
+            this._myRamparts = this.myStructures().filter(
+                obj => obj.structureType == STRUCTURE_RAMPART
+            ) as StructureRampart[]
+        return this._myRamparts
     }
     Room.prototype.sources = function() {
         if (!this._sources)
@@ -336,6 +357,10 @@ export function mountRoom() {
         return this._anyEnergySource
     }
 
+    Room.prototype.myController = function() {
+        return (this.controller && this.controller.my) ? this.controller : undefined
+    }
+
     Room.prototype.centralLink = function() {
         if (!this.memory.centeralLinkID || Game.time % 1000 > 0) {
             if (!this.storage) return undefined
@@ -369,6 +394,7 @@ declare global {
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
         registerAdvanced(): OK
+        makeViewer(roomName: string, tough?: number): OK
         showCreeps(): void
 
         // tick 级别缓存
@@ -384,6 +410,8 @@ declare global {
         _myTowers: StructureTower[]
         myLinks(): StructureLink[]
         _myLinks: StructureLink[]
+        myRamparts(): StructureRampart[]
+        _myRamparts: StructureRampart[]
         sources(): Source[]
         _sources: Source[]
         myCreeps(): Creep[]
@@ -408,6 +436,9 @@ declare global {
         _myConstructionSites: ConstructionSite[]
         anyEnergySource(): StructureStorage | StructureContainer | Resource | undefined
         _anyEnergySource: StructureStorage | StructureContainer | Resource | undefined
+
+        // 其他
+        myController(): StructureController | undefined
 
         // memory 级别缓存
         centralLink(): StructureLink | undefined

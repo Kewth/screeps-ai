@@ -53,8 +53,9 @@ export function statsMemory() {
     let RCLprogress = 0
     for (const name in Game.rooms) {
         const room = Game.rooms[name]
-        if (room.controller && room.controller.my) {
-            RCLprogress += room.controller.progress
+        const ctrl = room.myController()
+        if (ctrl) {
+            RCLprogress += ctrl.progress
             if (room.storage) storageEnergy += room.storage.store.getUsedCapacity(RESOURCE_ENERGY)
         }
     }

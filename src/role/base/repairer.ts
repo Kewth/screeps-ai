@@ -12,16 +12,14 @@ function calcTo (creep: Creep) {
     const data = creep.memory.data as RepairerData
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to || (!(to instanceof ConstructionSite) && to.hits >= to.hitsMax)) to =
-        creep.pos.findClosestByPath(creep.room.containers(), {
-            filter: obj => obj.hits < obj.hitsMax * 0.9
-        }) ||
-        creep.pos.findClosestByPath(creep.room.roads(), {
-            filter: obj => obj.hits < obj.hitsMax * 0.9
-        }) ||
-        creep.pos.findClosestByPath(creep.room.myConstructionSites()) ||
-        creep.pos.findClosestByPath(creep.room.walls(), {
-            filter: obj => obj.hits < obj.hitsMax * 0.9
+        creep.pos.findClosestByPath(
+            [...creep.room.containers(), ...creep.room.roads()], {
+                filter: obj => obj.hits < obj.hitsMax * 0.9
         })
+        ||
+        creep.pos.findClosestByPath(creep.room.myConstructionSites())
+        ||
+        _.min([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)
     data.toID = to?.id
     return to
 }
