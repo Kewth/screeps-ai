@@ -22,7 +22,7 @@ export const upgraderLogic: CreepLogic = {
         return false
     },
     target_stage: creep => {
-        if (creep.store.getUsedCapacity() <= 0) return true
+        if (creep.store[RESOURCE_ENERGY] <= 0) return true
         const to = creep.room.controller
         if (to) {
             const res = creep.upgradeController(to)

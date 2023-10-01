@@ -39,7 +39,7 @@ export const builderLogic: CreepLogic = {
     },
     target_stage: creep => {
         const data = creep.memory.data as BuilderData
-        if (creep.store.getUsedCapacity() <= 0) { delete data.toID; return true }
+        if (creep.store[RESOURCE_ENERGY] <= 0) { delete data.toID; return true }
         const to = calcTo(creep)
         if (to) {
             const res = to instanceof ConstructionSite ? creep.build(to) : creep.repair(to)

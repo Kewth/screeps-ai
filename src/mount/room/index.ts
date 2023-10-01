@@ -121,6 +121,8 @@ export function mountRoom() {
         creepApi.add<UpgraderData>(this.name, 'upgrader', `upg`, 'upgrader', {}, 1)
         // 注册 builder
         creepApi.add<BuilderData>(this.name, 'builder', `bui`, 'builder', {}, 1)
+        // 注册 carrier
+        creepApi.add<CarrierData>(this.name, 'carrier', `car`, 'carrier', {}, 1)
         return OK
     }
 
@@ -191,6 +193,28 @@ export function mountRoom() {
         return OK
     }
 
+    Room.prototype.registerNewRoom = function(roomName: string, pioneerClaim: number,
+        pioneerTough: number, pioneerHeal: number) {
+        // 注册 pioneer
+        const spawnFlag = Game.flags[`${roomName}_spawn`]
+        if (pioneerClaim === undefined) return OK
+        if (pioneerTough === undefined) return OK
+        if (pioneerHeal === undefined) return OK
+        if (spawnFlag) {
+            creepApi.add<PioneerData>(this.name, 'pioneer', `${roomName}_pio`, {
+                tough: pioneerTough,
+                heal: pioneerHeal,
+                work: 8,
+                carry: 8,
+                claim: pioneerClaim,
+                move: pioneerTough + pioneerHeal + 8 + 8 + pioneerClaim,
+            }, {
+                spawnFlagName: spawnFlag.name
+            }, 1)
+        }
+        return OK
+    }
+
     Room.prototype.registerAdvanced = function() {
         // 注册 collector
         creepApi.add(this.name, 'collector', `col`, 'carrier', <CollectorData>{}, 1)
@@ -213,6 +237,20 @@ export function mountRoom() {
         return OK
     }
 
+    Room.prototype.makeReserver = function(roomName: string, tough: number = 0) {
+        const claim = 1
+        let move = tough + claim
+        creepApi.add<ReserverData>(this.name, 'reserver', `${roomName}_oRes`, {
+            tough: tough,
+            move: move,
+            claim: claim,
+        }, {
+            onlyOnce: true,
+            targetRoomName: roomName,
+        }, 1)
+        return OK
+    }
+
     // 在终端跟踪此房间孵化的 creeps
     Room.prototype.showCreeps = function() {
         const t = new PrintTable()
@@ -220,6 +258,7 @@ export function mountRoom() {
         t.add('Role')
         t.add('Bodys')
         t.add('Body Cost')
+        t.add('Body Count')
         t.add('Live / Num')
         t.newLine()
         for (const configName in Memory.creepConfigs) {
@@ -229,8 +268,9 @@ export function mountRoom() {
                 const bodys = bodyConf ? makeBody(bodyConf) : []
                 t.add(configName)
                 t.add(config.role)
-                t.add(JSON.stringify(bodyConf))
+                t.add(bodyConf ? JSON.stringify(bodyConf) : 'UNDEFINED')
                 t.add(`${calcBodyCost(bodys)}`)
+                t.add(`${bodys.length}`)
                 t.add(`${config.live}/${config.num}`)
                 t.newLine()
             }
@@ -394,7 +434,9 @@ declare global {
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
         registerAdvanced(): OK
+        registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
         makeViewer(roomName: string, tough?: number): OK
+        makeReserver(roomName: string, tough?: number): OK
         showCreeps(): void
 
         // tick 级别缓存

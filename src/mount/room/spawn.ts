@@ -2,7 +2,7 @@ import { creepApi } from "creepApi"
 import { addStat_spawn } from "memory/stats"
 import { getRoleLogic } from "role"
 import { makeBody, parseGeneralBodyConf } from "utils/bodyConfig"
-import { logError, newCreepName } from "utils/other"
+import { logConsole, logError, newCreepName } from "utils/other"
 
 export function reSpawn(memory: CreepMemory) {
     if (memory.reSpawnAlready) return
@@ -11,6 +11,10 @@ export function reSpawn(memory: CreepMemory) {
     if (!config) { logError("no config", memory.configName); return }
     config.live--
     if (config.live >= config.num) return // num 减小了，多出来的 creep 就不再孵化了
+    if (config.live < 0) {
+        logError('live < 0', memory.configName)
+        config.live = 0
+    }
     const spawnRoom = Game.rooms[config.spawnRoomName]
     const logic = getRoleLogic[memory.role]
     if (config.data.onlyOnce || (logic.stopSpawn && logic.stopSpawn(spawnRoom, config.data)))
@@ -79,13 +83,14 @@ export function mountSpawn() {
         }
         else {
             const bodys = makeBody(bodyConf)
-            if (spawn.spawnCreep(bodys, creepName, {
+            const res = spawn.spawnCreep(bodys, creepName, {
                 memory: {
                     role: config.role,
                     data: config.data,
                     configName: configName,
                 }
-            }) == OK) {
+            })
+            if (res == OK) {
                 addStat_spawn(bodys)
                 config.live++
                 // 不需要移除队首

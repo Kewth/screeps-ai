@@ -1,10 +1,21 @@
+import { logError } from "./other"
+
 export function makeBody(b: BodyConfig): BodyPartConstant[] {
     let res: BodyPartConstant[] = []
-    if (b.tough) for (let i = 0; i < b.tough; i++) res.push(TOUGH)
+    let parts = _.sum(_.values(b))
+    if (parts > 50) {
+        logError(`body too large ${parts}/50`, 'makeBody')
+    }
+    let move = b.move ? b.move : 0
+    let tough = b.tough ? b.tough : 0
+    const moveTick = Math.ceil((parts - move) / move)
+    const moveAsTough = Math.floor(tough / moveTick)
+    for (let i = 0; i < tough; i++) res.push(TOUGH)
+    for (let i = 0; i < moveAsTough; i++) res.push(MOVE)
     if (b.work) for (let i = 0; i < b.work; i++) res.push(WORK)
     if (b.carry) for (let i = 0; i < b.carry; i++) res.push(CARRY)
     if (b.claim) for (let i = 0; i < b.claim; i++) res.push(CLAIM)
-    if (b.move) for (let i = 0; i < b.move; i++) res.push(MOVE)
+    for (let i = 0; i < move - moveAsTough; i++) res.push(MOVE)
     if (b.attack) for (let i = 0; i < b.attack; i++) res.push(ATTACK)
     if (b.ranged_attack) for (let i = 0; i < b.ranged_attack; i++) res.push(RANGED_ATTACK)
     if (b.heal) for (let i = 0; i < b.heal; i++) res.push(HEAL)
@@ -114,7 +125,7 @@ const getBodyConfigByAuto: {
     keeperSingleAttacker: energy => {
         if (energy >= 4330) return { tough: 3, ranged_attack: 10, heal: 9, move: 11 } // RCL 7
         return undefined
-    }
+    },
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
@@ -135,15 +146,8 @@ declare global {
         "remoteCarrier" |
         "keeperAttacker" |
         "keeperSingleAttacker"
-    interface BodyConfig {
-        work?: number
-        carry?: number
-        move?: number
-        claim?: number
-        attack?: number
-        heal?: number
-        tough?: number
-        ranged_attack?: number
+    type BodyConfig = {
+        [key in BodyPartConstant]?: number
     }
     type GeneralBodyConfig = AutoBodyConstant | BodyConfig
 }

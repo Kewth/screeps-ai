@@ -1,6 +1,6 @@
-// 走到目标预定到死
-
 import { logError } from "utils/other"
+
+// 走到目标预定到死
 
 declare global {
     interface ReserverData extends EmptyData {
@@ -31,6 +31,7 @@ export const reserverLogic: CreepLogic = {
     },
     hangSpawn: (spawnRoom, rawData) => {
         const data = rawData as ReserverData
+        if (data.onlyOnce) return false // 自己是一次性的话就同时担任 view 的任务，不需要目标视野
         const targetRoom = Game.rooms[data.targetRoomName]
         if (!targetRoom) return true // 没有视野
         if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
