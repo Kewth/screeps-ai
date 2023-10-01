@@ -17,7 +17,8 @@ declare namespace NodeJS {
 
 // 永久 creep: 没有 hangSpawn 没有 stopSpawn 一直保持孵化
 // 半永久 creep: 有 hangSpawn 没有 stopSpawn 在特殊情况被挂起并暂停孵化
-// 一次性 creep: 没有 hangSpawn 有 stopSpawn 在条件达成后停止孵化
+// 非永久 creep: 没有 hangSpawn 有 stopSpawn 在条件达成后停止孵化
+// 一次性 creep: data.onlyOnce 设置为 true ，只要死了就停止孵化
 interface CreepLogic {
   prepare_stage?: (creep: Creep) => boolean
   source_stage?: (creep: Creep) => boolean

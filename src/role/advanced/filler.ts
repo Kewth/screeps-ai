@@ -4,7 +4,6 @@ import { logError } from "utils/other"
 
 declare global {
     interface FillerData extends EmptyData {
-        emergency?: boolean
         toID?: Id<StructureSpawn | StructureExtension | StructureTower | Creep>
     }
 }
@@ -63,8 +62,4 @@ export const fillerLogic: CreepLogic = {
         }
         return false
     },
-    stopSpawn: (spawnRoom, rawData) => {
-        const data = rawData as FillerData
-        return data.emergency ? true : false
-    }
 }

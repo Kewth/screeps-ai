@@ -36,7 +36,7 @@ export function mountRoom() {
                 this.memory.noFillerTickCount ++
                 if (this.memory.noFillerTickCount >= 100) {
                     creepApi.add<FillerData>(this.name, 'filler', 'emergencyFILLER',
-                        { carry: 2, move: 1 }, { emergency: true }, 1, creepApi.EMERGENCY_PRIORITY)
+                        { carry: 2, move: 1 }, { onlyOnce: true }, 1, creepApi.EMERGENCY_PRIORITY)
                     this.memory.noFillerTickCount = 0
                 }
             } else

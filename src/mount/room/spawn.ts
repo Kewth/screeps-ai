@@ -13,7 +13,7 @@ export function reSpawn(memory: CreepMemory) {
     if (config.live >= config.num) return // num 减小了，多出来的 creep 就不再孵化了
     const spawnRoom = Game.rooms[config.spawnRoomName]
     const logic = getRoleLogic[memory.role]
-    if (logic.stopSpawn && logic.stopSpawn(spawnRoom, config.data))
+    if (config.data.onlyOnce || (logic.stopSpawn && logic.stopSpawn(spawnRoom, config.data)))
         creepApi.dec(memory.configName)
     else if (logic.hangSpawn && logic.hangSpawn(spawnRoom, config.data))
         spawnRoom && spawnRoom.addHangSpawnTask(memory.configName)

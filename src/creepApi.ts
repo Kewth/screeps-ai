@@ -14,8 +14,12 @@ export const creepApi = {
         if (!room) return ERR_NOT_OWNER
         const configName = calcConfigName(spawnRoomName, name)
         const update = Memory.creepConfigs[configName] ? true : false
+        if (update && data.onlyOnce && !Memory.creepConfigs[configName].data.onlyOnce) {
+            logConsole(`cannot set CreepConfig to ONLYONCE: ${configName}`)
+            return ERR_BUSY
+        }
         if (update && !updateLock && Memory.creepConfigs[configName].updateLock) {
-            logConsole(`cannot update CreepConfig without lock: ${configName}`)
+            logConsole(`cannot remove UPDATELOCK of CreepConfig: ${configName}`)
             return ERR_BUSY
         }
         const live = Memory.creepConfigs[configName]?.live as number | undefined

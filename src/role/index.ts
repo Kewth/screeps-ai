@@ -31,6 +31,7 @@ export const getRoleLogic: {
 
 declare global {
     interface EmptyData {
+        onlyOnce?: boolean
         placeHolder?: boolean
     }
     type RoleConstant =

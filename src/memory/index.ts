@@ -90,7 +90,6 @@ declare global {
         role: RoleConstant
         data: CreepData
         gBodyConf: GeneralBodyConfig
-        // numStopped: number
         num: number
         live: number
         priority: number
