@@ -191,17 +191,11 @@ export function mountRoom() {
         return OK
     }
 
-    Room.prototype.registerCollector = function() {
-        creepApi.add(this.name, 'collector', `col`, 'carrier', <CollectorData>{}, 1)
-        return OK
-    }
-    Room.prototype.registerFiller = function() {
-        creepApi.add(this.name, 'filler', `fil`, 'carrier', <FillerData>{}, 1, creepApi.FILLER_PRIORITY)
-        return OK
-    }
     Room.prototype.registerAdvanced = function() {
-        this.registerFiller()
-        this.registerCollector()
+        // 注册 collector
+        creepApi.add(this.name, 'collector', `col`, 'carrier', <CollectorData>{}, 1)
+        // 注册 filler
+        creepApi.add(this.name, 'filler', `fil`, 'carrier', <FillerData>{}, 1, creepApi.FILLER_PRIORITY)
         return OK
     }
 
@@ -372,13 +366,8 @@ declare global {
 
         // 终端控制 creeps
         registerBase(): OK
-        // registerRemoteRoom(): OK
-        // registerReserver(): OK
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
-
-        registerCollector(): OK
-        registerFiller(): OK
         registerAdvanced(): OK
         showCreeps(): void
 
