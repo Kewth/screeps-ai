@@ -30,7 +30,9 @@ export const getRoleLogic: {
 // export function createData<T extends CreepData> (data: T): T { return data }
 
 declare global {
-    interface EmptyData { placeHolder?: boolean }
+    interface EmptyData {
+        placeHolder?: boolean
+    }
     type RoleConstant =
         "harvester" |
         "repairer" |

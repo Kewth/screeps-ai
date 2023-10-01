@@ -7,13 +7,17 @@ export const creepApi = {
     // 添加 creepConfig 如果已经有直接覆盖 (live 保持不变)
     add<dataType extends CreepData>(
         spawnRoomName: string, role: RoleConstant, name: string, gBodyConf: GeneralBodyConfig,
-        data: dataType, num: number, priority?: number):
-        OK | ERR_NOT_OWNER
+        data: dataType, num: number, priority?: number, updateLock?: boolean):
+        OK | ERR_NOT_OWNER | ERR_BUSY
     {
         const room = Game.rooms[spawnRoomName]
         if (!room) return ERR_NOT_OWNER
         const configName = calcConfigName(spawnRoomName, name)
         const update = Memory.creepConfigs[configName] ? true : false
+        if (update && !updateLock && Memory.creepConfigs[configName].updateLock) {
+            logConsole(`cannot update CreepConfig without lock: ${configName}`)
+            return ERR_BUSY
+        }
         const live = Memory.creepConfigs[configName]?.live as number | undefined
         Memory.creepConfigs[configName] = {
             spawnRoomName: spawnRoomName,
@@ -22,7 +26,8 @@ export const creepApi = {
             gBodyConf: gBodyConf,
             num: num,
             live: live ? live : 0,
-            priority: priority ? priority : this.DEFAULT_PRIORITY
+            priority: priority ? priority : this.DEFAULT_PRIORITY,
+            updateLock: updateLock,
         }
         // 先挂起，下次 Spawn 检查的时候加进队列 (因为可能这个时候还不满足孵化要求)
         if (!live || live < num) room.addHangSpawnTask(configName)
