@@ -1,3 +1,4 @@
+import { spawn } from "child_process"
 import { logError } from "utils/other"
 
 // 修建筑，修完了跑去刷会墙
@@ -22,8 +23,9 @@ function calcTo (creep: Creep) {
 
 export const builderLogic: CreepLogic = {
     source_stage: creep => {
+        const data = creep.memory.data as BuilderData
         if (creep.store.getFreeCapacity() <= 0) return true
-        const from = creep.room.anyEnergySource()
+        const from = creep.findEnergySource()
         if (from) {
             const res = creep.gainResourceFrom(from, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
@@ -52,8 +54,9 @@ export const builderLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        if (spawnRoom.myConstructionSites().length <= 0) return true // 没工地了
+    hangSpawn: (spawnRoom, memData) => {
+        const totNeed = _.sum(spawnRoom.myConstructionSites(), obj => obj.progressTotal - obj.progress)
+        if (totNeed <= 3000) return true // 没工地了或者工地太小 (修几条路交给 repairer 来干就可以)
         return false
     }
 }

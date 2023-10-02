@@ -29,8 +29,8 @@ export const reserverLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        const data = rawData as ReserverData
+    hangSpawn: (spawnRoom, memData) => {
+        const data = memData as ReserverData
         if (data.onlyOnce) return false // 自己是一次性的话就同时担任 view 的任务，不需要目标视野
         const targetRoom = Game.rooms[data.targetRoomName]
         if (!targetRoom) return true // 没有视野

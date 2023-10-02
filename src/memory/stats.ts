@@ -43,7 +43,7 @@ export function statsMemory() {
     Memory.tempPack.cpu += Game.cpu.getUsed()
     //
     if (Game.time % PACK_TICK > 0) return
-    logConsole(`pack report: cpu=${Memory.tempPack.cpu}, spawn=${Memory.tempPack.spawn}`)
+    // logConsole(`pack report: cpu=${Memory.tempPack.cpu}, spawn=${Memory.tempPack.spawn}`)
     Memory.packList.push(Memory.tempPack)
     Memory.tempPack = emptyPack()
     if (Memory.packList.length > PACK_LIM)

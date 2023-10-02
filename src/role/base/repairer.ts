@@ -4,6 +4,7 @@ import { logError } from "utils/other"
 
 declare global {
     interface RepairerData extends EmptyData {
+        fromID?: Id<StructureStorage | StructureContainer | Resource>
         toID?: Id<AnyStructure | ConstructionSite>
     }
 }
@@ -26,8 +27,9 @@ function calcTo (creep: Creep) {
 
 export const repairerLogic: CreepLogic = {
     source_stage: creep => {
+        const data = creep.memory.data as RepairerData
         if (creep.store.getFreeCapacity() <= 0) return true
-        const from = creep.room.anyEnergySource()
+        const from = creep.findEnergySource()
         if (from) {
             const res = creep.gainResourceFrom(from, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)

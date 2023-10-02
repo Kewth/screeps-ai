@@ -1,39 +1,51 @@
 // 将 storage 的 erengy 填充到需要的位置
 
-import { logError } from "utils/other"
+import { ToN, logError } from "utils/other"
 
 declare global {
     interface FillerData extends EmptyData {
-        toID?: Id<StructureSpawn | StructureExtension | StructureTower | Creep>
+        toID?: Id<StructureSpawn | StructureExtension | StructureTower | Creep | StructureTerminal>
+        toPosX?: number
+        toPosY?: number
     }
 }
 
 function calcTo (creep: Creep, banID?: string) {
     const data = creep.memory.data as FillerData
     let to = data.toID && (data.toID != banID) && Game.getObjectById(data.toID)
-    if (!to || to.store.getFreeCapacity(RESOURCE_ENERGY) <= 0) to =
+    if (!to || to.store.getFreeCapacity(RESOURCE_ENERGY) <= 0 ||
+        to.pos.x != data.toPosX || to.pos.y != data.toPosY) to =
         creep.pos.findClosestByPath(creep.room.myTowers(), {
-            filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100 && obj.id != banID
+            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
         }) ||
         creep.pos.findClosestByPath(creep.room.mySpawns(), {
-            filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && obj.id != banID
+            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         }) ||
         creep.pos.findClosestByPath(creep.room.myExtensions(), {
-            filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && obj.id != banID
+            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         }) ||
-        creep.pos.findInRange(creep.room.myCreeps(), 1).find(
-            obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0 && obj.memory.role != 'collector' && obj.id != banID
-        )
+        creep.pos.findClosestByPath(creep.room.myCreeps(), {
+            filter: obj => obj.id != banID && obj.memory.role == 'upgrader' &&
+                obj.store.getFreeCapacity(RESOURCE_ENERGY) > obj.store.getCapacity() * 0.5
+        }) ||
+        [creep.room.terminal].find(obj => obj && obj.store[RESOURCE_ENERGY] < 50_000)
     data.toID = to?.id
+    data.toPosX = to?.pos.x
+    data.toPosY = to?.pos.y
     return to
 }
 
 export const fillerLogic: CreepLogic = {
+    prepare_stage: creep => {
+        // 提前孵化避免没 filler 停摆 (主要是 RCL 低的时候)
+        creep.memory.readyUsedTime = ToN(creep.memory.readyUsedTime) + 30
+        return true
+    },
     source_stage: creep => {
         if (creep.store.getFreeCapacity() <= 0) return true
-        const from = creep.room.storage
+        const from = creep.findEnergySource()
         if (from) {
-            const res = creep.withdraw(from, RESOURCE_ENERGY)
+            const res = creep.gainResourceFrom(from, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(from)
             else if (res == OK) { // 断定下一步是送能量

@@ -1,4 +1,4 @@
-import { logError } from "./other"
+import { ToN, logError } from "./other"
 
 export function makeBody(b: BodyConfig): BodyPartConstant[] {
     let res: BodyPartConstant[] = []
@@ -36,18 +36,7 @@ export function makeBody(b: BodyConfig): BodyPartConstant[] {
 // }
 
 export function calcBodyCost(b: BodyPartConstant[]): number {
-    return _.sum(b, x => {
-        switch(x) {
-            case TOUGH: return 10
-            case CARRY: return 50
-            case WORK: return 100
-            case MOVE: return 50
-            case CLAIM: return 600
-            case ATTACK: return 80
-            case RANGED_ATTACK: return 150
-            case HEAL: return 250
-        }
-    })
+    return _.sum(b, x => BODYPART_COST[x])
 }
 
 // RCL 1: 300
@@ -64,21 +53,22 @@ const getBodyConfigByAuto: {
 } = {
     harvester: energy => {
         if (energy >= 600) return { work: 5, carry: 1, move: 1 } // RCL 3
-        if (energy >= 550) return { work: 5, move: 1 } // RCL 2
-        if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
+        if (energy >= 500) return { work: 4, carry: 1, move: 1 } // RCL 2
+        if (energy >= 250) return { work: 2, carry: 1, move: 1 } // RCL 1
         return undefined
     },
     repairer: energy => {
         if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
         if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
         if (energy >= 400) return { work: 2, carry: 2, move: 2 } // RCL 2
-        if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
+        if (energy >= 250) return { work: 1, carry: 1, move: 2 } // RCL 1
         return undefined
     },
     upgrader: energy => {
         if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
-        if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
-        if (energy >= 200) return { work: 1, carry: 1, move: 1 } // RCL 1
+        if (energy >= 800) return { work: 5, carry: 2, move: 4 } // RCL 3
+        if (energy >= 550) return { work: 3, carry: 2, move: 3 } // RCL 2
+        if (energy >= 250) return { work: 1, carry: 1, move: 2 } // RCL 1
         return undefined
     },
     builder: energy => {
@@ -86,13 +76,21 @@ const getBodyConfigByAuto: {
         if (energy >= 1700) return { work: 10, carry: 6, move: 8 } // RCL 5
         if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
         if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
+        if (energy >= 400) return { work: 2, carry: 2, move: 2 } // RCL 2
+        if (energy >= 250) return { work: 1, carry: 1, move: 2 } // RCL 1
         return undefined
     },
-    carrier: energy => {
+    collector: energy => {
         if (energy >= 900) return { carry: 12, move: 6 } // RCL 4
-        if (energy >= 750) return { carry: 10, move: 5 } // RCL 3
-        if (energy >= 450) return { carry: 6, move: 3 } // RCL 2
-        if (energy >= 150) return { carry: 2, move: 1 } // RCL 1
+        return undefined
+    },
+    filler: energy => {
+        // filler 配置高很容易停摆 (这个问题可能会在未来妥善解决)
+        if (energy >= 2300) return { carry: 20, move: 10 } // RCL 6, cost 1500
+        if (energy >= 1300) return { carry: 12, move: 6 } // RCL 4, cost 900
+        if (energy >= 800) return { carry: 8, move: 4 } // RCL 3, cost 600
+        if (energy >= 550) return { carry: 4, move: 2 } // RCL 2, cost 300
+        if (energy >= 300) return { carry: 1, move: 1 } // RCL 1, cost 100
         return undefined
     },
     viewer: energy => {
@@ -109,6 +107,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     remoteCarrier: energy => {
+        // NOTE: 需要预留 15 个 part 给 extra
         // if (energy >= 1700) return { work: 1, carry: 21, move: 11 } // RCL 5
         if (energy >= 1400) return { work: 1, carry: 17, move: 9 } // RCL 5
         if (energy >= 950) return { work: 1, carry: 11, move: 6 } // RCL 4
@@ -126,10 +125,25 @@ const getBodyConfigByAuto: {
         if (energy >= 4330) return { tough: 3, ranged_attack: 10, heal: 9, move: 11 } // RCL 7
         return undefined
     },
+    exUpgrader: energy => {
+        if (energy >= 4000) return { work: 30, carry: 10, move: 10} // RCL 7
+        if (energy >= 550) return { work: 3, carry: 2, move: 3} // RCL 2
+        return undefined
+    },
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
     return typeof g === 'string' ? getBodyConfigByAuto[g](e) : g
+}
+
+export function unionBodyConf (a: BodyConfig | undefined, b: BodyConfig | undefined): BodyConfig | undefined {
+    if (!a) return b
+    if (!b) return a
+    const c: BodyConfig = {}
+    BODYPARTS_ALL.forEach(key => {
+        if (a[key] || b[key]) c[key] = ToN(a[key]) + ToN(b[key])
+    })
+    return c
 }
 
 declare global {
@@ -138,14 +152,16 @@ declare global {
         "repairer" |
         "upgrader" |
         "builder" |
-        "carrier" |
+        "collector" |
+        "filler" |
         "viewer" |
         "reserver" |
         "remoteHarvester" |
         "keeperHarvester" |
         "remoteCarrier" |
         "keeperAttacker" |
-        "keeperSingleAttacker"
+        "keeperSingleAttacker" |
+        "exUpgrader"
     type BodyConfig = {
         [key in BodyPartConstant]?: number
     }

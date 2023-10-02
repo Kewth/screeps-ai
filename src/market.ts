@@ -2,6 +2,7 @@ const roomName = 'E26S27'
 export function marketWork() {
     if (!Game.rooms[roomName]) return
     market_pixel()
+    market_energy()
 }
 
 function market_pixel() {
@@ -19,7 +20,7 @@ function market_pixel() {
 }
 
 function market_energy() {
-    const sell_price = 9
+    const sell_price = 10
     const amount = 1000
     if (!Game.rooms[roomName].terminal) return
     if (Game.rooms[roomName].terminal.store[RESOURCE_ENERGY] < amount) return

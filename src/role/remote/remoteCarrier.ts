@@ -1,4 +1,5 @@
-import { logError } from "utils/other";
+import { creepApi } from "creepApi";
+import { ToN, logConsole, logError } from "utils/other";
 
 // 专注于捡 sourceFlag (即外矿开采位) 的资源
 // 只搬到出生房间的 storage (可以在路上 link 捡走)
@@ -9,15 +10,16 @@ declare global {
         containerFlagName: string
         toID?: Id<StructureStorage | StructureLink>
         // TODO: 统计信息并自适应地更新 body
+        spawnRoomEnergyCap?: number
         fullCount?: number
-        totalCount?: number
-        emptyCount?: number
+        freeCount?: number
     }
 }
 
 export const remoteCarrierLogic: CreepLogic = {
     prepare_stage: creep => {
         const data = creep.memory.data as RemoteCarrierData
+        if (data.spawnRoomEnergyCap === undefined) data.spawnRoomEnergyCap = creep.room.energyCapacityAvailable
         // storage 备用
         if (!data.toID && creep.room.storage)
             data.toID = creep.room.storage.id
@@ -32,7 +34,10 @@ export const remoteCarrierLogic: CreepLogic = {
     // source:
     source_stage: creep => {
         const data = creep.memory.data as RemoteCarrierData
-        if (creep.store.getFreeCapacity() <= 0) return true
+        if (creep.store.getFreeCapacity() <= 0) {
+            data.fullCount = data.fullCount ? data.fullCount + 1 : 1
+            return true
+        }
         // 躲敌人 (主要是 source keeper)
         if (creep.hits < creep.hitsMax && creep.goAwayHostileCreeps()) return false
         // 获取沿路或者目的地附近的 dropEnergy
@@ -57,7 +62,10 @@ export const remoteCarrierLogic: CreepLogic = {
         ) as StructureContainer | undefined
         if (!container || container.store[RESOURCE_ENERGY] <= 100) {
             // container 空了，跑路，避免堵塞 (carry 空的时候不能直接转 stage ，否则会来回切换 stage)
-            if (creep.store.getUsedCapacity() > 0) return true
+            if (creep.store.getUsedCapacity() > 0) {
+                data.freeCount = data.freeCount ? data.freeCount + 1 : 1
+                return true
+            }
             const to = data.toID && Game.getObjectById(data.toID)
             to && creep.moveTo(to)
         }
@@ -109,8 +117,20 @@ export const remoteCarrierLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        const data = rawData as RemoteCarrierData
+    death_stage: (memory) => {
+        const data = memory.data as RemoteCarrierData
+        logConsole(`test: ${memory.configName}, FULL ${data.fullCount}, FREE ${data.freeCount}`)
+        if (data.fullCount && data.fullCount > ToN(data.freeCount) * 3 && data.fullCount > 5) {
+            const exBodyConf = creepApi.getExtraBody(memory.configName)
+            if (exBodyConf && ToN(exBodyConf.move) < 5) {
+                logConsole(`${memory.configName} add exBodyConf`)
+                exBodyConf.move = ToN(exBodyConf.move) + 1
+                exBodyConf.carry = ToN(exBodyConf.carry) + 2
+            }
+        }
+    },
+    hangSpawn: (spawnRoom, memData) => {
+        const data = memData as RemoteCarrierData
         const containerFlag = Game.flags[data.containerFlagName]
         if (!containerFlag) return true // 没有旗帜 (?)
         const targetRoom = Game.rooms[containerFlag.pos.roomName]

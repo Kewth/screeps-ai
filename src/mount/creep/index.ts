@@ -13,7 +13,7 @@ export function mountCreep() {
         if (!this.memory.ready) {
             if (!logic.prepare_stage || logic.prepare_stage(this)) {
                 this.memory.ready = true
-                logConsole(`${this.name} is ready in ${this.memory.readyUsedTime} ticks`)
+                // logConsole(`${this.name} is ready in ${this.memory.readyUsedTime} ticks`)
             }
             else {
                 this.updateReadyUsedTime()
@@ -60,8 +60,8 @@ export function mountCreep() {
         if (!this.memory.readyUsedTime || this.memory.readyUsedTime <= 0)
             this.memory.readyUsedTime = 0
         this.memory.readyUsedTime++
-        if (this.memory.readyUsedTime > 150)
-            this.memory.readyUsedTime = 150
+        if (this.memory.readyUsedTime > 200)
+            this.memory.readyUsedTime = 200
     }
 
     // Creep.prototype.goToRoomByFlag = function(flagName: string | undefined) {
@@ -120,6 +120,18 @@ export function mountCreep() {
     //     }
     // }
 
+    Creep.prototype.findEnergySource = function() {
+        if (this.room.storage) return this.room.storage
+        const cache = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
+        if (cache && (cache instanceof Resource || cache.store[RESOURCE_ENERGY] >= 50)) return cache
+        const list = [
+            ...this.room.containers().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
+            ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY)
+        ]
+        const res = this.pos.findClosestByPath(list)
+        this.memory.energySourceID = res?.id
+        return res ? res : undefined
+    }
     Creep.prototype.gainAnyResourceFrom = function(from: Resource | TypeWithStore) {
         if (from instanceof Resource)
             return this.pickup(from)
@@ -135,6 +147,10 @@ export function mountCreep() {
             return ERR_INVALID_TARGET
         return this.withdraw(from, resourceType)
     }
+
+    Creep.prototype.getConfig = function() {
+        return Memory.creepConfigs[this.memory.configName]
+    }
 }
 
 declare global {
@@ -149,7 +165,9 @@ declare global {
         goToRoom(roomName: string): boolean
         atExit(): boolean
         goAwayHostileCreeps(): boolean
+        findEnergySource(): StructureStorage | StructureContainer | Resource | undefined
         gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode
         gainResourceFrom(from: Resource | TypeWithStore, resourceType: ResourceConstant): ScreepsReturnCode
+        getConfig(): CreepConfig
     }
 }

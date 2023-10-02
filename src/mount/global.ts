@@ -48,6 +48,19 @@ const T = {
             }
         })
     },
+    sellEnergy(roomName: string, price: number, amount: number) {
+        if (!roomName) {
+            logConsole(`roomName, price, amount`)
+            return -1
+        }
+        return Game.market.createOrder({
+            type: ORDER_SELL,
+            resourceType: RESOURCE_ENERGY,
+            price: price / 0.95,
+            totalAmount: amount,
+            roomName: roomName
+        })
+    },
     mountRoom() {
         for (const roomName in Memory.rooms) {
             Object.defineProperty(global, roomName, {
@@ -55,6 +68,8 @@ const T = {
             })
         }
         return OK
+    },
+    tmp() {
     },
 }
 

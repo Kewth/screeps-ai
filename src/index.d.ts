@@ -23,6 +23,7 @@ interface CreepLogic {
   prepare_stage?: (creep: Creep) => boolean
   source_stage?: (creep: Creep) => boolean
   target_stage?: (creep: Creep) => boolean
+  death_stage?: (memory: CreepMemory) => void
   hangSpawn?: (spawnRoom: Room, data: CreepData) => boolean
   stopSpawn?: (spawnRoom: Room, data: CreepData) => boolean
 }

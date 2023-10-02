@@ -50,7 +50,8 @@ export function isEvil (obj: {owner: Owner}): boolean {
 }
 
 export function anyStore (obj: TypeWithStore): ResourceConstant | undefined {
-    return _.findKey(obj.store, (v: number) => v > 0) as ResourceConstant | undefined
+    // findLast 优先返回能量以外的高级资源
+    return _.findLastKey(obj.store, (v: number) => v > 0) as ResourceConstant | undefined
 }
 
 // export function makeBody
@@ -102,4 +103,8 @@ export class PrintTable {
         })
         return res
     }
+}
+
+export function ToN(x: number | undefined) {
+    return x ? x : 0
 }

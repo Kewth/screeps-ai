@@ -1,3 +1,4 @@
+import { parseGeneralBodyConf } from "utils/bodyConfig"
 import { calcConfigName, logConsole } from "utils/other"
 
 // 尽量不要让 num > 1 以及绝对不要让保持孵化的 creeps 和可能停止孵化的 creeps 共用 config
@@ -48,12 +49,14 @@ export const creepApi = {
     inc(configName: string): OK | ERR_NOT_FOUND {
         if (!Memory.creepConfigs[configName]) return ERR_NOT_FOUND
         Memory.creepConfigs[configName].num += 1
+        logConsole(`increase CreepConfig: ${configName}`)
         return OK
     },
     dec(configName: string): OK | ERR_NOT_FOUND | ERR_INVALID_TARGET {
         if (!Memory.creepConfigs[configName]) return ERR_NOT_FOUND
         if (Memory.creepConfigs[configName].num <= 0) return ERR_INVALID_TARGET
         Memory.creepConfigs[configName].num -= 1
+        logConsole(`decrease CreepConfig: ${configName}`)
         // 将在 Memory 模块里自动清理 live = 0, num = 0 的 config
         return OK
     },
@@ -61,8 +64,17 @@ export const creepApi = {
         if (!Memory.creepConfigs[configName]) return ERR_NOT_FOUND
         if (Memory.creepConfigs[configName].num <= 0) return ERR_INVALID_TARGET
         Memory.creepConfigs[configName].num = 0
+        logConsole(`remove CreepConfig: ${configName}`)
         // 将在 Memory 模块里自动清理 live = 0, num = 0 的 config
         return OK
+    },
+    getExtraBody(configName: string): BodyConfig | undefined {
+        const config = Memory.creepConfigs[configName]
+        if (config) {
+            if (!config.extraBodyConf) config.extraBodyConf = {}
+            return config.extraBodyConf
+        }
+        return undefined
     },
 
     DEFAULT_PRIORITY: 0,

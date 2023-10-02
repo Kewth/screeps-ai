@@ -1,8 +1,8 @@
 import { creepApi } from "creepApi"
 import { addStat_spawn } from "memory/stats"
 import { getRoleLogic } from "role"
-import { makeBody, parseGeneralBodyConf } from "utils/bodyConfig"
-import { logConsole, logError, newCreepName } from "utils/other"
+import { calcBodyCost, makeBody, parseGeneralBodyConf, unionBodyConf } from "utils/bodyConfig"
+import { ToN, logConsole, logError, newCreepName } from "utils/other"
 
 export function reSpawn(memory: CreepMemory) {
     if (memory.reSpawnAlready) return
@@ -17,9 +17,11 @@ export function reSpawn(memory: CreepMemory) {
     }
     const spawnRoom = Game.rooms[config.spawnRoomName]
     const logic = getRoleLogic[memory.role]
-    if (config.data.onlyOnce || (logic.stopSpawn && logic.stopSpawn(spawnRoom, config.data)))
+    logic.death_stage && logic.death_stage(memory)
+    // 要传 memory.data (creep 处理过的) 而不是 config.data (预定义的)
+    if (config.data.onlyOnce || (logic.stopSpawn && logic.stopSpawn(spawnRoom, memory.data)))
         creepApi.dec(memory.configName)
-    else if (logic.hangSpawn && logic.hangSpawn(spawnRoom, config.data))
+    else if (logic.hangSpawn && logic.hangSpawn(spawnRoom, memory.data))
         spawnRoom && spawnRoom.addHangSpawnTask(memory.configName)
     else
         spawnRoom && spawnRoom.addSpawnTask(memory.configName)
@@ -34,7 +36,7 @@ export function reSpawn(memory: CreepMemory) {
 
 export function mountSpawn() {
     // 去掉 live >= num 以及排序后的第一个孵化任务 (这是不可避免的，因为原则上 num 随时允许修改)
-    Room.prototype.getActiveSpawnConfigName = function() {
+    Room.prototype.getActiveSpawnConfigName = function () {
         if (this.memory.spawnTaskList.length <= 0) return undefined
         this.memory.spawnTaskList.sort((a, b) => Memory.creepConfigs[b].priority - Memory.creepConfigs[a].priority)
         let configName = this.memory.spawnTaskList[0]
@@ -48,7 +50,7 @@ export function mountSpawn() {
         return configName
     }
 
-    Room.prototype.checkHangSpawnTasks = function() {
+    Room.prototype.checkHangSpawnTasks = function () {
         this.memory.hangSpawnTaskList.forEach(configName => {
             const config = Memory.creepConfigs[configName]
             if (config) {
@@ -66,7 +68,7 @@ export function mountSpawn() {
         )
     }
 
-    Room.prototype.work_spawn = function() {
+    Room.prototype.work_spawn = function () {
         if (Game.time % 50 == 0) this.checkHangSpawnTasks()
         const configName = this.getActiveSpawnConfigName()
         const config = configName && Memory.creepConfigs[configName]
@@ -82,7 +84,12 @@ export function mountSpawn() {
             this.addHangSpawnTask(configName)
         }
         else {
-            const bodys = makeBody(bodyConf)
+            const newBodyConf = unionBodyConf(bodyConf, config.extraBodyConf)
+            let bodys = newBodyConf ? makeBody(newBodyConf) : []
+            if (bodys.length <= 0 || bodys.length > 50 || calcBodyCost(bodys) > this.energyCapacityAvailable) {
+                logError('extraBody cannot be applied in spawning', this.name)
+                bodys = makeBody(bodyConf)
+            }
             const res = spawn.spawnCreep(bodys, creepName, {
                 memory: {
                     role: config.role,

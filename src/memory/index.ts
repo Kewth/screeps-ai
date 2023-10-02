@@ -17,6 +17,8 @@ declare global {
         ready?: boolean
         // 是否正在 target stage
         working?: boolean
+        // 缓存 findEnergySource
+        energySourceID?: Id<StructureContainer | Resource>
     }
 }
 
@@ -94,6 +96,7 @@ declare global {
         live: number
         priority: number
         updateLock?: boolean
+        extraBodyConf?: BodyConfig
     }
     interface Memory {
         creepConfigs: { [name: string]: CreepConfig }

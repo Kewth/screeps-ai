@@ -1,9 +1,9 @@
-import { PrintTable, isEnemyOrInvader, isEvil, logConsole, logError, strLim } from "utils/other"
+import { PrintTable, calcConfigName, isEnemyOrInvader, isEvil, logConsole, logError, strLim } from "utils/other"
 import { mountTower } from "./tower"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
 import { creepApi } from "creepApi"
-import { calcBodyCost, makeBody, parseGeneralBodyConf } from "utils/bodyConfig"
+import { calcBodyCost, makeBody, parseGeneralBodyConf, unionBodyConf } from "utils/bodyConfig"
 
 // TODO: 集中式孵化改为分布式
 export function mountRoom() {
@@ -32,15 +32,33 @@ export function mountRoom() {
             if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
                 this.stats(true)
             // 紧急发布 filler 判定
-            if (this.storage && this.storage && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
+            const filConfigName = calcConfigName(this.name, `fil`)
+            if (Memory.creepConfigs[filConfigName] && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
                 this.memory.noFillerTickCount ++
                 if (this.memory.noFillerTickCount >= 100) {
-                    creepApi.add<FillerData>(this.name, 'filler', 'emergencyFILLER',
+                    creepApi.add<FillerData>(this.name, 'filler', `emergencyFILLER`,
                         { carry: 2, move: 1 }, { onlyOnce: true }, 1, creepApi.EMERGENCY_PRIORITY)
                     this.memory.noFillerTickCount = 0
                 }
             } else
                 this.memory.noFillerTickCount = 0
+            // 发布 extraUpgrader 判定
+            const exUpgConfigName = calcConfigName(this.name, 'exUpg')
+            if (!Memory.creepConfigs[exUpgConfigName]) {
+                if (this.storage) {
+                    // 有 storage 判定 storage
+                    if (this.storage.store.getUsedCapacity() >= 600_000)
+                        creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
+                            'exUpgrader', { onlyOnce: true }, 1)
+                }
+                else {
+                    // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
+                    if (_.every(this.containers(), obj => obj.store.getUsedCapacity() >= 1800)) {
+                        creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
+                            'exUpgrader', { onlyOnce: true }, 4)
+                    }
+                }
+            }
             // tower 集中式逻辑
             this.work_tower()
             // link 集中式逻辑
@@ -121,8 +139,8 @@ export function mountRoom() {
         creepApi.add<UpgraderData>(this.name, 'upgrader', `upg`, 'upgrader', {}, 1)
         // 注册 builder
         creepApi.add<BuilderData>(this.name, 'builder', `bui`, 'builder', {}, 1)
-        // 注册 carrier
-        creepApi.add<CarrierData>(this.name, 'carrier', `car`, 'carrier', {}, 1)
+        // 注册 filler
+        creepApi.add<FillerData>(this.name, 'filler', `fil`, 'filler', {}, 1, creepApi.FILLER_PRIORITY)
         return OK
     }
 
@@ -217,9 +235,7 @@ export function mountRoom() {
 
     Room.prototype.registerAdvanced = function() {
         // 注册 collector
-        creepApi.add(this.name, 'collector', `col`, 'carrier', <CollectorData>{}, 1)
-        // 注册 filler
-        creepApi.add(this.name, 'filler', `fil`, 'carrier', <FillerData>{}, 1, creepApi.FILLER_PRIORITY)
+        creepApi.add(this.name, 'collector', `col`, 'collector', <CollectorData>{}, 1)
         return OK
     }
 
@@ -264,7 +280,8 @@ export function mountRoom() {
         for (const configName in Memory.creepConfigs) {
             const config = Memory.creepConfigs[configName]
             if (config.spawnRoomName == this.name) {
-                const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
+                const bodyConf = unionBodyConf(config.extraBodyConf,
+                    parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable))
                 const bodys = bodyConf ? makeBody(bodyConf) : []
                 t.add(configName)
                 t.add(config.role)
@@ -389,13 +406,13 @@ export function mountRoom() {
             this._myConstructionSites = this.find(FIND_MY_CONSTRUCTION_SITES)
         return this._myConstructionSites
     }
-    Room.prototype.anyEnergySource = function() {
-        if (!this._anyEnergySource)
-            this._anyEnergySource = this.storage ||
-                this.containers().find(obj => obj.store[RESOURCE_ENERGY] > 500) ||
-                this.dropResources().find(obj => obj.resourceType == RESOURCE_ENERGY)
-        return this._anyEnergySource
-    }
+    // Room.prototype.anyEnergySource = function() {
+    //     if (!this._anyEnergySource)
+    //         this._anyEnergySource = this.storage ||
+    //             this.containers().find(obj => obj.store[RESOURCE_ENERGY] > 500) ||
+    //             _.max(this.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY), obj => obj.amount)
+    //     return this._anyEnergySource
+    // }
 
     Room.prototype.myController = function() {
         return (this.controller && this.controller.my) ? this.controller : undefined
@@ -476,8 +493,8 @@ declare global {
         _walls: StructureWall[]
         myConstructionSites(): ConstructionSite[]
         _myConstructionSites: ConstructionSite[]
-        anyEnergySource(): StructureStorage | StructureContainer | Resource | undefined
-        _anyEnergySource: StructureStorage | StructureContainer | Resource | undefined
+        // anyEnergySource(): StructureStorage | StructureContainer | Resource | undefined
+        // _anyEnergySource: StructureStorage | StructureContainer | Resource | undefined
 
         // 其他
         myController(): StructureController | undefined

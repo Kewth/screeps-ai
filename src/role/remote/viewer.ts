@@ -17,8 +17,8 @@ export const viewerLogic: CreepLogic = {
         creep.moveTo(new RoomPosition(25, 25, data.targetRoomName))
         return false
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        const data = rawData as ViewerData
+    hangSpawn: (spawnRoom, memData) => {
+        const data = memData as ViewerData
         const targetRoom = Game.rooms[data.targetRoomName]
         if (targetRoom) return true // 已经有视野
         const mem = Memory.rooms[data.targetRoomName]

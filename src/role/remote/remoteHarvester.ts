@@ -83,8 +83,8 @@ export const remoteHarvesterLogic: CreepLogic = {
         creep.build(sites[0])
         return false
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        const data = rawData as RemoteHarvesterData
+    hangSpawn: (spawnRoom, memData) => {
+        const data = memData as RemoteHarvesterData
         const workFlag = Game.flags[data.workFlagName]
         if (!workFlag) return true // 没有旗帜 (?)
         const targetRoom = Game.rooms[workFlag.pos.roomName]

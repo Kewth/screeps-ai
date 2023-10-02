@@ -108,8 +108,8 @@ export const keeperAttackerLogic: CreepLogic = {
         if (!targetFlag) return false
         return stage(creep, targetFlag)
     },
-    hangSpawn: (spawnRoom, rawData) => {
-        const data = rawData as KeeperAttackerData
+    hangSpawn: (spawnRoom, memData) => {
+        const data = memData as KeeperAttackerData
         const guardFlag = Game.flags[data.guardFlagNames[0]]
         if (!guardFlag) return true // 没有旗帜 (?)
         const targetRoom = Game.rooms[guardFlag.pos.roomName]

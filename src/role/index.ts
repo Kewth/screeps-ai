@@ -1,5 +1,5 @@
 import { collectorLogic } from "./advanced/collector";
-import { fillerLogic } from "./advanced/filler";
+import { fillerLogic } from "./base/filler";
 import { repairerLogic } from "./base/repairer";
 import { harvesterLogic } from "./base/harvester";
 import { upgraderLogic } from "./base/upgrader";
@@ -10,7 +10,6 @@ import { reserverLogic } from "./remote/reserver";
 import { viewerLogic } from "./remote/viewer";
 import { builderLogic } from "./base/builder";
 import { pioneerLogic } from "./remote/pioneer";
-import { carrierLogic } from "./base/carrier";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
@@ -19,7 +18,6 @@ export const getRoleLogic: {
     repairer: repairerLogic,
     upgrader: upgraderLogic,
     builder: builderLogic,
-    carrier: carrierLogic,
     collector: collectorLogic,
     filler: fillerLogic,
     viewer: viewerLogic,
@@ -43,7 +41,6 @@ declare global {
         "repairer" |
         "upgrader" |
         "builder" |
-        "carrier" |
         "collector" |
         "filler" |
         "viewer" |
@@ -58,7 +55,6 @@ declare global {
         RepairerData |
         UpgraderData |
         BuilderData |
-        CarrierData |
         CollectorData |
         FillerData |
         ViewerData |

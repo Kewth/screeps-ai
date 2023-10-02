@@ -73,8 +73,8 @@ export const pioneerLogic: CreepLogic = {
             return false
         }
     },
-    stopSpawn: (spawnRoom, rawData) => {
-        const data = rawData as PioneerData
+    stopSpawn: (spawnRoom, memData) => {
+        const data = memData as PioneerData
         return data.jobDone ? true : false
     },
 }
