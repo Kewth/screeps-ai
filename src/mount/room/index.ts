@@ -239,6 +239,17 @@ export function mountRoom() {
         return OK
     }
 
+    Room.prototype.registerMiner = function() {
+        // 注册 miner
+        const extractor = this.myExtractor()
+        if (extractor) {
+            const mineral = extractor.pos.lookFor(LOOK_MINERALS)[0]
+            if (mineral)
+                creepApi.add<HarvesterData>(this.name, 'harvester', `min`, 'miner', { sourceID: mineral.id }, 1)
+        }
+        return OK
+    }
+
     Room.prototype.makeViewer = function(roomName: string, tough: number = 0) {
         let move = tough
         if (move <= 0) move = 1
@@ -344,6 +355,13 @@ export function mountRoom() {
                 obj => obj.structureType == STRUCTURE_RAMPART
             ) as StructureRampart[]
         return this._myRamparts
+    }
+    Room.prototype.myExtractor = function() {
+        if (!this._myExtractor)
+            this._myExtractor = (this.find(FIND_MY_STRUCTURES, {
+                filter: obj => obj.structureType == STRUCTURE_EXTRACTOR
+            }) as StructureExtractor[])[0]
+        return this._myExtractor
     }
     Room.prototype.sources = function() {
         if (!this._sources)
@@ -451,6 +469,7 @@ declare global {
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
         registerAdvanced(): OK
+        registerMiner(): OK
         registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK
@@ -473,6 +492,10 @@ declare global {
         _myRamparts: StructureRampart[]
         sources(): Source[]
         _sources: Source[]
+        // minerals(): Mineral[]
+        // _minerals: Mineral[]
+        myExtractor(): StructureExtractor | undefined
+        _myExtractor: StructureExtractor | undefined
         myCreeps(): Creep[]
         _myCreeps: Creep[]
         hostileCreeps(): Creep[]

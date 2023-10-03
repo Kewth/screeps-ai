@@ -69,6 +69,9 @@ const T = {
         }
         return OK
     },
+    capi() {
+        return creepApi
+    },
     tmp() {
     },
 }

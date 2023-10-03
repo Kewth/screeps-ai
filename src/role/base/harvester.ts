@@ -1,8 +1,8 @@
-import {  logError } from "utils/other"
+import {  anyStore, logError } from "utils/other"
 
 declare global {
     interface HarvesterData extends EmptyData {
-        sourceID: Id<Source>
+        sourceID: Id<Source | Mineral>
         containerIDs?: Id<StructureContainer>[]
         workPosX?: number
         workPosY?: number
@@ -50,9 +50,14 @@ export const harvesterLogic: CreepLogic = {
             const container = data.containerIDs.map(id => Game.getObjectById(id)).find(
                 obj => obj && obj.store.getFreeCapacity() > 0
             )
-            if (container) creep.transfer(container, RESOURCE_ENERGY)
+            if (container) {
+                creep.transfer(container, anyStore(creep) || RESOURCE_ENERGY)
+                source && creep.harvest(source)
+            }
+            // container 爆满的话没必要挖
         }
-        if (source) creep.harvest(source)
+        else
+            source && creep.harvest(source)
         return false
     },
 }

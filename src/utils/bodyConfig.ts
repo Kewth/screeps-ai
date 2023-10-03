@@ -130,6 +130,10 @@ const getBodyConfigByAuto: {
         if (energy >= 550) return { work: 3, carry: 2, move: 3} // RCL 2
         return undefined
     },
+    miner: energy => {
+        if (energy >= 4000) return { work: 35, carry: 1, move: 9 } // RCL 7
+        return undefined
+    },
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
@@ -161,7 +165,8 @@ declare global {
         "remoteCarrier" |
         "keeperAttacker" |
         "keeperSingleAttacker" |
-        "exUpgrader"
+        "exUpgrader" |
+        "miner"
     type BodyConfig = {
         [key in BodyPartConstant]?: number
     }
