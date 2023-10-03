@@ -4,7 +4,7 @@ import { anyStore, hasResource, logError } from "utils/other"
 
 declare global {
     interface CollectorData extends EmptyData {
-        fromID?: Id<Resource | Tombstone | StructureContainer | StructureLink>
+        fromID?: Id<Resource | Tombstone | StructureContainer>
     }
 }
 
@@ -15,7 +15,7 @@ function calcFrom (creep: Creep) {
         creep.pos.findClosestByPath(creep.room.dropResources(), {
             filter: obj => obj.amount >= 50
         }) ||
-        [creep.room.centralLink()].find(obj => obj && obj.store[RESOURCE_ENERGY] > 0) ||
+        // [creep.room.centralLink()].find(obj => obj && obj.store[RESOURCE_ENERGY] > 0) ||
         creep.pos.findClosestByPath(creep.room.tombstones(), {
             filter: obj => obj.store.getUsedCapacity() - obj.store[RESOURCE_ENERGY] > 0 ||
                 obj.store[RESOURCE_ENERGY] >= 50

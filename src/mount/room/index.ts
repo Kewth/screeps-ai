@@ -47,7 +47,10 @@ export function mountRoom() {
             if (!Memory.creepConfigs[exUpgConfigName]) {
                 if (this.storage) {
                     // 有 storage 判定 storage
-                    if (this.storage.store.getUsedCapacity() >= 600_000)
+                    if (this.storage.store.getUsedCapacity() >= 800_000)
+                        creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
+                            'exUpgrader', { onlyOnce: true }, 2)
+                    else if (this.storage.store.getUsedCapacity() >= 600_000)
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                             'exUpgrader', { onlyOnce: true }, 1)
                 }
@@ -235,7 +238,9 @@ export function mountRoom() {
 
     Room.prototype.registerAdvanced = function() {
         // 注册 collector
-        creepApi.add(this.name, 'collector', `col`, 'collector', <CollectorData>{}, 1)
+        creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1)
+        // 注册 linkTransfer
+        creepApi.add<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer', {}, 1)
         return OK
     }
 

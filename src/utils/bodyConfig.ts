@@ -81,7 +81,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     collector: energy => {
-        if (energy >= 900) return { carry: 12, move: 6 } // RCL 4
+        if (energy >= 900) return { carry: 8, move: 6 } // RCL 4
         return undefined
     },
     filler: energy => {
@@ -134,6 +134,10 @@ const getBodyConfigByAuto: {
         if (energy >= 4000) return { work: 35, carry: 1, move: 9 } // RCL 7
         return undefined
     },
+    linkTransfer: energy => {
+        if (energy >= 2300) return { carry: 8, move: 4 } // RCL 6
+        return undefined
+    }
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
@@ -166,7 +170,8 @@ declare global {
         "keeperAttacker" |
         "keeperSingleAttacker" |
         "exUpgrader" |
-        "miner"
+        "miner" |
+        "linkTransfer"
     type BodyConfig = {
         [key in BodyPartConstant]?: number
     }

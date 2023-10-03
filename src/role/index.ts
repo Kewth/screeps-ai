@@ -10,6 +10,7 @@ import { reserverLogic } from "./remote/reserver";
 import { viewerLogic } from "./remote/viewer";
 import { builderLogic } from "./base/builder";
 import { pioneerLogic } from "./remote/pioneer";
+import { linkTransferLogic } from "./advanced/linkTransfer";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
@@ -26,6 +27,7 @@ export const getRoleLogic: {
     remoteCarrier: remoteCarrierLogic,
     keeperAttacker: keeperAttackerLogic,
     pioneer: pioneerLogic,
+    linkTransfer: linkTransferLogic,
 }
 
 // 用于类型检查 (TODO: find a better solution)
@@ -48,7 +50,8 @@ declare global {
         "remoteHarvester" |
         "remoteCarrier" |
         "keeperAttacker" |
-        "pioneer"
+        "pioneer" |
+        "linkTransfer"
     type CreepData =
         EmptyData |
         HarvesterData |
@@ -62,5 +65,6 @@ declare global {
         RemoteHarvesterData |
         RemoteCarrierData |
         KeeperAttackerData |
-        PioneerData
+        PioneerData |
+        LinkTransferData
 }
