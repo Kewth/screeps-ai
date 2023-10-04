@@ -20,16 +20,16 @@ function market_pixel() {
 }
 
 function market_energy() {
-    const sell_price = 10
-    const amount = 10_000
-    if (!Game.rooms[roomName].terminal) return
-    if (Game.rooms[roomName].terminal.store[RESOURCE_ENERGY] < amount) return
-    Game.market.getAllOrders({ type: ORDER_BUY, resourceType: RESOURCE_ENERGY }).forEach(buy => {
-        if (buy.price > sell_price && buy.roomName && buy.remainingAmount >= amount) {
-            const excost = Game.market.calcTransactionCost(amount, buy.roomName, roomName)
-            if (buy.price * amount / (amount + excost) > sell_price) {
-                Game.market.deal(buy.id, amount, roomName)
-            }
-        }
-    })
+    // const sell_price = 10
+    // const amount = 10_000
+    // if (!Game.rooms[roomName].terminal) return
+    // if (Game.rooms[roomName].terminal.store[RESOURCE_ENERGY] < amount) return
+    // Game.market.getAllOrders({ type: ORDER_BUY, resourceType: RESOURCE_ENERGY }).forEach(buy => {
+    //     if (buy.price > sell_price && buy.roomName && buy.remainingAmount >= amount) {
+    //         const excost = Game.market.calcTransactionCost(amount, buy.roomName, roomName)
+    //         if (buy.price * amount / (amount + excost) > sell_price) {
+    //             Game.market.deal(buy.id, amount, roomName)
+    //         }
+    //     }
+    // })
 }

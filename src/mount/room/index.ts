@@ -257,7 +257,8 @@ export function mountRoom() {
         // 注册 linkTransfer
         const link = this.myCentralLink()
         if (link) {
-            creepApi.tryAdd<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer', {}, 1)
+            creepApi.tryAdd<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer',
+                {}, 1, creepApi.LINKTRANSFER_PRIORITY)
         }
     }
 

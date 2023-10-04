@@ -82,7 +82,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     collector: energy => {
-        if (energy >= 900) return { carry: 8, move: 6 } // RCL 4
+        if (energy >= 1200) return { carry: 16, move: 8 } // RCL 4
         return undefined
     },
     filler: energy => {
