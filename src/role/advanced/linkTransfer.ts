@@ -11,7 +11,7 @@ export const linkTransferLogic: CreepLogic = {
     source_stage: creep => {
         const data = creep.memory.data as LinkTransferData
         // 拿到就搬走
-        if (creep.store.getFreeCapacity() > 0) return true
+        if (creep.store.getUsedCapacity() > 0) return true
         const link = creep.room.centralLink()
         if (link && link.store[RESOURCE_ENERGY] > 0) {
             const res = creep.withdraw(link, RESOURCE_ENERGY)

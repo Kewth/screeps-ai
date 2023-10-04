@@ -46,6 +46,21 @@ export const creepApi = {
             logConsole(`add new CreepConfig: ${configName}`)
         return OK
     },
+    // 不覆盖已有配置
+    tryAdd<dataType extends CreepData>(
+        spawnRoomName: string, role: RoleConstant, name: string, gBodyConf: GeneralBodyConfig,
+        data: dataType, num: number, priority?: number):
+        ERR_NAME_EXISTS | OK | ERR_NOT_OWNER | ERR_BUSY
+    {
+        const configName = calcConfigName(spawnRoomName, name)
+        const update = Memory.creepConfigs[configName] ? true : false
+        if (update) return ERR_NAME_EXISTS
+        return this.add<dataType>(spawnRoomName, role, name, gBodyConf, data, num, priority)
+    },
+    has(spawnRoomName: string, name: string) {
+        const configName = calcConfigName(spawnRoomName, name)
+        return Memory.creepConfigs[configName] !== undefined
+    },
     inc(configName: string): OK | ERR_NOT_FOUND {
         if (!Memory.creepConfigs[configName]) return ERR_NOT_FOUND
         Memory.creepConfigs[configName].num += 1

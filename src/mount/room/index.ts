@@ -31,6 +31,9 @@ export function mountRoom() {
             const statInterval = 3000
             if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
                 this.stats(true)
+            // 自动注册
+            if (Game.time % 1000 <= 0)
+                this.autoRegisterCreeps()
             // 紧急发布 filler 判定
             const filConfigName = calcConfigName(this.name, `fil`)
             if (Memory.creepConfigs[filConfigName] && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
@@ -236,23 +239,25 @@ export function mountRoom() {
         return OK
     }
 
-    Room.prototype.registerAdvanced = function() {
+    Room.prototype.autoRegisterCreeps = function() {
+        const ctrl = this.myController()
+        if (!ctrl) return
         // 注册 collector
-        creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1)
-        // 注册 linkTransfer
-        creepApi.add<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer', {}, 1)
-        return OK
-    }
-
-    Room.prototype.registerMiner = function() {
+        if (this.storage) {
+            creepApi.tryAdd<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1)
+        }
         // 注册 miner
         const extractor = this.myExtractor()
         if (extractor) {
             const mineral = extractor.pos.lookFor(LOOK_MINERALS)[0]
             if (mineral)
-                creepApi.add<HarvesterData>(this.name, 'harvester', `min`, 'miner', { sourceID: mineral.id }, 1)
+                creepApi.tryAdd<HarvesterData>(this.name, 'harvester', `min`, 'miner', { sourceID: mineral.id }, 1)
         }
-        return OK
+        // 注册 linkTransfer
+        const link = this.centralLink()
+        if (link) {
+            creepApi.tryAdd<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer', {}, 1)
+        }
     }
 
     Room.prototype.makeViewer = function(roomName: string, tough: number = 0) {
@@ -473,8 +478,7 @@ declare global {
         registerBase(): OK
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
-        registerAdvanced(): OK
-        registerMiner(): OK
+        autoRegisterCreeps(): void
         registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK

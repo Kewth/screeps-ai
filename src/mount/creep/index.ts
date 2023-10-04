@@ -121,7 +121,8 @@ export function mountCreep() {
     // }
 
     Creep.prototype.findEnergySource = function() {
-        if (this.room.storage) return this.room.storage
+        if (this.room.storage && this.room.storage.store[RESOURCE_ENERGY] >= 5_000)
+            return this.room.storage
         const cache = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
         if (cache && (cache instanceof Resource || cache.store[RESOURCE_ENERGY] >= 50)) return cache
         const list = [

@@ -52,13 +52,14 @@ const getBodyConfigByAuto: {
     [name in AutoBodyConstant]: (energy: number) => BodyConfig | undefined
 } = {
     harvester: energy => {
+        // 5 个 work 刚好满效率采矿
         if (energy >= 600) return { work: 5, carry: 1, move: 1 } // RCL 3
         if (energy >= 500) return { work: 4, carry: 1, move: 1 } // RCL 2
         if (energy >= 250) return { work: 2, carry: 1, move: 1 } // RCL 1
         return undefined
     },
     repairer: energy => {
-        if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
+        if (energy >= 1000) return { work: 5, carry: 5, move: 5 } // RCL 4
         if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
         if (energy >= 400) return { work: 2, carry: 2, move: 2 } // RCL 2
         if (energy >= 250) return { work: 1, carry: 1, move: 2 } // RCL 1
@@ -74,8 +75,8 @@ const getBodyConfigByAuto: {
     builder: energy => {
         if (energy >= 3000) return { work: 15, carry: 15, move: 15 } // RCL 7
         if (energy >= 1700) return { work: 10, carry: 6, move: 8 } // RCL 5
-        if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
-        if (energy >= 650) return { work: 4, carry: 2, move: 3 } // RCL 3
+        if (energy >= 1300) return { work: 8, carry: 4, move: 6 } // RCL 4
+        if (energy >= 800) return { work: 5, carry: 2, move: 4 } // RCL 3
         if (energy >= 400) return { work: 2, carry: 2, move: 2 } // RCL 2
         if (energy >= 250) return { work: 1, carry: 1, move: 2 } // RCL 1
         return undefined
@@ -135,7 +136,8 @@ const getBodyConfigByAuto: {
         return undefined
     },
     linkTransfer: energy => {
-        if (energy >= 2300) return { carry: 8, move: 4 } // RCL 6
+        // 注意 link 的容量只有 800
+        if (energy >= 2300) return { carry: 8, move: 4 } // RCL 6, cost 600
         return undefined
     }
 }
