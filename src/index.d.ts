@@ -28,7 +28,7 @@ interface CreepLogic {
   stopSpawn?: (spawnRoom: Room, data: CreepData) => boolean
 }
 
-type TypeWithStore = Tombstone | StructureStorage | StructureContainer | StructureLink | Creep
+type TypeWithStore = Tombstone | StructureStorage | StructureContainer | StructureLink | Creep | Ruin
 
 // type energySourceType = Tombstone | StructureStorage | StructureContainer | StructureLink
 // type energyTargetType = StructureStorage | StructureSpawn | StructureExtension | StructureTower

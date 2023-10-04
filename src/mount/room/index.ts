@@ -17,6 +17,7 @@ export function mountRoom() {
         const invaderCores = this.find(FIND_STRUCTURES, {
             filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 0
         })
+        // 自动注册
         if (invaders.length > 0 || invaderCores.length > 0) {
             // 设置 invaderTime
             if (!this.memory.invaderTime)
@@ -415,6 +416,11 @@ export function mountRoom() {
             ) as StructureContainer[]
         return this._containers
     }
+    Room.prototype.ruins = function() {
+        if (!this._ruins)
+            this._ruins = this.find(FIND_RUINS)
+        return this._ruins
+    }
     Room.prototype.roads = function() {
         if (!this._roads)
             this._roads = this.structures().filter(
@@ -519,6 +525,8 @@ declare global {
         _tombstones: Tombstone[]
         containers(): StructureContainer[]
         _containers: StructureContainer[]
+        ruins(): Ruin[]
+        _ruins: Ruin[]
         roads(): StructureRoad[]
         _roads: StructureRoad[]
         walls(): StructureWall[]
