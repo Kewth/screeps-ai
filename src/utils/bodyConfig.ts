@@ -66,7 +66,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     upgrader: energy => {
-        if (energy >= 850) return { work: 5, carry: 3, move: 4 } // RCL 4
+        if (energy >= 1300) return { work: 8, carry: 4, move: 6 } // RCL 4
         if (energy >= 800) return { work: 5, carry: 2, move: 4 } // RCL 3
         if (energy >= 550) return { work: 3, carry: 2, move: 3 } // RCL 2
         if (energy >= 250) return { work: 1, carry: 1, move: 2 } // RCL 1
