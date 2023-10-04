@@ -123,15 +123,15 @@ export function mountCreep() {
     Creep.prototype.findEnergySource = function() {
         if (this.room.storage && this.room.storage.store[RESOURCE_ENERGY] >= 5_000)
             return this.room.storage
-        const cache = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
-        if (cache && (cache instanceof Resource || cache.store[RESOURCE_ENERGY] >= 50)) return cache
+        const enSource = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
+        if (enSource && (enSource instanceof Resource || enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
         const list = [
-            ...this.room.containers().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
+            ...this.room.commonContainers().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
             ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY)
         ]
         const res = this.pos.findClosestByPath(list)
         this.memory.energySourceID = res?.id
-        return res ? res : undefined
+        return res || undefined
     }
     Creep.prototype.gainAnyResourceFrom = function(from: Resource | TypeWithStore) {
         if (from instanceof Resource)

@@ -14,7 +14,7 @@ function calcTo (creep: Creep) {
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to || (!(to instanceof ConstructionSite) && to.hits >= to.hitsMax)) to =
         creep.pos.findClosestByPath(
-            [...creep.room.containers(), ...creep.room.roads()], {
+            [...creep.room.allContainers(), ...creep.room.roads()], {
                 filter: obj => obj.hits < obj.hitsMax * 0.9
         })
         ||

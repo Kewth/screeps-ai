@@ -54,7 +54,10 @@ export const harvesterLogic: CreepLogic = {
                 creep.transfer(container, anyStore(creep) || RESOURCE_ENERGY)
                 source && creep.harvest(source)
             }
-            // container 爆满的话没必要挖
+            else {
+                // container 爆满的话没必要挖
+                creep.say('摸鱼...')
+            }
         }
         else
             source && creep.harvest(source)

@@ -12,7 +12,7 @@ export const linkTransferLogic: CreepLogic = {
         const data = creep.memory.data as LinkTransferData
         // 拿到就搬走
         if (creep.store.getUsedCapacity() > 0) return true
-        const link = creep.room.centralLink()
+        const link = creep.room.myCentralLink()
         if (link && link.store[RESOURCE_ENERGY] > 0) {
             const res = creep.withdraw(link, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
@@ -33,7 +33,7 @@ export const linkTransferLogic: CreepLogic = {
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(storage)
             else if (res == OK) { // 下一步是拿资源
-                const link = creep.room.centralLink()
+                const link = creep.room.myCentralLink()
                 link && creep.moveTo(link)
             }
             else

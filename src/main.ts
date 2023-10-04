@@ -1,3 +1,4 @@
+import { checkCache } from "cache";
 import { marketWork } from "market";
 import { checkMemory } from "memory";
 import { statsMemory } from "memory/stats";
@@ -11,6 +12,7 @@ mountAll()
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
+  checkCache()
   checkMemory()
 
   // Automatically delete memory of missing creeps

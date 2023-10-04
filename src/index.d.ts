@@ -10,6 +10,7 @@
 // Syntax for adding proprties to `global` (ex "global.log")
 declare namespace NodeJS {
   interface Global {
+    cache: Cache
     log: any
     mainRoomName: string
   }

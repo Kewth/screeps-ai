@@ -60,7 +60,7 @@ export function mountRoom() {
                 }
                 else {
                     // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
-                    if (_.every(this.containers(), obj => obj.store.getUsedCapacity() >= 1800)) {
+                    if (_.every(this.commonContainers(), obj => obj.store.getUsedCapacity() >= 1800)) {
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                             'exUpgrader', { onlyOnce: true }, 4)
                     }
@@ -255,7 +255,7 @@ export function mountRoom() {
                 creepApi.tryAdd<HarvesterData>(this.name, 'harvester', `min`, 'miner', { sourceID: mineral.id }, 1)
         }
         // 注册 linkTransfer
-        const link = this.centralLink()
+        const link = this.myCentralLink()
         if (link) {
             creepApi.tryAdd<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer', {}, 1)
         }
@@ -409,12 +409,12 @@ export function mountRoom() {
             this._tombstones = this.find(FIND_TOMBSTONES)
         return this._tombstones
     }
-    Room.prototype.containers = function() {
-        if (!this._containers)
-            this._containers = this.structures().filter(
+    Room.prototype.allContainers = function() {
+        if (!this._allContainers)
+            this._allContainers = this.structures().filter(
                 obj => obj.structureType == STRUCTURE_CONTAINER
             ) as StructureContainer[]
-        return this._containers
+        return this._allContainers
     }
     Room.prototype.ruins = function() {
         if (!this._ruins)
@@ -440,27 +440,49 @@ export function mountRoom() {
             this._myConstructionSites = this.find(FIND_MY_CONSTRUCTION_SITES)
         return this._myConstructionSites
     }
-    // Room.prototype.anyEnergySource = function() {
-    //     if (!this._anyEnergySource)
-    //         this._anyEnergySource = this.storage ||
-    //             this.containers().find(obj => obj.store[RESOURCE_ENERGY] > 500) ||
-    //             _.max(this.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY), obj => obj.amount)
-    //     return this._anyEnergySource
-    // }
 
     Room.prototype.myController = function() {
         return (this.controller && this.controller.my) ? this.controller : undefined
     }
-
-    Room.prototype.centralLink = function() {
-        if (!this.memory.centeralLinkID || Game.time % 1000 > 0) {
-            if (!this.storage) return undefined
-            const centralLink = this.storage.pos.findClosestByPath(this.myLinks())
-            if (!centralLink) return undefined
-            this.memory.centeralLinkID = centralLink.id
-        }
-        return Game.getObjectById(this.memory.centeralLinkID) || undefined
+    Room.prototype.upgradeContainers = function() {
+        const ctrl = this.myController()
+        return ctrl ? ctrl.pos.findInRange(this.allContainers(), 3) : []
     }
+    Room.prototype.commonContainers = function() {
+        return this.allContainers().filter(obj => _.every(this.upgradeContainers(), u => obj.id != u.id))
+    }
+
+    Room.prototype.myCentralLink = function() {
+        if (!this.memory.myCenteralLinkID || Game.time % 1000 > 0) {
+            this.memory.myCenteralLinkID = undefined
+            if (this.storage) {
+                const link = this.storage.pos.findClosestByRange(this.myLinks())
+                if (link && link.pos.inRangeTo(this.storage, 3))
+                    this.memory.myCenteralLinkID = link.id
+            }
+        }
+        return (this.memory.myCenteralLinkID && Game.getObjectById(this.memory.myCenteralLinkID)) || undefined
+    }
+    Room.prototype.myUpgradeLink = function() {
+        if (!this.memory.myUpgradeLinkID || Game.time % 1000 > 0) {
+            this.memory.myUpgradeLinkID = undefined
+            const ctrl = this.myController()
+            if (ctrl) {
+                const link = ctrl.pos.findClosestByRange(this.myLinks())
+                if (link && link.pos.inRangeTo(ctrl, 3))
+                    this.memory.myUpgradeLinkID = link.id
+            }
+        }
+        return (this.memory.myUpgradeLinkID && Game.getObjectById(this.memory.myUpgradeLinkID)) || undefined
+    }
+
+    Object.defineProperty(Room.prototype, 'cache', {
+        get: function (this: Room): RoomCache {
+            if (!global.cache.rooms[this.name])
+                global.cache.rooms[this.name] = {}
+            return global.cache.rooms[this.name]
+        },
+    })
 }
 
 declare global {
@@ -490,6 +512,7 @@ declare global {
         makeReserver(roomName: string, tough?: number): OK
         showCreeps(): void
 
+        // TODO: 实现 cache 缓存
         // tick 级别缓存
         structures(): AnyStructure[]
         _structures: AnyStructure[]
@@ -523,8 +546,8 @@ declare global {
         _dropResources: Resource[]
         tombstones(): Tombstone[]
         _tombstones: Tombstone[]
-        containers(): StructureContainer[]
-        _containers: StructureContainer[]
+        allContainers(): StructureContainer[]
+        _allContainers: StructureContainer[]
         ruins(): Ruin[]
         _ruins: Ruin[]
         roads(): StructureRoad[]
@@ -538,8 +561,13 @@ declare global {
 
         // 其他
         myController(): StructureController | undefined
+        upgradeContainers(): StructureContainer[]
+        commonContainers(): StructureContainer[]
 
         // memory 级别缓存
-        centralLink(): StructureLink | undefined
+        myCentralLink(): StructureLink | undefined
+        myUpgradeLink(): StructureLink | undefined
+
+        cache: RoomCache
     }
 }

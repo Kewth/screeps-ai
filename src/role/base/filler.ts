@@ -4,7 +4,7 @@ import { ToN, logError } from "utils/other"
 
 declare global {
     interface FillerData extends EmptyData {
-        toID?: Id<StructureSpawn | StructureExtension | StructureTower | Creep | StructureTerminal>
+        toID?: Id<StructureSpawn | StructureExtension | StructureTower | StructureTerminal | StructureContainer>
         toPosX?: number
         toPosY?: number
     }
@@ -18,15 +18,14 @@ function calcTo (creep: Creep, banID?: string) {
         creep.pos.findClosestByPath(creep.room.myTowers(), {
             filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
         }) ||
+        creep.pos.findClosestByPath(creep.room.upgradeContainers(), {
+            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500
+        }) ||
         creep.pos.findClosestByPath(creep.room.mySpawns(), {
             filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         }) ||
         creep.pos.findClosestByPath(creep.room.myExtensions(), {
             filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        }) ||
-        creep.pos.findClosestByPath(creep.room.myCreeps(), {
-            filter: obj => obj.id != banID && obj.memory.role == 'upgrader' &&
-                obj.store.getFreeCapacity(RESOURCE_ENERGY) > obj.store.getCapacity() * 0.5
         }) ||
         [creep.room.terminal].find(obj => obj && obj.store[RESOURCE_ENERGY] < 50_000)
     data.toID = to?.id

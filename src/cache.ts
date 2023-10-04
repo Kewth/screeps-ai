@@ -1,7 +1,13 @@
-interface Cache {
+declare global {
+    interface Cache {
+        rooms: { [name: string]: RoomCache }
+    }
+    interface RoomCache {
+    }
 }
-var Cache: Cache
 
 export function checkCache() {
-    if (!Cache) Cache = {}
+    if (!global.cache) global.cache = {
+        rooms: {}
+    }
 }

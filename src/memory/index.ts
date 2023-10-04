@@ -61,7 +61,9 @@ declare global {
         // 集中要刷的墙
         // focusWallID?: Id<StructureWall>
         // 中央 link
-        centeralLinkID?: Id<StructureLink>
+        myCenteralLinkID?: Id<StructureLink>
+        // 升级 link
+        myUpgradeLinkID?: Id<StructureLink>
         // filler 停摆的时间
         noFillerTickCount: number
         // 需要 claim

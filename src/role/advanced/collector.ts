@@ -20,7 +20,7 @@ function calcFrom (creep: Creep) {
             filter: obj => obj.store.getUsedCapacity() - obj.store[RESOURCE_ENERGY] > 0 ||
                 obj.store[RESOURCE_ENERGY] >= 50
         }) ||
-        creep.pos.findClosestByPath(creep.room.containers(), {
+        creep.pos.findClosestByPath(creep.room.commonContainers(), {
             filter: obj => obj.store.getUsedCapacity() >= 500
         }) ||
         creep.pos.findClosestByPath(creep.room.ruins(), {
