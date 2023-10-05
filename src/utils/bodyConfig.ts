@@ -139,6 +139,10 @@ const getBodyConfigByAuto: {
         // 注意 link 的容量只有 800
         if (energy >= 2300) return { carry: 8, move: 4 } // RCL 6, cost 600
         return undefined
+    },
+    claimKeeper: energy => {
+        if (energy >= 350) return { work: 1, carry: 2, move: 3 } // RCL 2
+        return undefined
     }
 }
 
@@ -173,7 +177,8 @@ declare global {
         "keeperSingleAttacker" |
         "exUpgrader" |
         "miner" |
-        "linkTransfer"
+        "linkTransfer" |
+        "claimKeeper"
     type BodyConfig = {
         [key in BodyPartConstant]?: number
     }

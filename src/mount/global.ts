@@ -16,7 +16,7 @@ const T = {
     reSP(creepName: string) {
         if (Memory.creeps[creepName]) {
             reSpawn(Memory.creeps[creepName])
-        return OK
+            return OK
         }
         else {
             return ERR_NOT_FOUND

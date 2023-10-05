@@ -11,6 +11,8 @@ import { viewerLogic } from "./remote/viewer";
 import { builderLogic } from "./base/builder";
 import { pioneerLogic } from "./remote/pioneer";
 import { linkTransferLogic } from "./advanced/linkTransfer";
+import { coreAttackerLogic } from "./remote/coreAttacker";
+import { claimKeeperLogic } from "./remote/claimKeeper";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
@@ -28,6 +30,8 @@ export const getRoleLogic: {
     keeperAttacker: keeperAttackerLogic,
     pioneer: pioneerLogic,
     linkTransfer: linkTransferLogic,
+    coreAttacker: coreAttackerLogic,
+    claimKeeper: claimKeeperLogic,
 }
 
 // 用于类型检查 (TODO: find a better solution)
@@ -51,7 +55,9 @@ declare global {
         "remoteCarrier" |
         "keeperAttacker" |
         "pioneer" |
-        "linkTransfer"
+        "linkTransfer" |
+        "coreAttacker" |
+        "claimKeeper"
     type CreepData =
         EmptyData |
         HarvesterData |
@@ -66,5 +72,7 @@ declare global {
         RemoteCarrierData |
         KeeperAttackerData |
         PioneerData |
-        LinkTransferData
+        LinkTransferData |
+        CoreAttackerData |
+        ClaimKeeperData
 }

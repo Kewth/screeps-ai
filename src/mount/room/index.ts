@@ -151,6 +151,13 @@ export function mountRoom() {
         return OK
     }
 
+    Room.prototype.registerClaimKeeper = function(roomName: string) {
+        creepApi.add<ClaimKeeperData>(this.name, 'claimKeeper', `${roomName}_cKep`, 'claimKeeper', {
+            targetRoomName: roomName
+        }, 1)
+        return OK
+    }
+
     Room.prototype.registerRemoteSourceRoom = function(roomName: string) {
         // 注册 viewer
         creepApi.add<ViewerData>(this.name, 'viewer', `${roomName}_vie`, 'viewer', {
@@ -283,6 +290,17 @@ export function mountRoom() {
             tough: tough,
             move: move,
             claim: claim,
+        }, {
+            onlyOnce: true,
+            targetRoomName: roomName,
+        }, 1)
+        return OK
+    }
+
+    Room.prototype.makeCoreAttacker = function(roomName: string, attack: number = 25) {
+        creepApi.add<CoreAttackerData>(this.name, 'coreAttacker', `${roomName}_cAtt`, {
+            move: attack,
+            attack: attack,
         }, {
             onlyOnce: true,
             targetRoomName: roomName,
@@ -442,6 +460,15 @@ export function mountRoom() {
         return this._myConstructionSites
     }
 
+    Room.prototype.invaderCore = function() {
+        const _cache = this.cache.invaderCoreID && Game.getObjectById(this.cache.invaderCoreID)
+        if (_cache) return _cache
+        const list = this.structures().filter(obj => obj.structureType == STRUCTURE_INVADER_CORE) as StructureInvaderCore[]
+        const res = list[0] // may be undefined
+        this.cache.invaderCoreID = res?.id
+        return res
+    }
+
     Room.prototype.myController = function() {
         return (this.controller && this.controller.my) ? this.controller : undefined
     }
@@ -505,12 +532,14 @@ declare global {
 
         // 终端控制 creeps
         registerBase(): OK
+        registerClaimKeeper(roomName: string): OK
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
         autoRegisterCreeps(): void
         registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK
+        makeCoreAttacker(roomName: string, attack?: number): OK
         showCreeps(): void
 
         // TODO: 实现 cache 缓存
@@ -559,6 +588,9 @@ declare global {
         _myConstructionSites: ConstructionSite[]
         // anyEnergySource(): StructureStorage | StructureContainer | Resource | undefined
         // _anyEnergySource: StructureStorage | StructureContainer | Resource | undefined
+
+        // cache 级别缓存
+        invaderCore(): StructureInvaderCore | undefined
 
         // 其他
         myController(): StructureController | undefined

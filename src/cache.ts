@@ -3,6 +3,7 @@ declare global {
         rooms: { [name: string]: RoomCache }
     }
     interface RoomCache {
+        invaderCoreID?: Id<StructureInvaderCore>
     }
 }
 
