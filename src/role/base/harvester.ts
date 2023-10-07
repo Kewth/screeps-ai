@@ -4,6 +4,7 @@ declare global {
     interface HarvesterData extends EmptyData {
         sourceID: Id<Source | Mineral>
         containerIDs?: Id<StructureContainer>[]
+        linkIDs?: Id<StructureLink>[]
         workPosX?: number
         workPosY?: number
     }
@@ -33,19 +34,33 @@ export const harvesterLogic: CreepLogic = {
         }
         // 如果有 carry 就可以 transfer/harvester
         const carryBody = creep.body.find(obj => obj.type == CARRY)
-        if (carryBody)
+        if (carryBody) {
             data.containerIDs = (creep.pos.findInRange(FIND_STRUCTURES, 1, {
                 filter: obj => obj.structureType == STRUCTURE_CONTAINER
             }) as StructureContainer[]).map(obj => obj.id)
-        else
-            data.containerIDs = []
+            data.linkIDs = (creep.pos.findInRange(FIND_STRUCTURES, 1, {
+                filter: obj => obj.structureType == STRUCTURE_LINK
+            }) as StructureLink[]).map(obj => obj.id)
+        }
         return true
     },
     // source: 不停开采并输送至 container (直接开采能量掉进 container)
     source_stage: creep => {
         const data = creep.memory.data as HarvesterData
-        const source = Game.getObjectById<Source>(data.sourceID)
+        const source = Game.getObjectById(data.sourceID)
         // transfer/harvest 可以在同一 tick 完成
+        // 优先放 link
+        if (data.linkIDs && source instanceof Source) {
+            const link = data.linkIDs.map(id => Game.getObjectById(id)).find(
+                obj => obj && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+            )
+            if (link) {
+                creep.transfer(link, RESOURCE_ENERGY)
+                source && creep.harvest(source)
+                return false
+            }
+        }
+        // 其次放 container 等其他人来拿
         if (data.containerIDs) {
             const container = data.containerIDs.map(id => Game.getObjectById(id)).find(
                 obj => obj && obj.store.getFreeCapacity() > 0
@@ -55,10 +70,11 @@ export const harvesterLogic: CreepLogic = {
                 source && creep.harvest(source)
             }
             else {
-                // container 爆满的话没必要挖
+                // container 爆满的话没必要挖了
                 creep.say('摸鱼...')
             }
         }
+        // 初期，挖出来 drop 给别人捡
         else
             source && creep.harvest(source)
         return false

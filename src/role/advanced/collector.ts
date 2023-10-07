@@ -40,6 +40,7 @@ export const collectorLogic: CreepLogic = {
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(from)
             else if (res == OK) { // 预测下一步转到 storage
+                delete data.fromID // 可能拿完了自己没满，需要重新搜索目标，否则可能会一直等待该容器
                 creep.room.storage && creep.moveTo(creep.room.storage)
             }
             else

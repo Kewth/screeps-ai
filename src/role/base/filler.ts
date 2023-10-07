@@ -47,12 +47,12 @@ export const fillerLogic: CreepLogic = {
             const res = creep.gainResourceFrom(from, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(from)
-            else if (res == OK) { // 断定下一步是送能量
+            else if (res == OK) { // 预测下一步是送能量
                 const to = calcTo(creep)
                 to && creep.moveTo(to)
             }
             else
-                logError("cannot get energy from storage", creep.name)
+                logError("cannot get energy", creep.name)
         }
         return false
     },
