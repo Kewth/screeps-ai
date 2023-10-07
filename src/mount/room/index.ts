@@ -252,20 +252,21 @@ export function mountRoom() {
         if (!ctrl) return
         // 注册 collector
         if (this.storage) {
-            creepApi.tryAdd<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1)
+            creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1)
         }
         // 注册 miner
         const extractor = this.myExtractor()
         if (extractor) {
             const mineral = extractor.pos.lookFor(LOOK_MINERALS)[0]
             if (mineral)
-                creepApi.tryAdd<HarvesterData>(this.name, 'harvester', `min`, 'miner', { sourceID: mineral.id }, 1)
+                creepApi.add<HarvesterData>(this.name, 'harvester', `min`, 'miner', { sourceID: mineral.id }, 1)
         }
         // 注册 linkTransfer
         const link = this.myCentralLink()
-        if (link) {
-            creepApi.tryAdd<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer',
-                {}, 1, creepApi.LINKTRANSFER_PRIORITY)
+        const transFlag = Game.flags[`${this.name}_linkTrans`]
+        if (link && transFlag) {
+            creepApi.add<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer',
+                { standFlagName: transFlag.name }, 1, creepApi.LINKTRANSFER_PRIORITY)
         }
     }
 

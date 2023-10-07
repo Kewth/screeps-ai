@@ -1,15 +1,26 @@
 import { logError } from "utils/other"
 
-// 专职把中央 link 的能量搬到 storage
+// 专职把中央 link 的能量搬到 storage ，有固定的站位
 
 declare global {
     interface LinkTransferData extends EmptyData {
+        standFlagName: string
     }
 }
 
 export const linkTransferLogic: CreepLogic = {
-    source_stage: creep => {
+    prepare_stage: creep => {
         const data = creep.memory.data as LinkTransferData
+        const standFlag = Game.flags[data.standFlagName]
+        if (standFlag) {
+            if (!creep.pos.isEqualTo(standFlag)) {
+                creep.moveTo(standFlag)
+                return false
+            }
+        }
+        return true
+    },
+    source_stage: creep => {
         // 拿到就搬走
         if (creep.store.getUsedCapacity() > 0) return true
         const link = creep.room.myCentralLink()
