@@ -137,7 +137,7 @@ const getBodyConfigByAuto: {
     },
     linkTransfer: energy => {
         // 注意 link 的容量只有 800
-        if (energy >= 2300) return { carry: 8, move: 4 } // RCL 6, cost 600
+        if (energy >= 1800) return { carry: 8, move: 4 } // RCL 5, cost 600
         return undefined
     },
     claimKeeper: energy => {
