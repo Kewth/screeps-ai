@@ -46,6 +46,11 @@ declare global {
         RCLprogress: number
         WallHits: number
     }
+    interface ResourceTask {
+        resourceType: ResourceConstant
+        amount: number
+        targetID: Id<StructureTerminal>
+    }
     interface RoomMemory {
         spawnTaskList: string[]
         hangSpawnTaskList: string[]
@@ -67,7 +72,9 @@ declare global {
         // filler 停摆的时间
         noFillerTickCount: number
         // 需要 claim
-        needClaim: boolean
+        needClaim?: boolean
+        // 资源搬运任务
+        resourceTaskList: ResourceTask[]
     }
 }
 
@@ -80,6 +87,8 @@ function checkRoomMemory() {
             Game.rooms[name].memory.hangSpawnTaskList = []
         if (!Game.rooms[name].memory.noFillerTickCount)
             Game.rooms[name].memory.noFillerTickCount = 0
+        if (!Game.rooms[name].memory.resourceTaskList)
+            Game.rooms[name].memory.resourceTaskList = []
         // if (!Game.rooms[name].memory.transferSourceTaskList)
         //     Game.rooms[name].memory.transferSourceTaskList = []
         // if (!Game.rooms[name].memory.transferTargetTaskList)

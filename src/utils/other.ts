@@ -105,6 +105,6 @@ export class PrintTable {
     }
 }
 
-export function ToN(x: number | undefined) {
+export function ToN(x: number | undefined | null) {
     return x ? x : 0
 }

@@ -48,14 +48,14 @@ const T = {
             }
         })
     },
-    sellEnergy(roomName: string, price: number, amount: number) {
+    sell(roomName: string, resourceType: ResourceConstant, price: number, amount: number) {
         if (!roomName) {
-            logConsole(`roomName, price, amount`)
+            logConsole(`roomName, resourceType, price, amount`)
             return -1
         }
         return Game.market.createOrder({
             type: ORDER_SELL,
-            resourceType: RESOURCE_ENERGY,
+            resourceType: resourceType,
             price: price / 0.95,
             totalAmount: amount,
             roomName: roomName

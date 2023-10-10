@@ -128,6 +128,7 @@ const getBodyConfigByAuto: {
     },
     exUpgrader: energy => {
         if (energy >= 4000) return { work: 30, carry: 10, move: 10} // RCL 7
+        if (energy >= 1600) return { work: 12, carry: 4, move: 4 } // RCL 5
         if (energy >= 550) return { work: 3, carry: 2, move: 3} // RCL 2
         return undefined
     },

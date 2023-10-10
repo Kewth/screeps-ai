@@ -343,6 +343,25 @@ export function mountRoom() {
         logConsole(str)
     }
 
+    Room.prototype.addResourceTask = function(task: ResourceTask) {
+        if (task.resourceType === undefined) return ERR_INVALID_ARGS
+        if (task.amount === undefined) return ERR_INVALID_ARGS
+        if (task.targetID === undefined) return ERR_INVALID_ARGS
+        this.memory.resourceTaskList.push(task)
+        return OK
+    }
+    Room.prototype.getResourceTask = function() {
+        while (this.memory.resourceTaskList.length > 0) {
+            const task = this.memory.resourceTaskList[0]
+            const target = Game.getObjectById(task.targetID)
+            if (target && target.store[task.resourceType] < task.amount)
+                return task
+            this.memory.resourceTaskList.shift()
+        }
+        return undefined
+    }
+
+
     Room.prototype.structures = function() {
         if (!this._structures)
             this._structures =  this.find(FIND_STRUCTURES)
@@ -511,6 +530,7 @@ export function mountRoom() {
                 global.cache.rooms[this.name] = {}
             return global.cache.rooms[this.name]
         },
+        configurable: true,
     })
 }
 
@@ -542,6 +562,10 @@ declare global {
         makeReserver(roomName: string, tough?: number): OK
         makeCoreAttacker(roomName: string, attack?: number): OK
         showCreeps(): void
+
+        // resource tasks
+        addResourceTask(task: ResourceTask): OK | ERR_INVALID_ARGS
+        getResourceTask(): ResourceTask | undefined
 
         // TODO: 实现 cache 缓存
         // tick 级别缓存
