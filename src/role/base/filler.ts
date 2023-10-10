@@ -15,17 +15,17 @@ function calcTo (creep: Creep, banID?: string) {
     let to = data.toID && (data.toID != banID) && Game.getObjectById(data.toID)
     if (!to || to.store.getFreeCapacity(RESOURCE_ENERGY) <= 0 ||
         to.pos.x != data.toPosX || to.pos.y != data.toPosY) to =
-        creep.pos.findClosestByPath(creep.room.myTowers(), {
-            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
-        }) ||
-        creep.pos.findClosestByPath(creep.room.upgradeContainers(), {
-            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500
-        }) ||
         creep.pos.findClosestByPath(creep.room.mySpawns(), {
             filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         }) ||
         creep.pos.findClosestByPath(creep.room.myExtensions(), {
             filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+        }) ||
+        creep.pos.findClosestByPath(creep.room.myTowers(), {
+            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
+        }) ||
+        creep.pos.findClosestByPath(creep.room.upgradeContainers(), {
+            filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500
         }) ||
         [creep.room.terminal].find(obj => obj && obj.store[RESOURCE_ENERGY] < 50_000)
     data.toID = to?.id

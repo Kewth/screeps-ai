@@ -86,8 +86,8 @@ const getBodyConfigByAuto: {
         return undefined
     },
     filler: energy => {
-        // filler 配置高很容易停摆 (这个问题可能会在未来妥善解决)
         if (energy >= 2300) return { carry: 20, move: 10 } // RCL 6, cost 1500
+        if (energy >= 1800) return { carry: 16, move: 8 } // RCL 5, cost 1200
         if (energy >= 1300) return { carry: 12, move: 6 } // RCL 4, cost 900
         if (energy >= 800) return { carry: 8, move: 4 } // RCL 3, cost 600
         if (energy >= 550) return { carry: 4, move: 2 } // RCL 2, cost 300
