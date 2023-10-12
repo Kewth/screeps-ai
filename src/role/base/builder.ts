@@ -13,10 +13,11 @@ function calcTo (creep: Creep) {
     const data = creep.memory.data as BuilderData
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to || (!(to instanceof ConstructionSite) && to.hits >= to.hitsMax)) to =
-        creep.pos.findClosestByPath(creep.room.myConstructionSites()) ||
-        creep.pos.findClosestByPath(creep.room.walls(), {
-            filter: obj => obj.hits < obj.hitsMax * 0.9
-        })
+        // 综合距离和进度选择工地
+        _.min(creep.room.myConstructionSites(), obj => (obj.progressTotal - obj.progress) + creep.pos.getRangeTo(obj) * 100)
+        // creep.pos.findClosestByPath(creep.room.myConstructionSites())
+        ||
+        _.min([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)
     data.toID = to?.id
     return to
 }

@@ -136,6 +136,7 @@ const getBodyConfigByAuto: {
     },
     miner: energy => {
         if (energy >= 4000) return { work: 35, carry: 1, move: 9 } // RCL 7
+        if (energy >= 2200) return { work: 19, carry: 1, move: 5 } // RCL 6
         return undefined
     },
     linkTransfer: energy => {
