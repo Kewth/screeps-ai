@@ -40,12 +40,6 @@ function checkFlagMemory() {
 
 /* ===== ROOM ===== */
 declare global {
-    interface RoomStat {
-        time: number
-        storageEnergy: number
-        RCLprogress: number
-        WallHits: number
-    }
     interface ResourceTask {
         resourceType: ResourceConstant
         amount: number
@@ -58,9 +52,6 @@ declare global {
         // energyTargetLocks: { [id: Id<energyTargetType>]: number }
         // transferSourceTaskList: TransferSourceTask[]
         // transferTargetTaskList: TransferTargetTask[]
-        // 统计量
-        nowStat?: RoomStat
-        lastStat?: RoomStat
         // 遭到入侵的时间
         invaderTime?: number
         // 集中要刷的墙

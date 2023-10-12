@@ -16,19 +16,19 @@ function calcTask (creep: Creep, next?: boolean) {
     var type: ResourceConstant | undefined = data.resourceType
     // 这个 store.getCapacity() 接口太傻逼了
     if (!to || !data.resourceType || to.store[data.resourceType] >= to.store.getCapacity(RESOURCE_ENERGY)) {
-        // 紧急 filler 只负责填孵化
-        if (data.onlyOnce) {
+        to = undefined
+        // 有孵化任务优先填充
+        if (creep.room.getActiveSpawnConfigName() !== undefined) {
             to =
-                creep.pos.findClosestByPath(creep.room.mySpawns(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                }) ||
                 creep.pos.findClosestByPath(creep.room.myExtensions(), {
                     filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                }) ||
+                creep.pos.findClosestByPath(creep.room.mySpawns(), {
+                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
                 })
-            type = RESOURCE_ENERGY
         }
-        else {
-            // 日常任务
+        // 正常顺序
+        if (!to) {
             to =
                 creep.pos.findClosestByPath(creep.room.upgradeContainers(), {
                     filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500
@@ -43,15 +43,15 @@ function calcTask (creep: Creep, next?: boolean) {
                     filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
                 }) ||
                 [creep.room.terminal].find(obj => obj && obj.store[RESOURCE_ENERGY] < 50_000)
-            if (to)
-                type = RESOURCE_ENERGY
-            // 特殊任务
-            else {
-                const roomTask = creep.room.getResourceTask()
-                if (roomTask) {
-                    to = Game.getObjectById(roomTask.targetID)
-                    type = roomTask.resourceType
-                }
+        }
+        if (to)
+            type = RESOURCE_ENERGY
+        // 特殊任务
+        else {
+            const roomTask = creep.room.getResourceTask()
+            if (roomTask) {
+                to = Game.getObjectById(roomTask.targetID)
+                type = roomTask.resourceType
             }
         }
     }

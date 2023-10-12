@@ -127,8 +127,10 @@ const getBodyConfigByAuto: {
         return undefined
     },
     exUpgrader: energy => {
-        if (energy >= 4000) return { work: 30, carry: 10, move: 10} // RCL 7
-        if (energy >= 1600) return { work: 12, carry: 4, move: 4 } // RCL 5
+        // move : work = 1 : 4 即可，正常情况只会空着走路
+        if (energy >= 3850) return { work: 32, carry: 5, move: 8} // RCL 7
+        if (energy >= 2300) return { work: 20, carry: 1, move: 5 } // RCL 6
+        if (energy >= 1550) return { work: 12, carry: 4, move: 3 } // RCL 5
         if (energy >= 550) return { work: 3, carry: 2, move: 3} // RCL 2
         return undefined
     },

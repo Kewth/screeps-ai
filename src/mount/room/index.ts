@@ -29,9 +29,9 @@ export function mountRoom() {
         }
         if (this.controller?.my) {
             // 检查统计
-            const statInterval = 3000
-            if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
-                this.stats(true)
+            // const statInterval = 3000
+            // if (!this.memory.nowStat || Game.time >= this.memory.nowStat.time + statInterval)
+                // this.stats(true)
             // 自动注册
             if (Game.time % 1000 <= 0)
                 this.autoRegisterCreeps()
@@ -75,37 +75,37 @@ export function mountRoom() {
         }
     }
 
-    Room.prototype.stats = function(store: boolean) {
-        // 统计
-        const storageEnergy = this.storage ?
-            this.storage.store.getUsedCapacity(RESOURCE_ENERGY) :
-            0
-        const RCLprogress = this.controller ?
-            this.controller.progress :
-            0
-        const WallHits = _.sum(this.walls(), obj => obj.hits) + _.sum(this.myRamparts(), obj => obj.hits)
-        // 输出
-        const stat = this.memory.lastStat ? this.memory.lastStat : this.memory.nowStat
-        if (stat) {
-            const interval = Game.time - stat.time
-            logConsole(
-                `${this.name}-stats(${interval} ticks):` +
-                ` storage/T=${(storageEnergy - stat.storageEnergy) / interval}` +
-                ` upgrade/T=${(RCLprogress - stat.RCLprogress) / interval}` +
-                ` wall/T=${(WallHits - stat.WallHits) / 100 / interval}`
-            )
-        }
-        // 存储
-        if (store) {
-            this.memory.lastStat = this.memory.nowStat
-            this.memory.nowStat = {
-                time: Game.time,
-                storageEnergy: storageEnergy,
-                RCLprogress: RCLprogress,
-                WallHits: WallHits,
-            }
-        }
-    }
+    // Room.prototype.stats = function(store: boolean) {
+    //     // 统计
+    //     const storageEnergy = this.storage ?
+    //         this.storage.store.getUsedCapacity(RESOURCE_ENERGY) :
+    //         0
+    //     const RCLprogress = this.controller ?
+    //         this.controller.progress :
+    //         0
+    //     const WallHits = _.sum(this.walls(), obj => obj.hits) + _.sum(this.myRamparts(), obj => obj.hits)
+    //     // 输出
+    //     const stat = this.memory.lastStat ? this.memory.lastStat : this.memory.nowStat
+    //     if (stat) {
+    //         const interval = Game.time - stat.time
+    //         logConsole(
+    //             `${this.name}-stats(${interval} ticks):` +
+    //             ` storage/T=${(storageEnergy - stat.storageEnergy) / interval}` +
+    //             ` upgrade/T=${(RCLprogress - stat.RCLprogress) / interval}` +
+    //             ` wall/T=${(WallHits - stat.WallHits) / 100 / interval}`
+    //         )
+    //     }
+    //     // 存储
+    //     if (store) {
+    //         this.memory.lastStat = this.memory.nowStat
+    //         this.memory.nowStat = {
+    //             time: Game.time,
+    //             storageEnergy: storageEnergy,
+    //             RCLprogress: RCLprogress,
+    //             WallHits: WallHits,
+    //         }
+    //     }
+    // }
 
     Room.prototype.addSpawnTask = function(configName: string) {
         if (this.memory.spawnTaskList.includes(configName)) return ERR_NAME_EXISTS
@@ -541,7 +541,7 @@ declare global {
         work_spawn(): void
         work_link(): void
         // getFocusWall(): StructureWall | undefined
-        stats(store: boolean): void
+        // stats(store: boolean): void
         // work_spawnCreep(): boolean
 
         addHangSpawnTask(configName: string): OK | ERR_NAME_EXISTS | ERR_INVALID_ARGS

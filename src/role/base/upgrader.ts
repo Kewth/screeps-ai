@@ -37,7 +37,12 @@ export const upgraderLogic: CreepLogic = {
             const res = creep.upgradeController(to)
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(to)
-            else if (res == OK) { // 预测下一步不变
+            else if (res == OK) {
+                // withdraw / upgrade
+                if (creep.store[RESOURCE_ENERGY] < 50) {
+                    const from = calcFrom(creep)
+                    from && creep.gainResourceFrom(from, RESOURCE_ENERGY)
+                }
             }
             else
                 logError("cannot upgrade", creep.name)
