@@ -21,34 +21,40 @@ export const linkTransferLogic: CreepLogic = {
         return true
     },
     source_stage: creep => {
+        // const data = creep.memory.data as LinkTransferData
         // 拿到就搬走
         if (creep.store.getUsedCapacity() > 0) return true
-        const link = creep.room.myCentralLink()
-        if (link && link.store[RESOURCE_ENERGY] > 0) {
-            const res = creep.withdraw(link, RESOURCE_ENERGY)
+        const upgradeLink = creep.room.myUpgradeLink()
+        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200
+        const from = reverse ? creep.room.storage : creep.room.myCentralLink()
+        const to = reverse ? creep.room.myCentralLink() : creep.room.storage
+        if (from && from.store[RESOURCE_ENERGY] > 0) {
+            const res = creep.withdraw(from, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
-                creep.moveTo(link)
-            else if (res == OK) { // 下一步转到 storage
-                creep.room.storage && creep.moveTo(creep.room.storage)
+                creep.moveTo(from)
+            else if (res == OK) {
+                to && creep.moveTo(to)
             }
             else
-                logError(`cannot get energy from link: ${res}`, creep.name)
+                logError(`cannot get energy: ${res}`, creep.name)
         }
         return false
     },
     target_stage: creep => {
         if (creep.store.getUsedCapacity() <= 0) return true
-        const storage = creep.room.storage
-        if (storage) {
-            const res = creep.transfer(storage, RESOURCE_ENERGY)
+        const upgradeLink = creep.room.myUpgradeLink()
+        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200
+        const from = reverse ? creep.room.storage : creep.room.myCentralLink()
+        const to = reverse ? creep.room.myCentralLink() : creep.room.storage
+        if (to) {
+            const res = creep.transfer(to, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
-                creep.moveTo(storage)
+                creep.moveTo(to)
             else if (res == OK) { // 下一步是拿资源
-                const link = creep.room.myCentralLink()
-                link && creep.moveTo(link)
+                from && creep.moveTo(from)
             }
             else
-                logError(`cannot send energy to storage: ${res}`, creep.name)
+                logError(`cannot send energy: ${res}`, creep.name)
         }
         return false
     }

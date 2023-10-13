@@ -47,7 +47,7 @@ export const pioneerLogic: CreepLogic = {
             else if (res == OK) {
             }
             else
-                logError("cannot harvester", creep.name)
+                logError(`cannot harvester: ${res}`, creep.name)
         }
         return false
     },

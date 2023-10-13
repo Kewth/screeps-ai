@@ -227,7 +227,7 @@ export function mountRoom() {
 
     Room.prototype.registerNewRoom = function(roomName: string, pioneerClaim: number,
         pioneerTough: number, pioneerHeal: number) {
-        // 注册 pioneer
+        // 注册 pioneer (带 claim 的话至少需要 RCL 6)
         const spawnFlag = Game.flags[`${roomName}_spawn`]
         if (pioneerClaim === undefined) return OK
         if (pioneerTough === undefined) return OK
@@ -236,10 +236,10 @@ export function mountRoom() {
             creepApi.add<PioneerData>(this.name, 'pioneer', `${roomName}_pio`, {
                 tough: pioneerTough,
                 heal: pioneerHeal,
-                work: 8,
-                carry: 8,
+                work: 6,
+                carry: 6,
                 claim: pioneerClaim,
-                move: pioneerTough + pioneerHeal + 8 + 8 + pioneerClaim,
+                move: pioneerTough + pioneerHeal + 6 + 6 + pioneerClaim,
             }, {
                 spawnFlagName: spawnFlag.name
             }, 1)
