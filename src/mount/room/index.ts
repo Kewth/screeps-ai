@@ -243,6 +243,7 @@ export function mountRoom() {
             }, {
                 spawnFlagName: spawnFlag.name
             }, 1)
+            logConsole('注册成功，请手动指定 container 的工地')
         }
         return OK
     }

@@ -14,7 +14,7 @@ function calcTo (creep: Creep) {
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to || (!(to instanceof ConstructionSite) && to.hits >= to.hitsMax)) to =
         // 综合距离和进度选择工地
-        _.min(creep.room.myConstructionSites(), obj => (obj.progressTotal - obj.progress) + creep.pos.getRangeTo(obj) * 100)
+        _.min(creep.room.myConstructionSites(), obj => (obj.progressTotal - obj.progress) + creep.pos.getRangeTo(obj) * 500)
         // creep.pos.findClosestByPath(creep.room.myConstructionSites())
         ||
         _.min([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)

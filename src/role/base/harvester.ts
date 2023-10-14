@@ -61,7 +61,7 @@ export const harvesterLogic: CreepLogic = {
             }
         }
         // 其次放 container 等其他人来拿
-        if (data.containerIDs) {
+        if (data.containerIDs && data.containerIDs.length > 0) {
             const container = data.containerIDs.map(id => Game.getObjectById(id)).find(
                 obj => obj && obj.store.getFreeCapacity() > 0
             )
