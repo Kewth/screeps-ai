@@ -1,5 +1,5 @@
 import { creepApi } from "creepApi";
-import { ToN, logConsole, logError } from "utils/other";
+import { ToN, logConsole, logError, myMin } from "utils/other";
 
 // 专注于捡 sourceFlag (即外矿开采位) 的资源
 // 只搬到出生房间的 storage (可以在路上 link 捡走)
@@ -95,9 +95,9 @@ export const remoteCarrierLogic: CreepLogic = {
             busy = true
         }
         // 看到工地建一下 (继续保持移动: remoteCarrier work 很少，所以停下来建造非常影响搬运效率)
-        const sites = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)
-        if (!busy && sites.length > 0) {
-            creep.build(_.min(sites, obj => obj.progressTotal - obj.progress))
+        const site = myMin(creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3), obj => obj.progressTotal - obj.progress)
+        if (!busy && site) {
+            creep.build(site)
             busy = true
         }
         // 移动/传输

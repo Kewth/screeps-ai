@@ -1,3 +1,5 @@
+import { myMax, myMin } from "utils/other"
+
 const roomName = 'E26S27'
 export function marketWork() {
     if (!Game.rooms[roomName]) return
@@ -9,11 +11,11 @@ function market_pixel() {
     // const std_price = 35000
     const sell_price = 40000
     const buy_price = 30000
-    const buy = _.max(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
+    const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
     if (buy && buy.price >= sell_price) {
         Game.market.deal(buy.id, 1)
     }
-    const sell = _.min(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
+    const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
     if (sell && sell.price <= buy_price) {
         Game.market.deal(sell.id, 1)
     }

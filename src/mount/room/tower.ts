@@ -1,4 +1,4 @@
-import { isEnemyOrInvader, isEvil } from "utils/other"
+import { isEnemyOrInvader, isEvil, myMin } from "utils/other"
 
 export function mountTower() {
     Room.prototype.work_tower = function() {
@@ -8,8 +8,8 @@ export function mountTower() {
         // 集中攻击
         const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
         if (enemys.length > 0) {
-            const enemy = _.min(enemys, e => e.hits)
-            towers.forEach(tower => tower.attack(enemy))
+            const enemy = myMin(enemys, e => e.hits)
+            enemy && towers.forEach(tower => tower.attack(enemy))
             return
         }
         // 维修

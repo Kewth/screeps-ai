@@ -91,10 +91,13 @@ export class PrintTable {
         this.table.push([])
     }
     toString() {
-        const colNum = _.max(this.table, lis => lis.length).length
+        const colNum = myMax(this.table, lis => lis.length)?.length
+        if (colNum === undefined) return undefined
         let colLims: number[] = []
-        for (let i = 0; i < colNum; i ++)
-            colLims.push(_.max(this.table, lis => lis[i]?.length)[i].length + 3)
+        for (let i = 0; i < colNum; i ++) {
+            const row = myMax(this.table, lis => lis[i]?.length)
+            row && colLims.push(row[i].length + 3)
+        }
         let res = ''
         this.table.forEach(lis => {
             for (let i = 0; i < lis.length; i++)
@@ -107,4 +110,13 @@ export class PrintTable {
 
 export function ToN(x: number | undefined | null) {
     return x ? x : 0
+}
+
+export function myMin<T> (list: T[], func: (obj: T) => any): T | undefined {
+    const res = _.min(list, func)
+    return res === Infinity ? undefined : res
+}
+export function myMax<T> (list: T[], func: (obj: T) => any): T | undefined {
+    const res = _.max(list, func)
+    return res === -Infinity ? undefined : res
 }

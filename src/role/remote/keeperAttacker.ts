@@ -1,6 +1,6 @@
 // 专杀 source keeper ，对其他敌对 creep 也有一定作用
 
-import { logError } from "utils/other"
+import { logError, myMax } from "utils/other"
 
 declare global {
     interface KeeperAttackerData extends EmptyData {
@@ -59,8 +59,9 @@ function stage(creep: Creep, flag: Flag): boolean {
         const friends = creep.pos.findInRange(FIND_MY_CREEPS, 1, {
             filter: obj => obj.memory.role == creep.memory.role && obj.hits < obj.hitsMax
         })
-        if (friends.length > 0)
-            creep.heal(_.max(friends, obj => obj.hitsMax - obj.hits))
+        const friend_toHeal = myMax(friends, obj => obj.hitsMax - obj.hits)
+        if (friend_toHeal)
+            creep.heal(friend_toHeal)
         // 移动到受伤友军
         else {
             const dis = safe ? 5 : 3

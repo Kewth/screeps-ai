@@ -1,11 +1,11 @@
 import { spawn } from "child_process"
-import { logError } from "utils/other"
+import { logConsole, logError, myMin } from "utils/other"
 
 // 修建筑，修完了跑去刷会墙
 
 declare global {
     interface BuilderData extends EmptyData {
-        toID?: Id<StructureWall | ConstructionSite>
+        toID?: Id<StructureWall | StructureRampart | ConstructionSite>
     }
 }
 
@@ -14,10 +14,10 @@ function calcTo (creep: Creep) {
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to || (!(to instanceof ConstructionSite) && to.hits >= to.hitsMax)) to =
         // 综合距离和进度选择工地
-        _.min(creep.room.myConstructionSites(), obj => (obj.progressTotal - obj.progress) + creep.pos.getRangeTo(obj) * 500)
+        myMin(creep.room.myConstructionSites(), obj => (obj.progressTotal - obj.progress) + creep.pos.getRangeTo(obj) * 500)
         // creep.pos.findClosestByPath(creep.room.myConstructionSites())
         ||
-        _.min([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)
+        myMin([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)
     data.toID = to?.id
     return to
 }
@@ -51,7 +51,7 @@ export const builderLogic: CreepLogic = {
             else if (res == OK) { // 预测下一步不变
             }
             else
-                logError("cannot build/repair", creep.name)
+                logError(`cannot build/repair: ${res}`, creep.name)
         }
         return false
     },

@@ -1,4 +1,4 @@
-import { logError } from "utils/other"
+import { logError, myMin } from "utils/other"
 
 // 修建筑 > 建工地 > 刷墙
 
@@ -20,7 +20,7 @@ function calcTo (creep: Creep) {
         ||
         creep.pos.findClosestByPath(creep.room.myConstructionSites())
         ||
-        _.min([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)
+        myMin([...creep.room.walls(), ...creep.room.myRamparts()], obj => obj.hits)
     data.toID = to?.id
     return to
 }
