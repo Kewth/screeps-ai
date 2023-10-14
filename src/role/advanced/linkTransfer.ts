@@ -1,3 +1,4 @@
+import { ClientRequest } from "http"
 import { logError } from "utils/other"
 
 // 专职把中央 link 的能量搬到 storage ，有固定的站位
@@ -25,9 +26,11 @@ export const linkTransferLogic: CreepLogic = {
         // 拿到就搬走
         if (creep.store.getUsedCapacity() > 0) return true
         const upgradeLink = creep.room.myUpgradeLink()
-        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200
-        const from = reverse ? creep.room.storage : creep.room.myCentralLink()
-        const to = reverse ? creep.room.myCentralLink() : creep.room.storage
+        const centralLink = creep.room.myCentralLink()
+        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200 &&
+            centralLink !== undefined && centralLink.cooldown <= 0
+        const from = reverse ? creep.room.storage : centralLink
+        const to = reverse ? centralLink : creep.room.storage
         if (from && from.store[RESOURCE_ENERGY] > 0) {
             const res = creep.withdraw(from, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
@@ -43,9 +46,11 @@ export const linkTransferLogic: CreepLogic = {
     target_stage: creep => {
         if (creep.store.getUsedCapacity() <= 0) return true
         const upgradeLink = creep.room.myUpgradeLink()
-        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200
-        const from = reverse ? creep.room.storage : creep.room.myCentralLink()
-        const to = reverse ? creep.room.myCentralLink() : creep.room.storage
+        const centralLink = creep.room.myCentralLink()
+        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200 &&
+            centralLink !== undefined && centralLink.cooldown <= 0
+        const from = reverse ? creep.room.storage : centralLink
+        const to = reverse ? centralLink : creep.room.storage
         if (to) {
             const res = creep.transfer(to, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)

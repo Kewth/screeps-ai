@@ -13,6 +13,7 @@ import { pioneerLogic } from "./remote/pioneer";
 import { linkTransferLogic } from "./advanced/linkTransfer";
 import { coreAttackerLogic } from "./remote/coreAttacker";
 import { claimKeeperLogic } from "./remote/claimKeeper";
+import { remoteHelperLogic } from "./remote/remoteHelper";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
@@ -32,6 +33,7 @@ export const getRoleLogic: {
     linkTransfer: linkTransferLogic,
     coreAttacker: coreAttackerLogic,
     claimKeeper: claimKeeperLogic,
+    remoteHelper: remoteHelperLogic,
 }
 
 // 用于类型检查 (TODO: find a better solution)
@@ -57,7 +59,8 @@ declare global {
         "pioneer" |
         "linkTransfer" |
         "coreAttacker" |
-        "claimKeeper"
+        "claimKeeper" |
+        "remoteHelper"
     type CreepData =
         EmptyData |
         HarvesterData |
@@ -74,5 +77,6 @@ declare global {
         PioneerData |
         LinkTransferData |
         CoreAttackerData |
-        ClaimKeeperData
+        ClaimKeeperData |
+        RemoteHelperData
 }

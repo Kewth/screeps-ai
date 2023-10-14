@@ -310,6 +310,15 @@ export function mountRoom() {
         return OK
     }
 
+    Room.prototype.makeHelper = function(roomName: string, num: number) {
+        if (num === undefined) return ERR_INVALID_ARGS
+        creepApi.add<RemoteHelperData>(this.name, 'remoteHelper', `${roomName}_rHel`, 'remoteHelper', {
+            sourceRoomName: this.name,
+            targetRoomName: roomName,
+        }, num)
+        return OK
+    }
+
     // 在终端跟踪此房间孵化的 creeps
     Room.prototype.showCreeps = function() {
         const t = new PrintTable()
@@ -562,6 +571,7 @@ declare global {
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK
         makeCoreAttacker(roomName: string, attack?: number): OK
+        makeHelper(roomName: string, num: number): OK | ERR_INVALID_ARGS
         showCreeps(): void
 
         // resource tasks

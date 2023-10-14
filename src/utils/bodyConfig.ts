@@ -148,7 +148,11 @@ const getBodyConfigByAuto: {
     claimKeeper: energy => {
         if (energy >= 350) return { work: 1, carry: 2, move: 3 } // RCL 2
         return undefined
-    }
+    },
+    remoteHelper: energy => {
+        if (energy >= 2200) return { work: 4, carry: 16, move: 20 } // RCL 6
+        return undefined
+    },
 }
 
 export function parseGeneralBodyConf (g: GeneralBodyConfig, e: number): BodyConfig | undefined {
@@ -183,7 +187,8 @@ declare global {
         "exUpgrader" |
         "miner" |
         "linkTransfer" |
-        "claimKeeper"
+        "claimKeeper" |
+        "remoteHelper"
     type BodyConfig = {
         [key in BodyPartConstant]?: number
     }
