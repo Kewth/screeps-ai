@@ -1,5 +1,6 @@
 // 将 erengy 填充到需要的位置
 
+import { Setting } from "setting"
 import { ToN, anyStore, logConsole, logError } from "utils/other"
 
 declare global {
@@ -42,7 +43,7 @@ function calcTask (creep: Creep, next?: boolean) {
                 creep.pos.findClosestByPath(creep.room.myTowers(), {
                     filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
                 }) ||
-                [creep.room.terminal].find(obj => obj && obj.store[RESOURCE_ENERGY] < 50_000)
+                [creep.room.terminal].find(obj => obj?.lowEnergy())
         }
         if (to)
             type = RESOURCE_ENERGY

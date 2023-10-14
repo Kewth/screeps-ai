@@ -17,7 +17,6 @@ export function mountRoom() {
         const invaderCores = this.find(FIND_STRUCTURES, {
             filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 0
         })
-        // 自动注册
         if (invaders.length > 0 || invaderCores.length > 0) {
             // 设置 invaderTime
             if (!this.memory.invaderTime)
@@ -72,6 +71,8 @@ export function mountRoom() {
             this.work_link()
             // spawn 集中式逻辑
             this.work_spawn()
+            // terminal 逻辑
+            this.terminal?.work()
         }
     }
 

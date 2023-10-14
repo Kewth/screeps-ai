@@ -12,7 +12,6 @@ declare namespace NodeJS {
   interface Global {
     cache: Cache
     log: any
-    mainRoomName: string
   }
 }
 
@@ -29,7 +28,8 @@ interface CreepLogic {
   stopSpawn?: (spawnRoom: Room, data: CreepData) => boolean
 }
 
-type TypeWithStore = Tombstone | StructureStorage | StructureContainer | StructureLink | Creep | Ruin
+type TypeWithStore = Tombstone | StructureStorage | StructureContainer | StructureLink | Creep | Ruin | StructureTerminal
+
 
 // type energySourceType = Tombstone | StructureStorage | StructureContainer | StructureLink
 // type energyTargetType = StructureStorage | StructureSpawn | StructureExtension | StructureTower

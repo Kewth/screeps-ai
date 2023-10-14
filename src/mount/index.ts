@@ -3,6 +3,7 @@ import { mountCreep } from "./creep";
 import { mountFlag } from "./flag";
 import { mountGlobal } from "./global";
 import { mountRoom } from "./room";
+import { mountTerminal } from "./terminal";
 
 export function mountAll() {
     logConsole('mount ALL modules')
@@ -10,4 +11,5 @@ export function mountAll() {
     mountRoom()
     mountFlag()
     mountGlobal()
+    mountTerminal()
 }

@@ -1,17 +1,18 @@
 // 将 resource 收集到 storage
 
+import { Setting } from "setting"
 import { anyStore, hasResource, logError } from "utils/other"
 
 declare global {
     interface CollectorData extends EmptyData {
-        fromID?: Id<Resource | Tombstone | StructureContainer | Ruin>
+        fromID?: Id<Resource | Tombstone | StructureContainer | Ruin | StructureTerminal>
     }
 }
 
 function calcFrom (creep: Creep) {
     const data = creep.memory.data as CollectorData
     let from = data.fromID && Game.getObjectById(data.fromID)
-    if (!from || !hasResource(from)) from =
+    if (!from || !hasResource(from) || (from instanceof StructureTerminal && from.resourceToStorage() === undefined)) from =
         creep.pos.findClosestByPath(creep.room.dropResources(), {
             filter: obj => obj.amount >= 50
         }) ||
@@ -25,7 +26,8 @@ function calcFrom (creep: Creep) {
         }) ||
         creep.pos.findClosestByPath(creep.room.ruins(), {
             filter: obj => obj.store.getUsedCapacity() >= 50
-        })
+        }) ||
+        [creep.room.terminal].find(obj => obj !== undefined && obj.resourceToStorage() !== undefined)
     data.fromID = from?.id
     return from
 }
@@ -36,15 +38,19 @@ export const collectorLogic: CreepLogic = {
         if (creep.store.getFreeCapacity() <= 0) { delete data.fromID; return true }
         const from = calcFrom(creep)
         if (from) {
-            const res = creep.gainAnyResourceFrom(from)
+            const res = from instanceof StructureTerminal
+                ? creep.withdraw(from, from.resourceToStorage() as ResourceConstant)
+                : creep.gainAnyResourceFrom(from)
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(from)
             else if (res == OK) { // 预测下一步转到 storage
                 delete data.fromID // 可能拿完了自己没满，需要重新搜索目标，否则可能会一直等待该容器
                 creep.room.storage && creep.moveTo(creep.room.storage)
             }
-            else
+            else {
                 logError(`cannot get resource: ${res}`, creep.name)
+                delete data.fromID
+            }
         }
         return false
     },
