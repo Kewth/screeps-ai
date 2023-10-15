@@ -14,7 +14,11 @@ export function mountTerminal() {
     StructureTerminal.prototype.work = function () {
         // 送能量出去
         const ctrl = this.room.controller
-        if (ctrl && ctrl.level == 8 && !this.lowEnergy() && Game.time % 100 <= 0) {
+        const storage = this.room.storage
+        if (ctrl && ctrl.level == 8 && storage &&
+            storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_LOW &&
+            !this.lowEnergy() && Game.time % 100 <= 0
+        ) {
             for (const otherRoomName in Game.rooms) {
                 const otherRoom = Game.rooms[otherRoomName]
                 const otherCtrl = otherRoom.myController()

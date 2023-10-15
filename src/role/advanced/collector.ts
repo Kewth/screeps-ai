@@ -14,18 +14,18 @@ function calcFrom (creep: Creep) {
     let from = data.fromID && Game.getObjectById(data.fromID)
     if (!from || !hasResource(from) || (from instanceof StructureTerminal && from.resourceToStorage() === undefined)) from =
         creep.pos.findClosestByPath(creep.room.dropResources(), {
-            filter: obj => obj.amount >= 50
+            filter: obj => obj.amount > 0
         }) ||
         // [creep.room.centralLink()].find(obj => obj && obj.store[RESOURCE_ENERGY] > 0) ||
         creep.pos.findClosestByPath(creep.room.tombstones(), {
             filter: obj => obj.store.getUsedCapacity() - obj.store[RESOURCE_ENERGY] > 0 ||
-                obj.store[RESOURCE_ENERGY] >= 50
+                obj.store[RESOURCE_ENERGY] > 0
         }) ||
         creep.pos.findClosestByPath(creep.room.commonContainers(), {
-            filter: obj => obj.store.getUsedCapacity() >= 500
+            filter: obj => obj.store.getUsedCapacity() >= 1000
         }) ||
         creep.pos.findClosestByPath(creep.room.ruins(), {
-            filter: obj => obj.store.getUsedCapacity() >= 50
+            filter: obj => obj.store.getUsedCapacity() > 0
         }) ||
         [creep.room.terminal].find(obj => obj !== undefined && obj.resourceToStorage() !== undefined)
     data.fromID = from?.id
