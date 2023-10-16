@@ -19,7 +19,7 @@ export function mountLink() {
                 }
         })
         // 最后 centralLink 考虑传给其他 targetLink (满足判断条件的话 centralLink 不会收到其他 link 的能量)
-        if (centralLink && centralLink.cooldown <= 0 && centralLink.store[RESOURCE_ENERGY] > free_count) {
+        if (centralLink && centralLink.cooldown <= 0 && centralLink.store.getFreeCapacity(RESOURCE_ENERGY) < free_count) {
             for (let i = 0; i < targetLinks.length; i++)
                 if (!busys[i] && targetLinks[i].id != centralLink.id) {
                     centralLink.transferEnergy(targetLinks[i])

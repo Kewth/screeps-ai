@@ -45,6 +45,17 @@ export function mountRoom() {
                 }
             } else
                 this.memory.noFillerTickCount = 0
+            // 紧急发布 harvester 判定
+            const harConfigName = calcConfigName(this.name, `har0`)
+            if (Memory.creepConfigs[harConfigName] && !this.myCreeps().find(obj => obj.memory.role == 'harvester')) {
+                this.memory.noHarvesterTickCount ++
+                if (this.memory.noHarvesterTickCount >= 200) {
+                    creepApi.add<HarvesterData>(this.name, 'harvester', `emergencyHARVESTER`,
+                        { work: 2, move: 1 }, { sourceID: this.sources()[0].id, onlyOnce: true }, 1, creepApi.EMERGENCY_PRIORITY)
+                    this.memory.noHarvesterTickCount = 0
+                }
+            } else
+                this.memory.noHarvesterTickCount = 0
             // 发布 extraUpgrader 判定
             const exUpgConfigName = calcConfigName(this.name, 'exUpg')
             if (!Memory.creepConfigs[exUpgConfigName]) {

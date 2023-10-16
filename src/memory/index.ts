@@ -62,6 +62,8 @@ declare global {
         myUpgradeLinkID?: Id<StructureLink>
         // filler 停摆的时间
         noFillerTickCount: number
+        // harvester 停摆的时间
+        noHarvesterTickCount: number
         // 需要 claim
         needClaim?: boolean
         // 资源搬运任务

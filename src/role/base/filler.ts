@@ -70,7 +70,7 @@ function calcTask (creep: Creep, next?: boolean) {
 export const fillerLogic: CreepLogic = {
     prepare_stage: creep => {
         // 提前孵化避免没 filler 停摆 (主要是 RCL 低的时候)
-        creep.memory.readyUsedTime = ToN(creep.memory.readyUsedTime) + 30
+        creep.memory.readyUsedTime = ToN(creep.memory.readyUsedTime) + 50
         return true
     },
     source_stage: creep => {
