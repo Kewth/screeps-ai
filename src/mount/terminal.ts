@@ -8,7 +8,11 @@ export function mountTerminal() {
         return this.store[RESOURCE_ENERGY] < Setting.TERMINAL_ENERGY_LOW
     }
     StructureTerminal.prototype.resourceToStorage = function () {
-        if (this.highEnergy()) return RESOURCE_ENERGY
+        const storage = this.room.storage
+        if (this.highEnergy())
+            return RESOURCE_ENERGY
+        if (storage && storage.store[RESOURCE_ENERGY] < Setting.STORAGE_ENERGY_ALMOST_ZERO)
+            return RESOURCE_ENERGY
         return undefined
     }
     StructureTerminal.prototype.work = function () {

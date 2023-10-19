@@ -61,6 +61,19 @@ const T = {
             roomName: roomName
         })
     },
+    buy(roomName: string, resourceType: ResourceConstant, price: number, amount: number) {
+        if (!roomName) {
+            logConsole(`roomName, resourceType, price, amount`)
+            return -1
+        }
+        return Game.market.createOrder({
+            type: ORDER_BUY,
+            resourceType: resourceType,
+            price: price / 1.05,
+            totalAmount: amount,
+            roomName: roomName
+        })
+    },
     mountRoom() {
         for (const roomName in Memory.rooms) {
             Object.defineProperty(global, roomName, {

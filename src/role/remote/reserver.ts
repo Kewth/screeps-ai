@@ -36,7 +36,8 @@ export const reserverLogic: CreepLogic = {
         if (!targetRoom) return true // 没有视野
         if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
         if (!targetRoom.controller) return true // 没有控制器 (?)
-        if (targetRoom.controller.reservation && targetRoom.controller.reservation.ticksToEnd >= 2500) return true // 预定充足
+        const reservation = targetRoom.controller.reservation
+        if (reservation && reservation.username == 'Kewth' && reservation.ticksToEnd >= 2500) return true // 预定充足
         if (targetRoom.controller.my) return true // 已经被 claim 了
         return false
     },

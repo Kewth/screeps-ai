@@ -36,7 +36,7 @@ export const claimKeeperLogic: CreepLogic = {
         const data = memData as ClaimKeeperData
         const targetRoom = Game.rooms[data.targetRoomName]
         if (!targetRoom) return false // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
+        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
         const ctrl = targetRoom.myController()
         if (!ctrl) return true // 没有控制器或者控制器不是自己的
         if (ctrl.ticksToDowngrade >= 5000) return true // 离降级还远

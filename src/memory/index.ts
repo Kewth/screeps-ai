@@ -52,8 +52,8 @@ declare global {
         // energyTargetLocks: { [id: Id<energyTargetType>]: number }
         // transferSourceTaskList: TransferSourceTask[]
         // transferTargetTaskList: TransferTargetTask[]
-        // 遭到入侵的时间
-        invaderTime?: number
+        // 不安全的时间
+        notSafeUntil?: number
         // 集中要刷的墙
         // focusWallID?: Id<StructureWall>
         // 中央 link

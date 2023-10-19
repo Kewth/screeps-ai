@@ -135,7 +135,7 @@ export const remoteCarrierLogic: CreepLogic = {
         if (!containerFlag) return true // 没有旗帜 (?)
         const targetRoom = Game.rooms[containerFlag.pos.roomName]
         if (!targetRoom) return true // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
+        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
         return false
     }
 }

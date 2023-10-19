@@ -22,7 +22,7 @@ export const viewerLogic: CreepLogic = {
         const targetRoom = Game.rooms[data.targetRoomName]
         if (targetRoom) return true // 已经有视野
         const mem = Memory.rooms[data.targetRoomName]
-        if (mem && mem.invaderTime && mem.invaderTime + 1500 > Game.time) return true // 房间记录 invaderTime 没到时候
+        if (mem && mem.notSafeUntil && Game.time < mem.notSafeUntil) return true // 房间记录不安全
         return false
     }
 }

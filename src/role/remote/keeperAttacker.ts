@@ -118,6 +118,7 @@ export const keeperAttackerLogic: CreepLogic = {
         const creeps = targetRoom.enemyOrInvaderCreeps()
         const totalBodyCount = _.sum(creeps, obj => obj.body.length)
         if (totalBodyCount > 25) return true // 大型 invader 小队，打不过
+        if (targetRoom.invaderCore()) return true // invader core 打不过
         return false
     },
 }

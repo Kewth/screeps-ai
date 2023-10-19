@@ -67,6 +67,7 @@ const getBodyConfigByAuto: {
     },
     upgrader: energy => {
         // work 不超过 15
+        if (energy >= 12000) return { work: 1, carry: 1, move: 1 } // RCL 8 开摆
         if (energy >= 1300) return { work: 8, carry: 4, move: 6 } // RCL 4
         if (energy >= 800) return { work: 5, carry: 2, move: 4 } // RCL 3
         if (energy >= 550) return { work: 3, carry: 2, move: 3 } // RCL 2
@@ -100,6 +101,8 @@ const getBodyConfigByAuto: {
         return undefined
     },
     reserver: energy => {
+        // if (energy >= 2600) return { claim: 4, move: 4 } // RCL 7
+        // if (energy >= 1950) return { claim: 3, move: 3 } // RCL 6
         if (energy >= 1300) return { claim: 2, move: 2 } // RCL 4
         return undefined
     },

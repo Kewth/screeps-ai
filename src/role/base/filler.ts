@@ -102,7 +102,8 @@ export const fillerLogic: CreepLogic = {
             }
             else
                 logError("cannot get resource", creep.name)
-        }
+        } else
+            creep.say('寄了！没资源了！')
         return false
     },
     target_stage: creep => {

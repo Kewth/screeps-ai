@@ -89,7 +89,7 @@ export const remoteHarvesterLogic: CreepLogic = {
         if (!workFlag) return true // 没有旗帜 (?)
         const targetRoom = Game.rooms[workFlag.pos.roomName]
         if (!targetRoom) return true // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
+        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
         return false
     }
 }

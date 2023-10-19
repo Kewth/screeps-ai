@@ -18,13 +18,12 @@ export function mountRoom() {
             filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 0
         })
         if (invaders.length > 0 || invaderCores.length > 0) {
-            // 设置 invaderTime
-            if (!this.memory.invaderTime)
-                this.memory.invaderTime = Game.time
+            // 设置 notSafeUntil
+            if (!this.memory.notSafeUntil || Game.time >= this.memory.notSafeUntil)
+                this.memory.notSafeUntil = Game.time + 1505
         } else {
-            // 复位 invaderTime
-            if (this.memory.invaderTime)
-                this.memory.invaderTime = undefined
+            // 复位 notSafeUntil
+            delete this.memory.notSafeUntil
         }
         if (this.controller?.my) {
             // 检查统计
@@ -149,7 +148,8 @@ export function mountRoom() {
         // 注册 harvester
         let index = 0
         this.sources().forEach(source => {
-            creepApi.add<HarvesterData>(this.name, 'harvester', `har${index}`, 'harvester', { sourceID: source.id }, 1)
+            creepApi.add<HarvesterData>(this.name, 'harvester', `har${index}`, 'harvester', { sourceID: source.id }, 1,
+                creepApi.HARVESER_PRIORITY)
             index++
         })
         // 注册 repairer
@@ -265,7 +265,7 @@ export function mountRoom() {
         if (!ctrl) return
         // 注册 collector
         if (this.storage) {
-            creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1)
+            creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1, creepApi.COLLECTOR_PRIORITY)
         }
         // 注册 miner
         const extractor = this.myExtractor()
@@ -360,6 +360,7 @@ export function mountRoom() {
         this.memory.spawnTaskList.sort((a, b) => Memory.creepConfigs[b].priority - Memory.creepConfigs[a].priority)
         str += `==========\n`
         str += `spawn energy: (${this.energyAvailable}/${this.energyCapacityAvailable})\n`
+        str += `active spawn: ${this.getActiveSpawnConfigName()}\n`
         str += `spawnList: ${this.memory.spawnTaskList}\n`
         str += `hangList: ${this.memory.hangSpawnTaskList}\n`
         logConsole(str)

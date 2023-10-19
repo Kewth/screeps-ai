@@ -1,5 +1,6 @@
 import { reSpawn } from "mount/room/spawn"
 import { getRoleLogic } from "role"
+import { Setting } from "setting"
 import { anyStore, logConsole, logError } from "utils/other"
 
 export function mountCreep() {
@@ -121,7 +122,7 @@ export function mountCreep() {
     // }
 
     Creep.prototype.findEnergySource = function() {
-        if (this.room.storage && this.room.storage.store[RESOURCE_ENERGY] >= 5_000)
+        if (this.room.storage && this.room.storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_ALMOST_ZERO)
             return this.room.storage
         const enSource = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
         if (enSource && (enSource instanceof Resource || enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
