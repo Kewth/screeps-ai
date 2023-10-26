@@ -13,11 +13,11 @@ function market_pixel() {
     const buy_price = 30000
     const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
     if (buy && buy.price >= sell_price) {
-        Game.market.deal(buy.id, 1)
+        Game.market.deal(buy.id, 10)
     }
     const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
-    if (sell && sell.price <= buy_price) {
-        Game.market.deal(sell.id, 1)
+    if (sell && sell.price <= buy_price && Game.market.credits >= 5_000_000) {
+        Game.market.deal(sell.id, 10)
     }
 }
 

@@ -4,6 +4,7 @@ import { mountFlag } from "./flag";
 import { mountGlobal } from "./global";
 import { mountRoom } from "./room";
 import { mountTerminal } from "./terminal";
+import { mountPowerSpawn } from "./powerSpawn";
 
 export function mountAll() {
     logConsole('mount ALL modules')
@@ -12,4 +13,5 @@ export function mountAll() {
     mountFlag()
     mountGlobal()
     mountTerminal()
+    mountPowerSpawn()
 }

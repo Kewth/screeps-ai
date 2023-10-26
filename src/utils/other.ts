@@ -15,13 +15,6 @@ export function logConsole(info: any): void {
     console.log(info)
 }
 
-export function noInvader (roomFlag: string): boolean {
-    const roomName = Game.flags[roomFlag].pos.roomName
-    const mem = Memory.rooms[roomName]
-    if (!mem) return true
-    return !mem.invaderTime || Game.time > mem.invaderTime + 1500
-}
-
 // all:     enemy | invader | source keeper | friend | my
 // hostile: enemy | invader | source keeper | friend
 // evil:    enemy | invader | source keeper

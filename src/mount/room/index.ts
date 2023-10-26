@@ -83,6 +83,8 @@ export function mountRoom() {
             this.work_spawn()
             // terminal 逻辑
             this.terminal?.work()
+            // power spawn 逻辑
+            this.myPowerSpawn()?.work()
         }
     }
 
@@ -370,18 +372,33 @@ export function mountRoom() {
         if (task.resourceType === undefined) return ERR_INVALID_ARGS
         if (task.amount === undefined) return ERR_INVALID_ARGS
         if (task.targetID === undefined) return ERR_INVALID_ARGS
-        this.memory.resourceTaskList.push(task)
+        const old_task = this.memory.resourceTaskList.find(obj => obj.resourceType == task.resourceType && obj.targetID == task.targetID)
+        if (old_task) {
+            if (task.amount > old_task.amount)
+                old_task.amount = task.amount
+        }
+        else
+            this.memory.resourceTaskList.push(task)
         return OK
     }
     Room.prototype.getResourceTask = function() {
-        while (this.memory.resourceTaskList.length > 0) {
-            const task = this.memory.resourceTaskList[0]
+        const storage = this.storage
+        if (!storage) return undefined
+        this.memory.resourceTaskList = this.memory.resourceTaskList.filter(task => {
             const target = Game.getObjectById(task.targetID)
-            if (target && target.store[task.resourceType] < task.amount)
-                return task
-            this.memory.resourceTaskList.shift()
-        }
-        return undefined
+            return target && target.store[task.resourceType] < task.amount
+        })
+        return this.memory.resourceTaskList.find(task =>
+            storage.store[task.resourceType] > 0
+        )
+        // while (this.memory.resourceTaskList.length > 0) {
+        //     const task = this.memory.resourceTaskList[0]
+        //     const target = Game.getObjectById(task.targetID)
+        //     if (target && target.store[task.resourceType] < task.amount)
+        //         return task
+        //     this.memory.resourceTaskList.shift()
+        // }
+        // return undefined
     }
 
 
@@ -407,6 +424,13 @@ export function mountRoom() {
         if (!this._mySpawns)
             this._mySpawns = this.find(FIND_MY_SPAWNS)
         return this._mySpawns
+    }
+    Room.prototype.myPowerSpawn = function() {
+        if (!this._myPowerSpawn)
+            this._myPowerSpawn = this.myStructures().find(
+                obj => obj.structureType == STRUCTURE_POWER_SPAWN
+            ) as StructurePowerSpawn | undefined
+        return this._myPowerSpawn
     }
     Room.prototype.myTowers = function() {
         if (!this._myTowers)
@@ -599,6 +623,8 @@ declare global {
         _myStructures: OwnedStructure[]
         mySpawns(): StructureSpawn[]
         _mySpawns: StructureSpawn[]
+        myPowerSpawn(): StructurePowerSpawn | undefined
+        _myPowerSpawn: StructurePowerSpawn | undefined
         myExtensions(): StructureExtension[]
         _myExtensions: StructureExtension[]
         myTowers(): StructureTower[]

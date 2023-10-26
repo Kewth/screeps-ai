@@ -43,7 +43,7 @@ declare global {
     interface ResourceTask {
         resourceType: ResourceConstant
         amount: number
-        targetID: Id<StructureTerminal>
+        targetID: Id<StructureTerminal | StructurePowerSpawn>
     }
     interface RoomMemory {
         spawnTaskList: string[]
