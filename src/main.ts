@@ -32,6 +32,10 @@ export const loop = ErrorMapper.wrapLoop(() => {
   Object.values(Game.creeps).forEach( creep => {
     creep.work()
   })
+  Object.values(Game.powerCreeps).forEach( powerCreep => {
+    powerCreep.work()
+  })
+
 
   marketWork()
 

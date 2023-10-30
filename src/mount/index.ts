@@ -5,6 +5,7 @@ import { mountGlobal } from "./global";
 import { mountRoom } from "./room";
 import { mountTerminal } from "./terminal";
 import { mountPowerSpawn } from "./powerSpawn";
+import { mountPowerCreep } from "./powerCreep";
 
 export function mountAll() {
     logConsole('mount ALL modules')
@@ -14,4 +15,5 @@ export function mountAll() {
     mountGlobal()
     mountTerminal()
     mountPowerSpawn()
+    mountPowerCreep()
 }
