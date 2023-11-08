@@ -1,7 +1,7 @@
 import { reSpawn } from "mount/room/spawn"
 import { getRoleLogic } from "role"
 import { Setting } from "setting"
-import { anyStore, logConsole, logError } from "utils/other"
+import { anyStore, logConsole, logError, myFirst } from "utils/other"
 
 export function mountCreep() {
     Creep.prototype.work = function() {
@@ -153,6 +153,54 @@ export function mountCreep() {
     Creep.prototype.getConfig = function() {
         return Memory.creepConfigs[this.memory.configName]
     }
+
+
+    Creep.prototype._move = Creep.prototype.move
+    Creep.prototype.move = function(dir: DirectionConstant): CreepMoveReturnCode {
+        this.memory.isSleep = undefined
+        let toX = this.pos.x
+        let toY = this.pos.y
+        if (dir == LEFT || dir == BOTTOM_LEFT || dir == TOP_LEFT) toX --
+        if (dir == RIGHT || dir == BOTTOM_RIGHT || dir == TOP_RIGHT) toX ++
+        if (dir == TOP || dir == TOP_LEFT || dir == TOP_RIGHT) toY --
+        if (dir == BOTTOM || dir == BOTTOM_LEFT || dir == BOTTOM_RIGHT) toY ++
+        if (toX >= 0 && toY >= 0 && toX < 50 && toY < 50) {
+            const toPos = new RoomPosition(toX, toY, this.pos.roomName)
+            this._movePos = toPos
+            // if (toPos.lookFor(LOOK_STRUCTURES).length > 0)
+                // return OK
+            const toCreep = myFirst(toPos.lookFor(LOOK_CREEPS)) || myFirst(toPos.lookFor(LOOK_POWER_CREEPS))
+            if (toCreep && toCreep.memory.isSleep) {
+                logConsole(`${this.name} CROSS ${toCreep.name}`)
+                switch (dir) {
+                    case LEFT: { toCreep._move(RIGHT); break }
+                    case RIGHT: { toCreep._move(LEFT); break }
+                    case TOP: { toCreep._move(BOTTOM); break }
+                    case BOTTOM: { toCreep._move(TOP); break }
+                    case BOTTOM_LEFT: { toCreep._move(TOP_RIGHT); break }
+                    case BOTTOM_RIGHT: { toCreep._move(TOP_LEFT); break }
+                    case TOP_LEFT: { toCreep._move(BOTTOM_RIGHT); break }
+                    case TOP_RIGHT: { toCreep._move(BOTTOM_LEFT); break }
+                }
+            }
+        }
+        return this._move(dir)
+    }
+    Creep.prototype.goTo = function(target: {pos: RoomPosition}) {
+        return this.moveTo(target, {
+            ignoreCreeps: true,
+            costCallback: function(roomName, martrix) {
+                // TODO: 可以优化 via memory
+                const room = Game.rooms[roomName]
+                if (room) {
+                    for (const creep of room.myCreeps()) {
+                        if (!creep.memory.isSleep)
+                            martrix.set(creep.pos.x, creep.pos.y, 255)
+                    }
+                }
+            }
+        })
+    }
 }
 
 declare global {
@@ -171,5 +219,8 @@ declare global {
         gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode
         gainResourceFrom(from: Resource | TypeWithStore, resourceType: ResourceConstant): ScreepsReturnCode
         getConfig(): CreepConfig
+        _movePos: RoomPosition
+        _move(target: DirectionConstant): CreepMoveReturnCode
+        goTo(tar: {pos: RoomPosition}): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND
     }
 }

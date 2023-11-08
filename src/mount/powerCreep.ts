@@ -1,9 +1,10 @@
-import { ToN, logError } from "utils/other"
+import { ToN, logConsole, logError } from "utils/other"
 
 export function mountPowerCreep() {
     PowerCreep.prototype.work = function() {
         if (this.shard === undefined) return
         if (this.room === undefined) return
+        this.memory.isSleep = true
         // renew
         if (ToN(this.ticksToLive) < 300) {
             const powerSpawn = this.room.myPowerSpawn()
@@ -33,10 +34,16 @@ export function mountPowerCreep() {
             return
         }
     }
+
+    // PowerCreep.move 内部在调用 Creep.move
+    PowerCreep.prototype._move = function(dir: DirectionConstant) {
+        return Creep.prototype._move.call(this, dir)
+    }
 }
 
 declare global {
     interface PowerCreep {
         work(): void
+        _move(dir: DirectionConstant): CreepMoveReturnCode
     }
 }

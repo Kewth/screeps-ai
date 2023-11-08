@@ -52,6 +52,8 @@ export const collectorLogic: CreepLogic = {
                 delete data.fromID
             }
         }
+        else
+            creep.memory.isSleep = true
         return false
     },
 

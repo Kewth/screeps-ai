@@ -60,10 +60,10 @@ export function mountRoom() {
             if (!Memory.creepConfigs[exUpgConfigName]) {
                 if (this.storage) {
                     // 有 storage 判定 storage
-                    if (this.storage.store.getUsedCapacity() >= 800_000)
+                    if (this.storage.store[RESOURCE_ENERGY] >= 800_000)
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                             'exUpgrader', { onlyOnce: true }, 2)
-                    else if (this.storage.store.getUsedCapacity() >= 600_000)
+                    else if (this.storage.store[RESOURCE_ENERGY] >= 500_000)
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                             'exUpgrader', { onlyOnce: true }, 1)
                 }

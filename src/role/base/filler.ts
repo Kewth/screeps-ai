@@ -44,7 +44,7 @@ function calcTask (creep: Creep, pos: RoomPosition, next?: boolean) {
                 pos.findClosestByPath(creep.room.myTowers(), {
                     filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
                 }) ||
-                [creep.room.myPowerSpawn()].find(obj => obj && obj.id != banID && obj.store[RESOURCE_ENERGY] < 50) // 50 能量一次操作
+                [creep.room.myPowerSpawn()].find(obj => obj && obj.id != banID && obj.store[RESOURCE_ENERGY] < 500)
                 ||
                 [creep.room.terminal].find(obj => obj && obj.id != banID && obj.lowEnergy())
         }
@@ -52,10 +52,22 @@ function calcTask (creep: Creep, pos: RoomPosition, next?: boolean) {
             type = RESOURCE_ENERGY
         // 特殊任务
         else {
-            const roomTask = creep.room.getResourceTask()
-            if (roomTask) {
-                to = Game.getObjectById(roomTask.targetID)
-                type = roomTask.resourceType
+            const term = creep.room.terminal
+            const ps = creep.room.myPowerSpawn()
+            if (!to && term && banID != term.id && term.resourceNeed()) {
+                to = term
+                type = term.resourceNeed()
+            }
+            if (!to && ps && banID != ps.id && ps.store[RESOURCE_POWER] <= 10) {
+                to = ps
+                type = RESOURCE_POWER
+            }
+            if (!to) {
+                const roomTask = creep.room.getResourceTask()
+                if (roomTask) {
+                    to = Game.getObjectById(roomTask.targetID)
+                    type = roomTask.resourceType
+                }
             }
         }
     }
@@ -86,7 +98,7 @@ export const fillerLogic: CreepLogic = {
             if (type && creep.room.storage) {
                 const res = creep.transfer(creep.room.storage, type)
                 if (res == ERR_NOT_IN_RANGE)
-                    creep.moveTo(creep.room.storage)
+                    creep.goTo(creep.room.storage)
             }
             // 要是没 storage 就只能扔掉了
             else if (type)
@@ -100,15 +112,19 @@ export const fillerLogic: CreepLogic = {
         if (from) {
             const res = creep.gainResourceFrom(from, t.type)
             if (res == ERR_NOT_IN_RANGE)
-                creep.moveTo(from)
+                creep.goTo(from)
             else if (res == OK) {
                 // 提前移动
-                creep.moveTo(t.to)
+                creep.goTo(t.to)
             }
-            else
+            else {
+                const data = creep.memory.data as FillerData
+                delete data.toID
+                delete data.resourceType
                 logError(`cannot get resource: ${res}`, creep.name)
+            }
         } else
-            creep.say('寄了！没资源了！')
+            creep.say('寄了！没地方拿资源了！')
         return false
     },
     target_stage: creep => {
@@ -125,15 +141,15 @@ export const fillerLogic: CreepLogic = {
             if (creep.store[t.type] <= 0) return true
             const res = creep.transfer(t.to, t.type)
             if (res == ERR_NOT_IN_RANGE)
-                creep.moveTo(t.to)
+                creep.goTo(t.to)
             else if (res == OK) {
                 // 提前移动
                 if (t.type == RESOURCE_ENERGY && creep.store[t.type] > ToN(t.to.store.getFreeCapacity(t.type))) {
                     const nextT = calcTask(creep, creep.pos, true)
-                    nextT && creep.moveTo(nextT.to)
+                    nextT && creep.goTo(nextT.to)
                 }
                 else {
-                    creep.room.storage && creep.moveTo(creep.room.storage)
+                    creep.room.storage && creep.goTo(creep.room.storage)
                 }
             }
             else

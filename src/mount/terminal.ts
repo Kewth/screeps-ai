@@ -17,6 +17,23 @@ export function mountTerminal() {
             return RESOURCE_POWER
         return undefined
     }
+    StructureTerminal.prototype.resourceNeed = function () {
+        const storage = this.room.storage
+        if (!storage) return undefined
+        if (this.store.getFreeCapacity() <= 30_000) return undefined
+        const order = Object.values(Game.market.orders).find(o =>
+            o.type == ORDER_SELL
+            && o.roomName == this.room.name
+            && o.resourceType != PIXEL
+            && o.resourceType != CPU_UNLOCK
+            && o.resourceType != ACCESS_KEY
+            && o.resourceType != SUBSCRIPTION_TOKEN
+            && this.store[o.resourceType] < o.remainingAmount
+            && storage.store[o.resourceType] > 0
+        )
+        if (order === undefined) return undefined
+        return order.resourceType as ResourceConstant
+    }
     StructureTerminal.prototype.work = function () {
         // 送能量出去
         const ctrl = this.room.controller
@@ -49,6 +66,7 @@ declare global {
         highEnergy(): boolean
         lowEnergy(): boolean
         resourceToStorage(): ResourceConstant | undefined
+        resourceNeed(): ResourceConstant | undefined
         work(): void
     }
 }

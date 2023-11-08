@@ -113,3 +113,7 @@ export function myMax<T> (list: T[], func: (obj: T) => any): T | undefined {
     const res = _.max(list, func)
     return res === -Infinity ? undefined : res
 }
+
+export function myFirst<T> (list: T[]): T | undefined {
+    return _.first(list)
+}

@@ -19,10 +19,27 @@ declare global {
         working?: boolean
         // 缓存 findEnergySource
         energySourceID?: Id<StructureContainer | Resource>
+        // 是否站定
+        // standing?: boolean
+        // 是否摸鱼
+        isSleep?: boolean
     }
 }
 
 function checkCreepMemory() {
+    // 在 spawn 保证了 memory 合法性
+    return
+}
+
+/* ===== POWERCREEP ===== */
+declare global {
+    interface PowerCreepMemory {
+        // 是否摸鱼
+        isSleep?: boolean
+    }
+}
+
+function checkPowerCreepMemory() {
     // 在 spawn 保证了 memory 合法性
     return
 }
@@ -117,6 +134,7 @@ export function checkMemory() {
     }
     checkStatsMemory()
     checkCreepMemory()
+    checkPowerCreepMemory()
     checkFlagMemory()
     checkRoomMemory()
 }
