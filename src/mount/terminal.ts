@@ -1,4 +1,5 @@
 import { Setting } from "setting"
+import { marketConst2resourceConst } from "utils/other"
 
 export function mountTerminal() {
     StructureTerminal.prototype.highEnergy = function () {
@@ -21,18 +22,21 @@ export function mountTerminal() {
         const storage = this.room.storage
         if (!storage) return undefined
         if (this.store.getFreeCapacity() <= 30_000) return undefined
-        const order = Object.values(Game.market.orders).find(o =>
-            o.type == ORDER_SELL
-            && o.roomName == this.room.name
-            && o.resourceType != PIXEL
-            && o.resourceType != CPU_UNLOCK
-            && o.resourceType != ACCESS_KEY
-            && o.resourceType != SUBSCRIPTION_TOKEN
-            && this.store[o.resourceType] < o.remainingAmount
-            && storage.store[o.resourceType] > 0
-        )
-        if (order === undefined) return undefined
-        return order.resourceType as ResourceConstant
+        // 需要卖出的资源及时搬到 terminal
+        const order = Object.values(Game.market.orders).find(o => {
+            const resourceConst = marketConst2resourceConst(o.resourceType)
+            return resourceConst
+                && o.type == ORDER_SELL
+                && o.roomName == this.room.name
+                && this.store[resourceConst] < o.remainingAmount
+                && storage.store[resourceConst] > 0
+        })
+        if (order !== undefined) return order.resourceType as ResourceConstant
+        // 房间里挖的资源定量存储到 terminal
+        const mineralType = this.room.mineral()?.mineralType
+        if (mineralType && this.store[mineralType] < Setting.FOCUS_ORDER_AMOUNT_PER * 10 && storage.store[mineralType] > 0)
+            return mineralType
+        return undefined
     }
     StructureTerminal.prototype.work = function () {
         // 送能量出去

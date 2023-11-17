@@ -1,15 +1,17 @@
-import { PrintTable, calcConfigName, isEnemyOrInvader, isEvil, logConsole, logError, strLim } from "utils/other"
+import { PrintTable, calcConfigName, isEnemyOrInvader, isEvil, logConsole, logError, myFirst, strLim } from "utils/other"
 import { mountTower } from "./tower"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
 import { creepApi } from "creepApi"
 import { calcBodyCost, makeBody, parseGeneralBodyConf, unionBodyConf } from "utils/bodyConfig"
+import { mountMarket } from "./market"
 
-// TODO: 集中式孵化改为分布式
+// TODO: 缓存在没有值 (undefined) 的时候等同于没有缓存，不太合理
 export function mountRoom() {
     mountTower()
     mountLink()
     mountSpawn()
+    mountMarket()
 
     Room.prototype.work = function() {
         // 检查入侵
@@ -85,6 +87,8 @@ export function mountRoom() {
             this.terminal?.work()
             // power spawn 逻辑
             this.myPowerSpawn()?.work()
+            // market 逻辑
+            this.work_market()
         }
     }
 
@@ -531,9 +535,16 @@ export function mountRoom() {
         const _cache = this.cache.invaderCoreID && Game.getObjectById(this.cache.invaderCoreID)
         if (_cache) return _cache
         const list = this.structures().filter(obj => obj.structureType == STRUCTURE_INVADER_CORE) as StructureInvaderCore[]
-        const res = list[0] // may be undefined
-        this.cache.invaderCoreID = res?.id
-        return res
+        const invaderCore = myFirst(list)
+        this.cache.invaderCoreID = invaderCore?.id
+        return invaderCore
+    }
+    Room.prototype.mineral = function() {
+        const _cache = this.cache.mineralID && Game.getObjectById(this.cache.mineralID)
+        if (_cache) return _cache
+        const mineral = myFirst(this.find(FIND_MINERALS))
+        this.cache.mineralID = mineral?.id
+        return mineral
     }
 
     Room.prototype.myController = function() {
@@ -587,6 +598,7 @@ declare global {
         work_tower(): void
         work_spawn(): void
         work_link(): void
+        work_market(): void
         // getFocusWall(): StructureWall | undefined
         // stats(store: boolean): void
         // work_spawnCreep(): boolean
@@ -597,6 +609,11 @@ declare global {
         checkHangSpawnTasks(): void
         // getEnergySourceList(): energySourceType[]
         // getEnergyTargetList(): energyTargetType[]
+
+        market_mineralOrder(focus: FocusOrder): void
+        market_buyingOrder(focus: FocusOrder): void
+        init_mineralOrder(price: number): void
+        init_buyingOrder(price: number, resource: ResourceConstant, totalAmount: number): void
 
         // 终端控制 creeps
         registerBase(): OK
@@ -666,6 +683,7 @@ declare global {
 
         // cache 级别缓存
         invaderCore(): StructureInvaderCore | undefined
+        mineral(): Mineral | undefined
 
         // 其他
         myController(): StructureController | undefined

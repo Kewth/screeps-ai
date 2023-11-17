@@ -2,9 +2,7 @@ import { isEnemyOrInvader, isEvil, myMin } from "utils/other"
 
 export function mountTower() {
     Room.prototype.work_tower = function() {
-        const towers = this.find(FIND_MY_STRUCTURES, {
-            filter: obj => obj.structureType == STRUCTURE_TOWER
-        }) as StructureTower[]
+        const towers = this.myTowers()
         // 集中攻击
         const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
         if (enemys.length > 0) {

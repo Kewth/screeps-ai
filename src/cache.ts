@@ -4,6 +4,7 @@ declare global {
     }
     interface RoomCache {
         invaderCoreID?: Id<StructureInvaderCore>
+        mineralID?: Id<Mineral>
     }
 }
 

@@ -62,6 +62,13 @@ declare global {
         amount: number
         targetID: Id<StructureTerminal | StructurePowerSpawn>
     }
+    interface FocusOrder {
+        id?: string
+        timeBegin: number
+        timeEnd?: number
+        amountLimit?: number
+        dead?: boolean
+    }
     interface RoomMemory {
         spawnTaskList: string[]
         hangSpawnTaskList: string[]
@@ -85,6 +92,9 @@ declare global {
         needClaim?: boolean
         // 资源搬运任务
         resourceTaskList: ResourceTask[]
+        // 自动处理的订单
+        mineralOrder?: FocusOrder
+        buyingOrder?: FocusOrder
     }
 }
 

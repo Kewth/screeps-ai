@@ -117,3 +117,9 @@ export function myMax<T> (list: T[], func: (obj: T) => any): T | undefined {
 export function myFirst<T> (list: T[]): T | undefined {
     return _.first(list)
 }
+
+export function marketConst2resourceConst (t: MarketResourceConstant): ResourceConstant | undefined {
+    return (t != PIXEL && t != CPU_UNLOCK && t != ACCESS_KEY && t != SUBSCRIPTION_TOKEN)
+        ? t
+        : undefined
+}
