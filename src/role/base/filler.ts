@@ -52,13 +52,14 @@ function calcTask (creep: Creep, pos: RoomPosition, next?: boolean) {
             type = RESOURCE_ENERGY
         // 特殊任务
         else {
+            const storage = creep.room.storage
             const term = creep.room.terminal
             const ps = creep.room.myPowerSpawn()
             if (!to && term && banID != term.id && term.resourceNeed()) {
                 to = term
                 type = term.resourceNeed()
             }
-            if (!to && ps && banID != ps.id && ps.store[RESOURCE_POWER] <= 10) {
+            if (!to && ps && banID != ps.id && ps.store[RESOURCE_POWER] <= 10 && storage && storage.store[RESOURCE_POWER] > 0) {
                 to = ps
                 type = RESOURCE_POWER
             }

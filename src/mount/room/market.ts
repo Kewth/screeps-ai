@@ -28,27 +28,25 @@ export function mountMarket() {
                 focus.dead = true
                 return
             }
-            let remainTimeRatio = (Setting.FOCUS_ORDER_TIME_INTERVAL - timeUsed) / Setting.FOCUS_ORDER_TIME_INTERVAL
-            if (remainTimeRatio < 0) remainTimeRatio = 0
-            const newPrice = order.price * Math.pow(0.99, remainTimeRatio)
+            let newPrice = order.price
+            // 以一定概率降低购价
+            if (Math.random() < 0.5)
+                newPrice *= 0.99
             const creditsNeed = newPrice * Setting.FOCUS_ORDER_AMOUNT_PER * 1.05
-            // 没钱了，挂起
-            if (creditsNeed > Game.market.credits * 0.3) {
-            }
-            else {
-                // 降低购价并补货，新一轮监听
-                Game.market.changeOrderPrice(order.id, newPrice)
-                Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER)
-                focus.timeBegin = Game.time + 1
-                focus.timeEnd = undefined
-            }
+            const creditsLimit = Game.market.credits * 0.1
+            // 没钱了，进一步降低购价
+            if (creditsNeed > creditsLimit)
+                newPrice = creditsLimit / Setting.FOCUS_ORDER_AMOUNT_PER / 1.05
+            // 补充数量，新一轮监听
+            Game.market.changeOrderPrice(order.id, newPrice)
+            Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER)
+            focus.timeBegin = Game.time + 1
+            focus.timeEnd = undefined
         }
         // 超时了
-        else if (Game.time - focus.timeBegin > Setting.FOCUS_ORDER_TIME_INTERVAL) {
-            // 提高购价不补货，新一轮监听
-            const newPrice = order.price * 1.02
-            Game.market.changeOrderPrice(order.id, newPrice)
-            // Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER - order.remainingAmount)
+        else if (Game.time - focus.timeBegin > Setting.FOCUS_ORDER_TIMEOUT) {
+            // 提高购价不补充数量，新一轮监听
+            Game.market.changeOrderPrice(order.id, order.price * 1.02)
             focus.timeBegin = Game.time + 1
             focus.timeEnd = undefined
         }
@@ -83,27 +81,29 @@ export function mountMarket() {
                 focus.dead = true
                 return
             }
-            let remainTimeRatio = (Setting.FOCUS_ORDER_TIME_INTERVAL - timeUsed) / Setting.FOCUS_ORDER_TIME_INTERVAL
-            if (remainTimeRatio < 0) remainTimeRatio = 0
             // 终端资源不够，挂起
             const term = this.terminal
             if (!term || term.store[resourceConst] < Setting.FOCUS_ORDER_AMOUNT_PER) {
             }
             else {
-                // 增加一点价格 (不超过 1%) 并补货，新一轮监听
-                const newPrice = order.price * Math.pow(1.01, remainTimeRatio)
-                Game.market.changeOrderPrice(order.id, newPrice)
+                if (this.storage && this.storage.store[order.resourceType as ResourceConstant] >= Setting.STORAGE_MINERAL_HIGH) {
+                    // 矿太多了，继续卖
+                }
+                else {
+                    // 以一定概率增加一点价格
+                    if (Math.random() < 0.3)
+                        Game.market.changeOrderPrice(order.id, order.price * 1.01)
+                }
+                // 补货，新一轮监听
                 Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER)
                 focus.timeBegin = Game.time + 1
                 focus.timeEnd = undefined
             }
         }
         // 超时了
-        else if (Game.time - focus.timeBegin > Setting.FOCUS_ORDER_TIME_INTERVAL) {
+        else if (Game.time - focus.timeBegin > Setting.FOCUS_ORDER_TIMEOUT) {
             // 降低一点价格不补货，新一轮监听
-            const newPrice = order.price * 0.98
-            Game.market.changeOrderPrice(order.id, newPrice)
-            // Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER - order.remainingAmount)
+            Game.market.changeOrderPrice(order.id, order.price * 0.98)
             focus.timeBegin = Game.time + 1
             focus.timeEnd = undefined
         }

@@ -48,6 +48,11 @@ export const harvesterLogic: CreepLogic = {
     source_stage: creep => {
         const data = creep.memory.data as HarvesterData
         const source = Game.getObjectById(data.sourceID)
+        // 有空间直接挖，先存着 (可能有多出来的掉进 container 里面)
+        if (creep.store.getFreeCapacity() > 0) {
+            source && creep.harvest(source)
+            return false
+        }
         // transfer/harvest 可以在同一 tick 完成
         // 优先放 link
         if (data.linkIDs && source instanceof Source) {
@@ -68,15 +73,14 @@ export const harvesterLogic: CreepLogic = {
             if (container) {
                 creep.transfer(container, anyStore(creep) || RESOURCE_ENERGY)
                 source && creep.harvest(source)
+                return false
             }
-            else {
-                // container 爆满的话没必要挖了
-                creep.say('摸鱼...')
-            }
+            // container 爆满的话没必要挖了
+            creep.say('摸鱼...')
+            return false
         }
         // 初期，挖出来 drop 给别人捡
-        else
-            source && creep.harvest(source)
+        source && creep.harvest(source)
         return false
     },
     hangSpawn: (spawnRoom, memData) => {

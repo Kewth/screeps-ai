@@ -21,18 +21,29 @@ export function mountPowerCreep() {
                 this.moveTo(ctrl)
             return
         }
-        // source
-        if (this.store.getFreeCapacity() > 0) {
-            this.usePower(PWR_GENERATE_OPS)
-            return
+        // use power
+        const toPos = this.work_usePower()
+        if (toPos) this.moveTo(toPos)
+        else {
+            // transfer ops
+            if (this.store.getFreeCapacity() <= 50) {
+                const storage = this.room.storage
+                if (storage && this.transfer(storage, RESOURCE_OPS) == ERR_NOT_IN_RANGE)
+                    this.moveTo(storage)
+            }
         }
-        // target
-        const storage = this.room.storage
-        if (storage) {
-            if (this.transfer(storage, RESOURCE_OPS) == ERR_NOT_IN_RANGE)
-                this.moveTo(storage)
-            return
+    }
+
+    PowerCreep.prototype.work_usePower = function() {
+        if (this.room === undefined) return undefined
+        if (this.usePower(PWR_GENERATE_OPS) == OK) return undefined
+        const source = this.room.sources().find(s => !s.effects || s.effects.length <= 0)
+        if (source) {
+            const resp = this.usePower(PWR_REGEN_SOURCE, source)
+            if (resp == OK) return undefined
+            if (resp == ERR_NOT_IN_RANGE) return source.pos
         }
+        return undefined
     }
 
     // PowerCreep.move 内部在调用 Creep.move
@@ -44,6 +55,7 @@ export function mountPowerCreep() {
 declare global {
     interface PowerCreep {
         work(): void
+        work_usePower(): RoomPosition | undefined
         _move(dir: DirectionConstant): CreepMoveReturnCode
     }
 }

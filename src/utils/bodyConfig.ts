@@ -52,6 +52,8 @@ const getBodyConfigByAuto: {
     [name in AutoBodyConstant]: (energy: number) => BodyConfig | undefined
 } = {
     harvester: energy => {
+        // 更多的 work, carry: 减少 cpu 消耗，能挖带 regen 的矿
+        if (energy >= 12900) return { work: 8, carry: 4, move: 3 } // RCL 8
         // 5 个 work 刚好满效率采矿
         if (energy >= 600) return { work: 5, carry: 1, move: 1 } // RCL 3
         if (energy >= 500) return { work: 4, carry: 1, move: 1 } // RCL 2
