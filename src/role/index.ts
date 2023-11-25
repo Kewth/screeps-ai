@@ -9,11 +9,12 @@ import { remoteHarvesterLogic } from "./remote/remoteHarvester";
 import { reserverLogic } from "./remote/reserver";
 import { viewerLogic } from "./remote/viewer";
 import { builderLogic } from "./base/builder";
-import { pioneerLogic } from "./remote/pioneer";
 import { linkTransferLogic } from "./advanced/linkTransfer";
 import { coreAttackerLogic } from "./remote/coreAttacker";
 import { claimKeeperLogic } from "./remote/claimKeeper";
 import { remoteHelperLogic } from "./remote/remoteHelper";
+import { roomAttakerLogic } from "./war/roomAttacker";
+import { claimerLogic } from "./remote/claimer";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
@@ -29,11 +30,12 @@ export const getRoleLogic: {
     remoteHarvester: remoteHarvesterLogic,
     remoteCarrier: remoteCarrierLogic,
     keeperAttacker: keeperAttackerLogic,
-    pioneer: pioneerLogic,
     linkTransfer: linkTransferLogic,
     coreAttacker: coreAttackerLogic,
     claimKeeper: claimKeeperLogic,
     remoteHelper: remoteHelperLogic,
+    roomAttacker: roomAttakerLogic,
+    claimer: claimerLogic,
 }
 
 // 用于类型检查 (TODO: find a better solution)
@@ -56,11 +58,12 @@ declare global {
         "remoteHarvester" |
         "remoteCarrier" |
         "keeperAttacker" |
-        "pioneer" |
         "linkTransfer" |
         "coreAttacker" |
         "claimKeeper" |
-        "remoteHelper"
+        "remoteHelper" |
+        "roomAttacker" |
+        "claimer"
     type CreepData =
         EmptyData |
         HarvesterData |
@@ -74,9 +77,10 @@ declare global {
         RemoteHarvesterData |
         RemoteCarrierData |
         KeeperAttackerData |
-        PioneerData |
         LinkTransferData |
         CoreAttackerData |
         ClaimKeeperData |
-        RemoteHelperData
+        RemoteHelperData |
+        RoomAttackerData |
+        ClaimerData
 }

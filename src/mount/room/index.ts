@@ -243,25 +243,42 @@ export function mountRoom() {
         return OK
     }
 
-    Room.prototype.registerNewRoom = function(roomName: string, pioneerClaim: number,
-        pioneerTough: number, pioneerHeal: number) {
-        // 注册 pioneer (带 claim 的话至少需要 RCL 6)
+    Room.prototype.registerNewRoom = function(roomName: string, numClaim: number,
+        numTough: number, numHeal: number) {
+        // 注册 claimer
         const spawnFlag = Game.flags[`${roomName}_spawn`]
-        if (pioneerClaim === undefined) return OK
-        if (pioneerTough === undefined) return OK
-        if (pioneerHeal === undefined) return OK
+        if (numClaim === undefined) return OK
+        if (numTough === undefined) return OK
+        if (numHeal === undefined) return OK
         if (spawnFlag) {
-            creepApi.add<PioneerData>(this.name, 'pioneer', `${roomName}_pio`, {
-                tough: pioneerTough,
-                heal: pioneerHeal,
-                work: 6,
-                carry: 6,
-                claim: pioneerClaim,
-                move: pioneerTough + pioneerHeal + 6 + 6 + pioneerClaim,
+            creepApi.add<ClaimerData>(this.name, 'claimer', `${roomName}_claim`, {
+                tough: numTough,
+                heal: numHeal,
+                claim: numClaim,
+                move: numTough + numHeal + numClaim,
             }, {
                 spawnFlagName: spawnFlag.name
             }, 1)
-            logConsole('注册成功，请手动指定 container 的工地')
+            creepApi.add<RemoteHelperData>(this.name, 'remoteHelper', `${roomName}_rHel`, 'remoteHelper', {
+                sourceRoomName: this.name,
+                targetRoomName: roomName,
+            }, 3)
+            logConsole('注册成功')
+        }
+        return OK
+    }
+
+    Room.prototype.attackRoom = function(roomName: string) {
+        const wallFlag = Game.flags[`${roomName}_atkWall`]
+        if (wallFlag) {
+            creepApi.add<RoomAttackerData>(this.name, 'roomAttacker', `${roomName}_roomAtk`, {
+                move: 18,
+                ranged_attack: 12,
+                heal: 20,
+            }, {
+                wallFlagName: wallFlag.name
+            }, 6)
+            logConsole('注册成功，开始战争！')
         }
         return OK
     }
@@ -622,6 +639,7 @@ declare global {
         registerRemoteSourceKeeperRoom(roomName: string): OK
         autoRegisterCreeps(): void
         registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
+        attackRoom(roomName: string): OK
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK
         makeCoreAttacker(roomName: string, attack?: number): OK

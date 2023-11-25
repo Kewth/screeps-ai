@@ -95,6 +95,8 @@ declare global {
         // 自动处理的订单
         mineralOrder?: FocusOrder
         buyingOrder?: FocusOrder
+        // upgrade block
+        controllerBlockUntil?: number
     }
 }
 

@@ -8,6 +8,8 @@ declare global {
     }
 }
 
+// TODO: 搬 storage
+
 function calcTo (creep: Creep) {
     const data = creep.memory.data as RemoteHelperData
     let to = data.toID && Game.getObjectById(data.toID)
@@ -55,6 +57,8 @@ export const remoteHelperLogic: CreepLogic = {
         const room = Game.rooms[data.targetRoomName]
         if (!room) return true
         if (room.enemyOrInvaderCreeps().length > 0) return true
+        if (!room.controller) return true
+        if (!room.controller.my) return true
         return false
     },
     stopSpawn: (spawnRoom, memData) => {

@@ -43,6 +43,13 @@ export function mountPowerCreep() {
             if (resp == OK) return undefined
             if (resp == ERR_NOT_IN_RANGE) return source.pos
         }
+        if (this.room.energyCapacityAvailable >= 12000 && this.room.storage
+            && this.room.energyAvailable < 3000 && this.store[RESOURCE_OPS] >= 2
+        ) {
+            const resp = this.usePower(PWR_OPERATE_EXTENSION, this.room.storage)
+            if (resp == OK) return undefined
+            if (resp == ERR_NOT_IN_RANGE) return this.room.storage.pos
+        }
         return undefined
     }
 
