@@ -45,15 +45,16 @@ export function calcBodyCost(b: BodyPartConstant[]): number {
 // RCL 4: 1300
 // RCL 5: 1800
 // RCL 6: 2300
-// RCL 7: 5600
-// RCL 8: 12900
+// RCL 7: 5300 - 5600
+// RCL 8: 12300 - 12900
 
 const getBodyConfigByAuto: {
     [name in AutoBodyConstant]: (energy: number) => BodyConfig | undefined
 } = {
     harvester: energy => {
         // 更多的 work, carry: 减少 cpu 消耗，能挖带 regen 的矿
-        if (energy >= 12900) return { work: 8, carry: 4, move: 3 } // RCL 8
+        // 正常情况只会空着走路
+        if (energy >= 10000) return { work: 10, carry: 6, move: 5 } // RCL 8
         // 5 个 work 刚好满效率采矿
         if (energy >= 600) return { work: 5, carry: 1, move: 1 } // RCL 3
         if (energy >= 500) return { work: 4, carry: 1, move: 1 } // RCL 2
@@ -69,7 +70,7 @@ const getBodyConfigByAuto: {
     },
     upgrader: energy => {
         // work 不超过 15
-        if (energy >= 12000) return { work: 1, carry: 1, move: 1 } // RCL 8 开摆
+        if (energy >= 10000) return { work: 1, carry: 1, move: 1 } // RCL 8 开摆
         if (energy >= 1300) return { work: 8, carry: 4, move: 6 } // RCL 4
         if (energy >= 800) return { work: 5, carry: 2, move: 4 } // RCL 3
         if (energy >= 550) return { work: 3, carry: 2, move: 3 } // RCL 2

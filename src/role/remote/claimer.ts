@@ -20,11 +20,12 @@ export const claimerLogic: CreepLogic = {
         if (ctrl.my) return true
         if (!creep.pos.isNearTo(ctrl)) { creep.moveTo(ctrl); return false }
         // claim 它
-        const res = creep.claimController(ctrl)
-        if (res == OK)
-            return true
+        const resp = creep.claimController(ctrl)
+        if (resp == OK)
+            return false // 下个 tick 再检查一次 ctrl.my
         else {
-            creep.attackController(ctrl)
+            const resp = creep.attackController(ctrl)
+            if (resp == OK) creep.signController(ctrl, 'It will be cliamed by Kewth')
             creep.room.memory.controllerBlockUntil = Game.time + ctrl.upgradeBlocked
             return false
         }
@@ -32,8 +33,12 @@ export const claimerLogic: CreepLogic = {
     source_stage: creep => {
         const data = creep.memory.data as ClaimerData
         const spawnFlag = Game.flags[data.spawnFlagName]
+        creep.room.controller && creep.signController(creep.room.controller, '')
         spawnFlag.pos.createConstructionSite(STRUCTURE_SPAWN)
         data.jobDone = true
+        return true
+    },
+    target_stage: creep => {
         creep.say('摸鱼')
         return false
     },
