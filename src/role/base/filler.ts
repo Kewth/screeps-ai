@@ -2,76 +2,51 @@
 // TODO: 将 storage 前后的 filler 拆分
 
 import { Setting } from "setting"
-import { ToN, anyStore, logConsole, logError } from "utils/other"
+import { ToN, anyStore, logConsole, logError, mySingleToList } from "utils/other"
 
+type toType = StructureSpawn | StructureExtension | StructureTower | StructureTerminal | StructureContainer | StructurePowerSpawn
 declare global {
     interface FillerData extends EmptyData {
-        toID?: Id<StructureSpawn | StructureExtension | StructureTower | StructureTerminal | StructureContainer | StructurePowerSpawn>
+        toID?: Id<toType>
         resourceType?: ResourceConstant
     }
 }
 
+const funcList: ((room: Room) => [ResourceConstant | undefined, toType[]])[] = [
+    room => [RESOURCE_ENERGY, room.mySpawns().filter(obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0)],
+    room => [RESOURCE_ENERGY, room.upgradeContainers().filter(obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500)],
+    room => [RESOURCE_ENERGY, room.myFreeExtensionsRough()],
+    room => [RESOURCE_ENERGY, room.myTowers().filter(obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100)],
+    room => [RESOURCE_ENERGY, mySingleToList(room.myPowerSpawn()).filter(obj => obj.store[RESOURCE_ENERGY] < 500)],
+    room => [RESOURCE_ENERGY, mySingleToList(room.terminal).filter(obj => obj.lowEnergy())],
+    room => [room.terminal?.resourceNeed(), mySingleToList(room.terminal)],
+    room => [RESOURCE_POWER, mySingleToList(room.myPowerSpawn()).filter(
+        obj => obj.store[RESOURCE_POWER] <= 10 && room.storage && room.storage.store[RESOURCE_POWER] > 0)],
+]
+
 function calcTask (creep: Creep, pos: RoomPosition, next?: boolean) {
+    const cpuBegin = Game.cpu.getUsed()
     const data = creep.memory.data as FillerData
     const banID = next ? data.toID : undefined
     let to = data.toID && data.toID != banID && Game.getObjectById(data.toID)
     var type: ResourceConstant | undefined = data.resourceType
     // 这个 store.getCapacity() 接口太傻逼了
-    if (!to || !data.resourceType || to.store[data.resourceType] >= ToN(to.store.getCapacity(data.resourceType))) {
+    if (
+        (Game.time % 5 === 0 && !(to && type)) ||
+        (to && type && to.store[type] >= ToN(to.store.getCapacity(type)))
+    ) {
         to = undefined
-        // 有孵化任务优先填充
-        if (creep.room.getActiveSpawnConfigName() !== undefined) {
-            to =
-                pos.findClosestByPath(creep.room.myExtensions(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                }) ||
-                pos.findClosestByPath(creep.room.mySpawns(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                })
-        }
-        // 正常顺序 放 energy
-        if (!to) {
-            to =
-                pos.findClosestByPath(creep.room.upgradeContainers(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500
-                }) ||
-                pos.findClosestByPath(creep.room.mySpawns(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                }) ||
-                pos.findClosestByPath(creep.room.myExtensions(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                }) ||
-                pos.findClosestByPath(creep.room.myTowers(), {
-                    filter: obj => obj.id != banID && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100
-                }) ||
-                [creep.room.myPowerSpawn()].find(obj => obj && obj.id != banID && obj.store[RESOURCE_ENERGY] < 500)
-                ||
-                [creep.room.terminal].find(obj => obj && obj.id != banID && obj.lowEnergy())
-        }
-        if (to)
-            type = RESOURCE_ENERGY
-        // 特殊任务
-        else {
-            const storage = creep.room.storage
-            const term = creep.room.terminal
-            const ps = creep.room.myPowerSpawn()
-            if (!to && term && banID != term.id && term.resourceNeed()) {
-                to = term
-                type = term.resourceNeed()
-            }
-            if (!to && ps && banID != ps.id && ps.store[RESOURCE_POWER] <= 10 && storage && storage.store[RESOURCE_POWER] > 0) {
-                to = ps
-                type = RESOURCE_POWER
-            }
+        funcList.forEach(f => {
             if (!to) {
-                const roomTask = creep.room.getResourceTask()
-                if (roomTask) {
-                    to = Game.getObjectById(roomTask.targetID)
-                    type = roomTask.resourceType
-                }
+                const test = Game.cpu.getUsed()
+                const tuple = f(creep.room)
+                to = tuple[0] && creep.pos.findClosestByRange(tuple[1].filter(obj => obj.id != banID))
+                type = tuple[0]
+                // logConsole(`cpu cost: ${Game.cpu.getUsed() - test}`)
             }
-        }
+        })
     }
+    // logConsole(`filler calcTask cpu cost: ${Game.cpu.getUsed() - cpuBegin} at ${creep.room.name}`)
     if (to && type) {
         data.toID = to.id
         data.resourceType = type
@@ -80,6 +55,8 @@ function calcTask (creep: Creep, pos: RoomPosition, next?: boolean) {
             type: type,
         }
     }
+    data.toID = undefined
+    data.resourceType = undefined
     return undefined
 }
 

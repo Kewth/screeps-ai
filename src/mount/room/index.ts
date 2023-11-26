@@ -1,4 +1,4 @@
-import { PrintTable, calcConfigName, isEnemyOrInvader, isEvil, logConsole, logError, myFirst, strLim } from "utils/other"
+import { PrintTable, ToN, calcConfigName, isEnemyOrInvader, isEvil, logConsole, logError, myFirst, strLim } from "utils/other"
 import { mountTower } from "./tower"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
@@ -433,14 +433,14 @@ export function mountRoom() {
             this._myStructures =  this.find(FIND_MY_STRUCTURES)
         return this._myStructures
     }
-    Room.prototype.myExtensions = function() {
-        if (!this._myExtensions) {
-            this._myExtensions = this.myStructures().filter(
-                obj => obj.structureType == STRUCTURE_EXTENSION
-            ) as StructureExtension[]
-        }
-        return this._myExtensions
-    }
+    // Room.prototype.myExtensions = function() {
+    //     if (!this._myExtensions) {
+    //         this._myExtensions = this.myStructures().filter(
+    //             obj => obj.structureType == STRUCTURE_EXTENSION
+    //         ) as StructureExtension[]
+    //     }
+    //     return this._myExtensions
+    // }
     Room.prototype.mySpawns = function() {
         if (!this._mySpawns)
             this._mySpawns = this.find(FIND_MY_SPAWNS)
@@ -563,6 +563,33 @@ export function mountRoom() {
         this.cache.mineralID = mineral?.id
         return mineral
     }
+    Room.prototype.myExtensions = function() {
+        if (this.cache.myExtensionIDs)
+            return this.cache.myExtensionIDs.map(id => Game.getObjectById(id)).filter(obj => obj) as StructureExtension[]
+        const myExtensions = this.myStructures().filter(
+            obj => obj.structureType == STRUCTURE_EXTENSION
+        ) as StructureExtension[]
+        this.cache.myExtensionIDs = myExtensions.map(obj => obj.id)
+        return myExtensions
+    }
+    // 结果可能会少，但很多时候并不重要
+    Room.prototype.myFreeExtensionsRough = function() {
+        if (this.cache.myFreeExtensionIDs) {
+            const res = this.cache.myFreeExtensionIDs
+                .map(id => Game.getObjectById(id))
+                .filter(obj => obj && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0) as StructureExtension[]
+            this.cache.myFreeExtensionIDs = res.map(obj => obj.id)
+            // WARNING: 只要找到了 5 个就不更新 cache
+            if (res.length >= 5) return res
+            // 在保证期限内不更新 cache
+            if (Game.time <= ToN(this.cache.myFreeExtensionIDsUntil)) return res
+        }
+        // 更新 cache
+        const res = this.myExtensions().filter(obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+        this.cache.myFreeExtensionIDs = res.map(obj => obj.id)
+        this.cache.myFreeExtensionIDsUntil = Game.time + 10
+        return res
+    }
 
     Room.prototype.myController = function() {
         return (this.controller && this.controller.my) ? this.controller : undefined
@@ -660,8 +687,8 @@ declare global {
         _mySpawns: StructureSpawn[]
         myPowerSpawn(): StructurePowerSpawn | undefined
         _myPowerSpawn: StructurePowerSpawn | undefined
-        myExtensions(): StructureExtension[]
-        _myExtensions: StructureExtension[]
+        // myExtensions(): StructureExtension[]
+        // _myExtensions: StructureExtension[]
         myTowers(): StructureTower[]
         _myTowers: StructureTower[]
         myLinks(): StructureLink[]
@@ -702,6 +729,8 @@ declare global {
         // cache 级别缓存
         invaderCore(): StructureInvaderCore | undefined
         mineral(): Mineral | undefined
+        myExtensions(): StructureExtension[]
+        myFreeExtensionsRough(): StructureExtension[]
 
         // 其他
         myController(): StructureController | undefined

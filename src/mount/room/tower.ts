@@ -36,7 +36,7 @@ export function mountTower() {
         const hurts = [...this.myCreeps(), ...this.find(FIND_MY_POWER_CREEPS)].filter(obj => obj.hits < obj.hitsMax)
         hurts.forEach(creep => {
             const free_towers = towers.filter(t => !busy_tower_list.includes(t.id))
-            const free_tower = myMin(free_towers, obj => creep.pos.getRangeTo(obj))
+            const free_tower = creep.pos.findClosestByRange(free_towers)
             if (free_tower) {
                 busy_tower_list.push(free_tower.id)
                 free_tower.heal(creep)

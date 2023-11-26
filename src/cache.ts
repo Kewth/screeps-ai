@@ -1,3 +1,5 @@
+import { logConsole } from "utils/other"
+
 declare global {
     interface Cache {
         rooms: { [name: string]: RoomCache }
@@ -5,11 +7,17 @@ declare global {
     interface RoomCache {
         invaderCoreID?: Id<StructureInvaderCore>
         mineralID?: Id<Mineral>
+        myExtensionIDs?: Id<StructureExtension>[]
+        myFreeExtensionIDs?: Id<StructureExtension>[]
+        myFreeExtensionIDsUntil?: number
     }
 }
 
 export function checkCache() {
-    if (!global.cache) global.cache = {
-        rooms: {}
+    if (!global.cache) {
+        logConsole('Init/Clear Cache')
+        global.cache = {
+            rooms: {}
+        }
     }
 }

@@ -41,7 +41,7 @@ export const roomAttakerLogic: CreepLogic = {
         const friends = creep.pos.findInRange(FIND_MY_CREEPS, 3)
         const hostiles = creep.pos.findInRange(FIND_HOSTILE_CREEPS, 3)
         // 治疗
-        const healTarget = myMin(friends.filter(obj => obj.hits < obj.hitsMax), obj => creep.pos.getRangeTo(obj))
+        const healTarget = creep.pos.findClosestByRange(friends.filter(obj => obj.hits < obj.hitsMax))
         if (healTarget) {
             if (healTarget.pos.inRangeTo(creep, 1))
                 creep.heal(healTarget)

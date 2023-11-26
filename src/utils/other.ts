@@ -118,6 +118,10 @@ export function myFirst<T> (list: T[]): T | undefined {
     return _.first(list)
 }
 
+export function mySingleToList<T> (single: T | undefined): T[] {
+    return single === undefined ? [] : [single]
+}
+
 export function marketConst2resourceConst (t: MarketResourceConstant): ResourceConstant | undefined {
     return (t != PIXEL && t != CPU_UNLOCK && t != ACCESS_KEY && t != SUBSCRIPTION_TOKEN)
         ? t
