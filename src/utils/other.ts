@@ -127,3 +127,19 @@ export function marketConst2resourceConst (t: MarketResourceConstant): ResourceC
         ? t
         : undefined
 }
+
+export function compressResourceType (
+    t: RESOURCE_UTRIUM | RESOURCE_LEMERGIUM | RESOURCE_ZYNTHIUM | RESOURCE_KEANIUM |
+        RESOURCE_GHODIUM | RESOURCE_OXYGEN | RESOURCE_HYDROGEN | RESOURCE_CATALYST | RESOURCE_ENERGY
+) {
+    if (t == RESOURCE_UTRIUM) return RESOURCE_UTRIUM_BAR
+    if (t == RESOURCE_LEMERGIUM) return RESOURCE_LEMERGIUM_BAR
+    if (t == RESOURCE_ZYNTHIUM) return RESOURCE_ZYNTHIUM_BAR
+    if (t == RESOURCE_KEANIUM) return RESOURCE_KEANIUM_BAR
+    if (t == RESOURCE_GHODIUM) return RESOURCE_GHODIUM_MELT
+    if (t == RESOURCE_OXYGEN) return RESOURCE_OXIDANT
+    if (t == RESOURCE_HYDROGEN) return RESOURCE_REDUCTANT
+    if (t == RESOURCE_CATALYST) return RESOURCE_PURIFIER
+    if (t == RESOURCE_ENERGY) return RESOURCE_BATTERY
+    return undefined
+}

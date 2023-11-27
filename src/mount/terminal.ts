@@ -1,5 +1,5 @@
 import { Setting } from "setting"
-import { marketConst2resourceConst } from "utils/other"
+import { logConsole, marketConst2resourceConst } from "utils/other"
 
 export function mountTerminal() {
     StructureTerminal.prototype.highEnergy = function () {
@@ -12,7 +12,7 @@ export function mountTerminal() {
         const storage = this.room.storage
         if (this.highEnergy())
             return RESOURCE_ENERGY
-        if (storage && storage.store[RESOURCE_ENERGY] < Setting.STORAGE_ENERGY_ALMOST_ZERO)
+        if (storage && storage.almostNoEnergy())
             return RESOURCE_ENERGY
         if (this.store[RESOURCE_POWER] > 0)
             return RESOURCE_POWER
@@ -40,21 +40,25 @@ export function mountTerminal() {
     }
     StructureTerminal.prototype.work = function () {
         // 送能量出去
+        // NOTE: 为了避免低能量房间反复传的情况，仅允许高能量房间进行传输
         const ctrl = this.room.controller
         const storage = this.room.storage
         const rate = 0.1 // 可以容忍的消耗
-        const localAmount = Math.floor(this.store[RESOURCE_ENERGY] / 2) // 本地能够发送的能量
-        const amount = Math.floor(localAmount / (1 + rate)) // 实际发送出去的能量
-        if (ctrl && ctrl.level == 8 && storage &&
-            storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_LOW + localAmount &&
-            !this.lowEnergy() && Game.time % 100 <= 0
+        const localAmount = Math.floor(this.store[RESOURCE_ENERGY] / 2) // 本地能够使用的能量
+        const amount = Math.floor(localAmount / (1 + rate)) // 实际能够发送出去的能量
+        if (Game.time % 10 <= 0 &&
+            ctrl && ctrl.level == 8 &&
+            // storage && storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_LOW + localAmount &&
+            storage && storage.mediumHighEnergy() &&
+            !this.lowEnergy()
         ) {
             for (const otherRoomName in Game.rooms) {
                 const otherRoom = Game.rooms[otherRoomName]
                 const otherCtrl = otherRoom.myController()
+                if (!otherCtrl) return
                 const otherTerm = otherRoom.terminal
-                if (otherCtrl && otherCtrl.level < 8 &&
-                    otherTerm && !otherTerm.highEnergy() &&
+                // logConsole(`test ${this.room.name} ${otherRoom.name}: ${otherRoom.storage?.lowEnergy()} ${otherTerm?.highEnergy()}`)
+                if (otherRoom.storage?.lowEnergy() && otherTerm && !otherTerm.highEnergy() &&
                     amount + Game.market.calcTransactionCost(amount, this.room.name, otherRoomName) <= localAmount
                 ) {
                     this.send(RESOURCE_ENERGY, amount, otherRoom.name, `energy from ${this.room.name}`)

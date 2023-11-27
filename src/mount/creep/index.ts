@@ -1,7 +1,7 @@
 import { reSpawn } from "mount/room/spawn"
 import { getRoleLogic } from "role"
 import { Setting } from "setting"
-import { anyStore, logConsole, logError, myFirst } from "utils/other"
+import { ToN, anyStore, logConsole, logError, myFirst } from "utils/other"
 
 export function mountCreep() {
     Creep.prototype.work = function() {
@@ -9,29 +9,35 @@ export function mountCreep() {
             this.updateReadyUsedTime()
             return
         }
-        const logic = getRoleLogic[this.memory.role]
-        // prepare 阶段
-        if (!this.memory.ready) {
-            if (!logic.prepare_stage || logic.prepare_stage(this)) {
-                this.memory.ready = true
-                // logConsole(`${this.name} is ready in ${this.memory.readyUsedTime} ticks`)
-            }
-            else {
-                this.updateReadyUsedTime()
-                return
-            }
+        if (this.sleeping()) {
+            this.say(`摸鱼:${this.sleepRemain()}`, true)
+            return
         }
-        // source/target 阶段
-        const changeStage = this.memory.working
-            ? (!logic.target_stage || logic.target_stage(this))
-            : (!logic.source_stage || logic.source_stage(this))
-        if (changeStage) {
-            this.memory.working = !this.memory.working
-            const changeStageAgain = this.memory.working
+        else {
+            const logic = getRoleLogic[this.memory.role]
+            // prepare 阶段
+            if (!this.memory.ready) {
+                if (!logic.prepare_stage || logic.prepare_stage(this)) {
+                    this.memory.ready = true
+                    // logConsole(`${this.name} is ready in ${this.memory.readyUsedTime} ticks`)
+                }
+                else {
+                    this.updateReadyUsedTime()
+                    return
+                }
+            }
+            // source/target 阶段
+            const changeStage = this.memory.working
                 ? (!logic.target_stage || logic.target_stage(this))
                 : (!logic.source_stage || logic.source_stage(this))
-            if (changeStageAgain)
-                logError('change stage twice a tick', this.name)
+            if (changeStage) {
+                this.memory.working = !this.memory.working
+                const changeStageAgain = this.memory.working
+                    ? (!logic.target_stage || logic.target_stage(this))
+                    : (!logic.source_stage || logic.source_stage(this))
+                if (changeStageAgain)
+                    logError('change stage twice a tick', this.name)
+            }
         }
         // 快死了提前孵化
         if (!this.memory.reSpawnAlready && this.memory.readyUsedTime && this.ticksToLive && this.ticksToLive < this.memory.readyUsedTime)
@@ -122,7 +128,7 @@ export function mountCreep() {
     // }
 
     Creep.prototype.findEnergySource = function() {
-        if (this.room.storage && this.room.storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_ALMOST_ZERO)
+        if (this.room.storage && !this.room.storage.almostNoEnergy())
             return this.room.storage
         const enSource = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
         if (enSource && (enSource instanceof Resource || enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
@@ -157,7 +163,7 @@ export function mountCreep() {
 
     Creep.prototype._move = Creep.prototype.move
     Creep.prototype.move = function(dir: DirectionConstant): CreepMoveReturnCode {
-        this.memory.isSleep = undefined
+        this.memory.allowCross = undefined
         let toX = this.pos.x
         let toY = this.pos.y
         if (dir == LEFT || dir == BOTTOM_LEFT || dir == TOP_LEFT) toX --
@@ -170,7 +176,7 @@ export function mountCreep() {
             // if (toPos.lookFor(LOOK_STRUCTURES).length > 0)
                 // return OK
             const toCreep = myFirst(toPos.lookFor(LOOK_CREEPS)) || myFirst(toPos.lookFor(LOOK_POWER_CREEPS))
-            if (toCreep && toCreep.memory.isSleep) {
+            if (toCreep && toCreep.memory.allowCross) {
                 logConsole(`${this.name} CROSS ${toCreep.name}`)
                 switch (dir) {
                     case LEFT: { toCreep._move(RIGHT); break }
@@ -194,12 +200,26 @@ export function mountCreep() {
                 const room = Game.rooms[roomName]
                 if (room) {
                     for (const creep of room.myCreeps()) {
-                        if (!creep.memory.isSleep)
+                        if (!creep.memory.allowCross)
                             martrix.set(creep.pos.x, creep.pos.y, 255)
                     }
                 }
             }
         })
+    }
+
+    Creep.prototype.sleep = function(time: number) {
+        // sleep 范围包括本 tick
+        this.memory.sleepUntil = Game.time + time
+        this.say(`摸鱼咯:${time}`, true)
+        this.memory.allowCross = true // 会在下次移动的时候自动被修改为 undefined
+    }
+    Creep.prototype.sleepRemain = function() {
+        const d = ToN(this.memory.sleepUntil) - Game.time
+        return d > 0 ? d : 0
+    }
+    Creep.prototype.sleeping = function() {
+        return this.sleepRemain() > 0
     }
 }
 
@@ -222,5 +242,8 @@ declare global {
         _movePos: RoomPosition
         _move(target: DirectionConstant): CreepMoveReturnCode
         goTo(tar: {pos: RoomPosition}): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND
+        sleep(time: number): void
+        sleepRemain(): number
+        sleeping(): boolean
     }
 }

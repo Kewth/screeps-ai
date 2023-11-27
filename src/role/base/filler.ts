@@ -1,10 +1,7 @@
-// 将 erengy 填充到需要的位置
-// TODO: 将 storage 前后的 filler 拆分
-
-import { Setting } from "setting"
 import { ToN, anyStore, logConsole, logError, mySingleToList } from "utils/other"
 
-type toType = StructureSpawn | StructureExtension | StructureTower | StructureTerminal | StructureContainer | StructurePowerSpawn
+type toType = StructureSpawn | StructureExtension | StructureTower |
+    StructureTerminal | StructureContainer | StructurePowerSpawn | StructureFactory
 declare global {
     interface FillerData extends EmptyData {
         toID?: Id<toType>
@@ -22,30 +19,33 @@ const funcList: ((room: Room) => [ResourceConstant | undefined, toType[]])[] = [
     room => [room.terminal?.resourceNeed(), mySingleToList(room.terminal)],
     room => [RESOURCE_POWER, mySingleToList(room.myPowerSpawn()).filter(
         obj => obj.store[RESOURCE_POWER] <= 10 && room.storage && room.storage.store[RESOURCE_POWER] > 0)],
+    room => [RESOURCE_ENERGY, mySingleToList(room.myFactory()).filter(obj => obj.lowEnergy())],
+    room => [room.myFactory()?.resourceNeed(), mySingleToList(room.myFactory())],
 ]
 
 function calcTask (creep: Creep, pos: RoomPosition, next?: boolean) {
-    const cpuBegin = Game.cpu.getUsed()
+    // const cpuBegin = Game.cpu.getUsed()
     const data = creep.memory.data as FillerData
     const banID = next ? data.toID : undefined
     let to = data.toID && data.toID != banID && Game.getObjectById(data.toID)
     var type: ResourceConstant | undefined = data.resourceType
     // 这个 store.getCapacity() 接口太傻逼了
     if (
-        (Game.time % 5 === 0 && !(to && type)) ||
-        (to && type && to.store[type] >= ToN(to.store.getCapacity(type)))
+        !(to && type) || to.store[type] >= ToN(to.store.getCapacity(type))
     ) {
         to = undefined
         funcList.forEach(f => {
             if (!to) {
-                const test = Game.cpu.getUsed()
+                // const test = Game.cpu.getUsed()
                 const tuple = f(creep.room)
                 to = tuple[0] && creep.pos.findClosestByRange(tuple[1].filter(obj => obj.id != banID))
                 type = tuple[0]
+                // if (creep.room.name == 'E26S27')
                 // logConsole(`cpu cost: ${Game.cpu.getUsed() - test}`)
             }
         })
     }
+    // if (creep.room.name == 'E26S27')
     // logConsole(`filler calcTask cpu cost: ${Game.cpu.getUsed() - cpuBegin} at ${creep.room.name}`)
     if (to && type) {
         data.toID = to.id
@@ -68,7 +68,10 @@ export const fillerLogic: CreepLogic = {
     },
     source_stage: creep => {
         const t = calcTask(creep, creep.room.storage?.pos || creep.pos)
-        if (!t) return false
+        if (!t) {
+            creep.sleep(10)
+            return false
+        }
         if (creep.store[t.type] >= creep.store.getCapacity()) return true
         // 多余不对的资源放进 storage
         if (creep.store[t.type] < creep.store.getUsedCapacity()) {
@@ -114,25 +117,27 @@ export const fillerLogic: CreepLogic = {
             return true
         }
         const t = calcTask(creep, creep.pos)
-        if (t) {
-            // 资源不对，转 source 但不清除缓存
-            if (creep.store[t.type] <= 0) return true
-            const res = creep.transfer(t.to, t.type)
-            if (res == ERR_NOT_IN_RANGE)
-                creep.goTo(t.to)
-            else if (res == OK) {
-                // 提前移动
-                if (t.type == RESOURCE_ENERGY && creep.store[t.type] > ToN(t.to.store.getFreeCapacity(t.type))) {
-                    const nextT = calcTask(creep, creep.pos, true)
-                    nextT && creep.goTo(nextT.to)
-                }
-                else {
-                    creep.room.storage && creep.goTo(creep.room.storage)
-                }
-            }
-            else
-                logError("cannot send resource", creep.name)
+        if (!t) {
+            creep.sleep(10)
+            return true
         }
+        // 资源不对，转 source 但不清除缓存
+        if (creep.store[t.type] <= 0) return true
+        const res = creep.transfer(t.to, t.type)
+        if (res == ERR_NOT_IN_RANGE)
+            creep.goTo(t.to)
+        else if (res == OK) {
+            // 提前移动
+            if (t.type == RESOURCE_ENERGY && creep.store[t.type] > ToN(t.to.store.getFreeCapacity(t.type))) {
+                const nextT = calcTask(creep, creep.pos, true)
+                nextT && creep.goTo(nextT.to)
+            }
+            else {
+                creep.room.storage && creep.goTo(creep.room.storage)
+            }
+        }
+        else
+            logError("cannot send resource", creep.name)
         return false
     },
 }

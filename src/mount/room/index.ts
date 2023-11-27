@@ -5,6 +5,7 @@ import { mountSpawn } from "./spawn"
 import { creepApi } from "creepApi"
 import { calcBodyCost, makeBody, parseGeneralBodyConf, unionBodyConf } from "utils/bodyConfig"
 import { mountMarket } from "./market"
+import { Setting } from "setting"
 
 // TODO: 缓存在没有值 (undefined) 的时候等同于没有缓存，不太合理
 export function mountRoom() {
@@ -62,10 +63,10 @@ export function mountRoom() {
             if (!Memory.creepConfigs[exUpgConfigName]) {
                 if (this.storage) {
                     // 有 storage 判定 storage
-                    if (this.storage.store[RESOURCE_ENERGY] >= 800_000)
+                    if (this.storage.highEnergy() && this.controller.level < 8)
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                             'exUpgrader', { onlyOnce: true }, 2)
-                    else if (this.storage.store[RESOURCE_ENERGY] >= 500_000)
+                    else if (this.storage.mediumHighEnergy() && this.controller.level < 8)
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                             'exUpgrader', { onlyOnce: true }, 1)
                 }
@@ -87,6 +88,8 @@ export function mountRoom() {
             this.terminal?.work()
             // power spawn 逻辑
             this.myPowerSpawn()?.work()
+            // factory 逻辑
+            this.myFactory()?.work()
             // market 逻辑
             this.work_market()
         }
@@ -590,6 +593,13 @@ export function mountRoom() {
         this.cache.myFreeExtensionIDsUntil = Game.time + 10
         return res
     }
+    Room.prototype.myFactory = function() {
+        const _cache = this.cache.factoryID && Game.getObjectById(this.cache.factoryID)
+        if (_cache) return _cache
+        const factory = this.myStructures().find(obj => obj.structureType == STRUCTURE_FACTORY) as StructureFactory
+        this.cache.factoryID = factory?.id
+        return factory
+    }
 
     Room.prototype.myController = function() {
         return (this.controller && this.controller.my) ? this.controller : undefined
@@ -731,6 +741,7 @@ declare global {
         mineral(): Mineral | undefined
         myExtensions(): StructureExtension[]
         myFreeExtensionsRough(): StructureExtension[]
+        myFactory(): StructureFactory | undefined
 
         // 其他
         myController(): StructureController | undefined

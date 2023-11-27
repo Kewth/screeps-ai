@@ -10,6 +10,7 @@ declare global {
         myExtensionIDs?: Id<StructureExtension>[]
         myFreeExtensionIDs?: Id<StructureExtension>[]
         myFreeExtensionIDsUntil?: number
+        factoryID?: Id<StructureFactory>
     }
 }
 

@@ -39,7 +39,7 @@ export const claimerLogic: CreepLogic = {
         return true
     },
     target_stage: creep => {
-        creep.say('摸鱼')
+        creep.sleep(100)
         return false
     },
     hangSpawn: (spawnRoom, memData) => {

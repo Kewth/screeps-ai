@@ -76,7 +76,7 @@ export const harvesterLogic: CreepLogic = {
                 return false
             }
             // container 爆满的话没必要挖了
-            creep.say('摸鱼...')
+            creep.sleep(10)
             return false
         }
         // 初期，挖出来 drop 给别人捡

@@ -6,6 +6,8 @@ import { mountRoom } from "./room";
 import { mountTerminal } from "./terminal";
 import { mountPowerSpawn } from "./powerSpawn";
 import { mountPowerCreep } from "./powerCreep";
+import { mountFactory } from "./factory";
+import { mountStorage } from "./storage";
 
 export function mountAll() {
     logConsole('mount ALL modules')
@@ -16,4 +18,6 @@ export function mountAll() {
     mountTerminal()
     mountPowerSpawn()
     mountPowerCreep()
+    mountFactory()
+    mountStorage()
 }

@@ -41,6 +41,8 @@ export const linkTransferLogic: CreepLogic = {
             else
                 logError(`cannot get energy: ${res}`, creep.name)
         }
+        else
+            creep.sleep(5)
         return false
     },
     target_stage: creep => {

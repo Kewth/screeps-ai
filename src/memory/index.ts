@@ -21,8 +21,10 @@ declare global {
         energySourceID?: Id<StructureContainer | Resource>
         // 是否站定
         // standing?: boolean
-        // 是否摸鱼
-        isSleep?: boolean
+        // 是否允对穿
+        allowCross?: boolean
+        // 摸鱼
+        sleepUntil?: number
     }
 }
 
@@ -34,8 +36,10 @@ function checkCreepMemory() {
 /* ===== POWERCREEP ===== */
 declare global {
     interface PowerCreepMemory {
-        // 是否摸鱼
-        isSleep?: boolean
+        // 是否允对穿
+        allowCross?: boolean
+        // 移动目标
+        targetRoomName: string
     }
 }
 
@@ -97,6 +101,12 @@ declare global {
         buyingOrder?: FocusOrder
         // upgrade block
         controllerBlockUntil?: number
+        // 工厂相关
+        factoryProduct?: RESOURCE_ENERGY | CommodityConstant
+        factoryWorkCount?: number
+        factoryPrepareList?: {type: ResourceConstant, amount: number}[]
+        factoryWorking?: boolean
+        factorySending?: boolean
     }
 }
 

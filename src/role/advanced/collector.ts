@@ -5,7 +5,7 @@ import { anyStore, hasResource, logError } from "utils/other"
 
 declare global {
     interface CollectorData extends EmptyData {
-        fromID?: Id<Resource | Tombstone | StructureContainer | Ruin | StructureTerminal>
+        fromID?: Id<Resource | Tombstone | StructureContainer | Ruin | StructureTerminal | StructureFactory>
     }
 }
 
@@ -27,7 +27,9 @@ function calcFrom (creep: Creep) {
         creep.pos.findClosestByPath(creep.room.ruins(), {
             filter: obj => obj.store.getUsedCapacity() > 0
         }) ||
-        [creep.room.terminal].find(obj => obj !== undefined && obj.resourceToStorage() !== undefined)
+        [creep.room.terminal, creep.room.myFactory()].find(
+            obj => obj !== undefined && obj.resourceToStorage() !== undefined
+        )
     data.fromID = from?.id
     return from
 }
@@ -38,7 +40,7 @@ export const collectorLogic: CreepLogic = {
         if (creep.store.getFreeCapacity() <= 0) { delete data.fromID; return true }
         const from = calcFrom(creep)
         if (from) {
-            const res = from instanceof StructureTerminal
+            const res = (from instanceof StructureTerminal || from instanceof StructureFactory)
                 ? creep.withdraw(from, from.resourceToStorage() as ResourceConstant)
                 : creep.gainAnyResourceFrom(from)
             if (res == ERR_NOT_IN_RANGE)
@@ -53,7 +55,7 @@ export const collectorLogic: CreepLogic = {
             }
         }
         else
-            creep.memory.isSleep = true
+            creep.sleep(10)
         return false
     },
 

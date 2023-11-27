@@ -1,5 +1,5 @@
 import { Setting } from "setting"
-import { logConsole, logError, marketConst2resourceConst, myMax } from "utils/other"
+import { ToN, logConsole, logError, marketConst2resourceConst, myMax } from "utils/other"
 
 export function mountMarket() {
     Room.prototype.market_buyingOrder = function(focus: FocusOrder) {
@@ -86,14 +86,10 @@ export function mountMarket() {
             if (!term || term.store[resourceConst] < Setting.FOCUS_ORDER_AMOUNT_PER) {
             }
             else {
-                if (this.storage && this.storage.store[order.resourceType as ResourceConstant] >= Setting.STORAGE_MINERAL_HIGH) {
-                    // 矿太多了，继续卖
-                }
-                else {
-                    // 以一定概率增加一点价格
-                    if (Math.random() < 0.3)
-                        Game.market.changeOrderPrice(order.id, order.price * 1.01)
-                }
+                const nowStore = ToN(this.storage?.store[order.resourceType as ResourceConstant])
+                // 以一定概率增加一点价格，库存越少概率越高
+                if (Math.random() < 1 - nowStore / Setting.STORAGE_MINERAL_HIGH)
+                    Game.market.changeOrderPrice(order.id, order.price * 1.01)
                 // 补货，新一轮监听
                 Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER)
                 focus.timeBegin = Game.time + 1

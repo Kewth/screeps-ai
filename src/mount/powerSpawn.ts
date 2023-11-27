@@ -11,7 +11,7 @@ export function mountPowerSpawn() {
             //         targetID: this.id,
             //     })
             // }
-            // if (this.store[RESOURCE_ENERGY] <= 0 && storage && storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_LOW) {
+            // if (this.store[RESOURCE_ENERGY] <= 0 && storage && !storage.lowEnergy()) {
             //     this.room.addResourceTask({
             //         resourceType: RESOURCE_ENERGY,
             //         amount: this.store.getCapacity(RESOURCE_ENERGY) * 0.8,
@@ -19,7 +19,8 @@ export function mountPowerSpawn() {
             //     })
             // }
         }
-        if (storage && storage.store[RESOURCE_ENERGY] >= Setting.STORAGE_ENERGY_LOW)
+        // 停一次是为了让 filler 能够释放出来，另外放慢一下速度减少能量消耗
+        if (storage && !storage.lowEnergy() && Game.time % 2 > 0)
             this.processPower()
     }
 }
