@@ -2,53 +2,54 @@ import { logError } from "utils/other"
 
 declare global {
     interface RemoteHelperData extends EmptyData {
-        sourceRoomName: string
         targetRoomName: string
-        toID?: Id<ConstructionSite>
+        toID?: Id<ConstructionSite | StructureController>
     }
 }
-
-// TODO: 搬 storage
 
 function calcTo (creep: Creep) {
     const data = creep.memory.data as RemoteHelperData
     let to = data.toID && Game.getObjectById(data.toID)
     if (!to) to =
-        creep.pos.findClosestByPath(creep.room.myConstructionSites())
+        creep.pos.findClosestByRange(creep.room.myConstructionSites()) ||
+        creep.room.controller
     data.toID = to?.id
     return to
 }
 
 export const remoteHelperLogic: CreepLogic = {
-    source_stage: creep => {
+    prepare_stage: creep => {
         const data = creep.memory.data as RemoteHelperData
+        return creep.goToRoom(data.targetRoomName)
+    },
+    source_stage: creep => {
         if (creep.store.getFreeCapacity() <= 0) return true
-        if (!creep.goToRoom(data.sourceRoomName)) return false
-        const from = creep.findEnergySource()
+        // 使用别人剩下的 storage
+        const storage = creep.room.storage
+        const from = storage && storage.store[RESOURCE_ENERGY] > 0 ? storage : creep.findEnergySource()
         if (from) {
-            const res = creep.gainResourceFrom(from, RESOURCE_ENERGY)
-            if (res == ERR_NOT_IN_RANGE)
+            const resp = creep.gainResourceFrom(from, RESOURCE_ENERGY)
+            if (resp == ERR_NOT_IN_RANGE)
                 creep.moveTo(from)
-            else if (res == OK)
-                creep.goToRoom(data.targetRoomName)
-            else
-                logError(`cannot get energy: ${res}`, creep.name)
+            else if (resp != OK)
+                logError(`cannot get energy: ${resp}`, creep.name)
+        }
+        else {
+            // TODO: 挖矿
+            logError(`no source`, creep.name)
         }
         return false
     },
     target_stage: creep => {
         const data = creep.memory.data as RemoteHelperData
         if (creep.store[RESOURCE_ENERGY] <= 0) { delete data.toID; return true }
-        if (!creep.goToRoom(data.targetRoomName)) return false
         const to = calcTo(creep)
         if (to) {
-            const res = creep.build(to)
+            const res = to instanceof StructureController ? creep.upgradeController(to) : creep.build(to)
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(to)
-            else if (res == OK) {
-            }
-            else
-                logError(`cannot build: ${res}`, creep.name)
+            else if (res != OK)
+                logError(`cannot work: ${res}`, creep.name)
         }
         return false
     },
@@ -57,14 +58,14 @@ export const remoteHelperLogic: CreepLogic = {
         const room = Game.rooms[data.targetRoomName]
         if (!room) return true
         if (room.enemyOrInvaderCreeps().length > 0) return true
-        if (!room.controller) return true
-        if (!room.controller.my) return true
+        if (!room.myController()) return true
         return false
     },
     stopSpawn: (spawnRoom, memData) => {
         const data = memData as RemoteHelperData
         const room = Game.rooms[data.targetRoomName]
-        if (room && room.myConstructionSites().length <= 0) return true
+        const ctrl = room?.myController()
+        if (ctrl && ctrl.level >= 5) return true
         return false
     }
 }

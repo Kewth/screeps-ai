@@ -156,7 +156,7 @@ const getBodyConfigByAuto: {
         return undefined
     },
     remoteHelper: energy => {
-        if (energy >= 2200) return { work: 4, carry: 16, move: 20 } // RCL 6
+        if (energy >= 3000) return { work: 10, carry: 15, move: 25 } // RCL 7
         return undefined
     },
 }

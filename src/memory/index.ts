@@ -18,7 +18,7 @@ declare global {
         // 是否正在 target stage
         working?: boolean
         // 缓存 findEnergySource
-        energySourceID?: Id<StructureContainer | Resource>
+        energySourceID?: Id<StructureContainer | Resource | StructureStorage>
         // 是否站定
         // standing?: boolean
         // 是否允对穿

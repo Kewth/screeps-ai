@@ -128,7 +128,8 @@ export function mountCreep() {
     // }
 
     Creep.prototype.findEnergySource = function() {
-        if (this.room.storage && !this.room.storage.almostNoEnergy())
+        // 优先使用自己的 storage
+        if (this.room.storage?.my && !this.room.storage.almostNoEnergy())
             return this.room.storage
         const enSource = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
         if (enSource && (enSource instanceof Resource || enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
@@ -136,7 +137,8 @@ export function mountCreep() {
             ...this.room.commonContainers().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
             ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY)
         ]
-        const res = this.pos.findClosestByPath(list)
+        // 最后考虑别人的 storage
+        const res = this.pos.findClosestByRange(list) || this.room.storage
         this.memory.energySourceID = res?.id
         return res || undefined
     }

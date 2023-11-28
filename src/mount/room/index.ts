@@ -169,6 +169,11 @@ export function mountRoom() {
         creepApi.add<BuilderData>(this.name, 'builder', `bui`, 'builder', {}, 1)
         // 注册 filler
         creepApi.add<FillerData>(this.name, 'filler', `fil`, 'filler', {}, 1, creepApi.FILLER_PRIORITY)
+        // 清理
+        this.structures().forEach(obj => {
+            if (obj.structureType == STRUCTURE_EXTENSION && !obj.my)
+                obj.destroy()
+        })
         return OK
     }
 
@@ -263,7 +268,6 @@ export function mountRoom() {
                 spawnFlagName: spawnFlag.name
             }, 1)
             creepApi.add<RemoteHelperData>(this.name, 'remoteHelper', `${roomName}_rHel`, 'remoteHelper', {
-                sourceRoomName: this.name,
                 targetRoomName: roomName,
             }, 3)
             logConsole('注册成功')
@@ -290,7 +294,7 @@ export function mountRoom() {
         const ctrl = this.myController()
         if (!ctrl) return
         // 注册 collector
-        if (this.storage) {
+        if (this.storage && this.storage.my) {
             creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1, creepApi.COLLECTOR_PRIORITY)
         }
         // 注册 miner
@@ -351,7 +355,6 @@ export function mountRoom() {
     Room.prototype.makeHelper = function(roomName: string, num: number) {
         if (num === undefined) return ERR_INVALID_ARGS
         creepApi.add<RemoteHelperData>(this.name, 'remoteHelper', `${roomName}_rHel`, 'remoteHelper', {
-            sourceRoomName: this.name,
             targetRoomName: roomName,
         }, num)
         return OK

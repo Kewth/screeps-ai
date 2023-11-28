@@ -20,8 +20,14 @@ export function mountPowerSpawn() {
             // }
         }
         // 停一次是为了让 filler 能够释放出来，另外放慢一下速度减少能量消耗
-        if (storage && !storage.lowEnergy() && Game.time % 2 <= 0)
-            this.processPower()
+        if (storage && this.store[RESOURCE_POWER] > 0) {
+            if (storage.highEnergy())
+                this.processPower()
+            else if (storage.mediumHighEnergy())
+                Game.time % 2 <= 0 && this.processPower()
+            else if (!storage.lowEnergy())
+                Game.time % 5 <= 0 && this.processPower()
+        }
     }
 }
 
