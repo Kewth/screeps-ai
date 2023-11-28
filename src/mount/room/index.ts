@@ -366,6 +366,7 @@ export function mountRoom() {
         t.add('Body Cost')
         t.add('Body Count')
         t.add('Live / Num')
+        t.add('CPU cost (new -> old)')
         t.newLine()
         for (const configName in Memory.creepConfigs) {
             const config = Memory.creepConfigs[configName]
@@ -379,6 +380,9 @@ export function mountRoom() {
                 t.add(`${calcBodyCost(bodys)}`)
                 t.add(`${bodys.length}`)
                 t.add(`${config.live}/${config.num}`)
+                let str = ''
+                config.recordCpuCost?.forEach(cpu => str = `${cpu.toFixed(2)}  ` + str)
+                t.add(str)
                 t.newLine()
             }
         }

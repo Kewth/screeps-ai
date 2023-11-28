@@ -14,7 +14,7 @@ const funcList: ((room: Room) => [ResourceConstant | undefined, toType[]])[] = [
     room => [RESOURCE_ENERGY, room.upgradeContainers().filter(obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 500)],
     room => [RESOURCE_ENERGY, room.myFreeExtensionsRough()],
     room => [RESOURCE_ENERGY, room.myTowers().filter(obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 100)],
-    room => [RESOURCE_ENERGY, mySingleToList(room.myPowerSpawn()).filter(obj => obj.store[RESOURCE_ENERGY] < 500)],
+    room => [RESOURCE_ENERGY, mySingleToList(room.myPowerSpawn()).filter(obj => obj.store[RESOURCE_ENERGY] < 1000)],
     room => [RESOURCE_ENERGY, mySingleToList(room.terminal).filter(obj => obj.lowEnergy())],
     room => [room.terminal?.resourceNeed(), mySingleToList(room.terminal)],
     room => [RESOURCE_POWER, mySingleToList(room.myPowerSpawn()).filter(
@@ -128,7 +128,7 @@ export const fillerLogic: CreepLogic = {
             creep.goTo(t.to)
         else if (res == OK) {
             // 提前移动
-            if (t.type == RESOURCE_ENERGY && creep.store[t.type] > ToN(t.to.store.getFreeCapacity(t.type))) {
+            if (creep.store[t.type] > ToN(t.to.store.getFreeCapacity(t.type))) {
                 const nextT = calcTask(creep, creep.pos, true)
                 nextT && creep.goTo(nextT.to)
             }

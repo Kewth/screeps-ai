@@ -10,6 +10,11 @@ export function reSpawn(memory: CreepMemory) {
     const config = Memory.creepConfigs[memory.configName]
     if (!config) { logError("no config", memory.configName); return }
     config.live--
+    if (config.recordCpuCost === undefined)
+        config.recordCpuCost = []
+    config.recordCpuCost.push(memory.cpuCost)
+    if (config.recordCpuCost.length > 10)
+        config.recordCpuCost.shift()
     if (config.live >= config.num) return // num 减小了，多出来的 creep 就不再孵化了
     if (config.live < 0) {
         logError('live < 0', memory.configName)
@@ -95,6 +100,7 @@ export function mountSpawn() {
                     role: config.role,
                     data: config.data,
                     configName: configName,
+                    cpuCost: 0,
                 }
             })
             if (res == OK) {

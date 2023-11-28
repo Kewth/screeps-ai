@@ -28,6 +28,7 @@ export const creepApi = {
             return ERR_BUSY
         }
         const live = Memory.creepConfigs[configName]?.live as number | undefined
+        const recordCpuCost = Memory.creepConfigs[configName]?.recordCpuCost
         Memory.creepConfigs[configName] = {
             spawnRoomName: spawnRoomName,
             role: role,
@@ -37,6 +38,7 @@ export const creepApi = {
             live: live ? live : 0,
             priority: priority ? priority : this.DEFAULT_PRIORITY,
             updateLock: updateLock,
+            recordCpuCost: recordCpuCost,
         }
         // 先挂起，下次 Spawn 检查的时候加进队列 (因为可能这个时候还不满足孵化要求)
         if (!live || live < num) room.addHangSpawnTask(configName)

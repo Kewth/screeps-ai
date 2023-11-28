@@ -25,6 +25,8 @@ declare global {
         allowCross?: boolean
         // 摸鱼
         sleepUntil?: number
+        // cpu 消耗
+        cpuCost: number
     }
 }
 
@@ -140,6 +142,8 @@ declare global {
         priority: number
         updateLock?: boolean
         extraBodyConf?: BodyConfig
+        // 统计用
+        recordCpuCost?: number[]
     }
     interface Memory {
         creepConfigs: { [name: string]: CreepConfig }

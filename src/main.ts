@@ -30,7 +30,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
     flag.work()
   })
   Object.values(Game.creeps).forEach( creep => {
+    const cpuTest = Game.cpu.getUsed()
     creep.work()
+    creep.memory.cpuCost += Game.cpu.getUsed() - cpuTest
   })
   Object.values(Game.powerCreeps).forEach( powerCreep => {
     powerCreep.work()
