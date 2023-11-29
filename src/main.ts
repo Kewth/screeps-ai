@@ -5,6 +5,7 @@ import { statsMemory } from "memory/stats";
 import { mountAll } from "mount";
 import { reSpawn } from "mount/room/spawn";
 import { ErrorMapper } from "utils/ErrorMapper";
+import { logConsole } from "utils/other";
 
 // 挂载只需执行一次
 mountAll()
@@ -24,7 +25,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
   }
 
   Object.values(Game.rooms).forEach( room => {
+    const cpuTest = Game.cpu.getUsed()
     room.work()
+    const cost = Game.cpu.getUsed() - cpuTest
+    if (cost >= 1)
+      logConsole(`Room ${room.name} CPU ${cost}`)
   })
   Object.values(Game.flags).forEach( flag => {
     flag.work()

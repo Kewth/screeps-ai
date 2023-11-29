@@ -8,6 +8,7 @@ declare global {
         invaderCoreID?: Id<StructureInvaderCore>
         mineralID?: Id<Mineral>
         myExtensionIDs?: Id<StructureExtension>[]
+        myExtensionIDsUntil?: number
         myFreeExtensionIDs?: Id<StructureExtension>[]
         myFreeExtensionIDsUntil?: number
         factoryID?: Id<StructureFactory>
@@ -15,7 +16,7 @@ declare global {
 }
 
 export function checkCache() {
-    if (!global.cache) {
+    if (!global.cache || Game.time % 2333 <= 0) {
         logConsole('Init/Clear Cache')
         global.cache = {
             rooms: {}

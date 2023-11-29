@@ -46,7 +46,12 @@ export function mountMarket() {
         // 超时了
         else if (Game.time - focus.timeBegin > Setting.FOCUS_ORDER_TIMEOUT) {
             // 提高购价不补充数量，新一轮监听
-            Game.market.changeOrderPrice(order.id, order.price * 1.02)
+            const priceList = Game.market.getHistory(order.resourceType)
+            const priceHis = priceList[priceList.length - 1]
+            if (priceHis && order.price > priceHis.avgPrice)
+                Game.market.changeOrderPrice(order.id, order.price * 1.005)
+            else
+                Game.market.changeOrderPrice(order.id, order.price * 1.02)
             focus.timeBegin = Game.time + 1
             focus.timeEnd = undefined
         }

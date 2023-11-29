@@ -61,7 +61,7 @@ export function mountRoom() {
             // 发布 extraUpgrader 判定
             const exUpgConfigName = calcConfigName(this.name, 'exUpg')
             if (!Memory.creepConfigs[exUpgConfigName]) {
-                if (this.storage) {
+                if (this.storage?.my) {
                     // 有 storage 判定 storage
                     if (this.storage.highEnergy() && this.controller.level < 8)
                         creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
@@ -574,12 +574,13 @@ export function mountRoom() {
         return mineral
     }
     Room.prototype.myExtensions = function() {
-        if (this.cache.myExtensionIDs)
+        if (this.cache.myExtensionIDs && Game.time <= ToN(this.cache.myExtensionIDsUntil))
             return this.cache.myExtensionIDs.map(id => Game.getObjectById(id)).filter(obj => obj) as StructureExtension[]
         const myExtensions = this.myStructures().filter(
             obj => obj.structureType == STRUCTURE_EXTENSION
         ) as StructureExtension[]
         this.cache.myExtensionIDs = myExtensions.map(obj => obj.id)
+        this.cache.myExtensionIDsUntil = Game.time + 100
         return myExtensions
     }
     // 结果可能会少，但很多时候并不重要
