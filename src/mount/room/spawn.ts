@@ -69,7 +69,7 @@ export function mountSpawn() {
         })
         // 清理
         this.memory.hangSpawnTaskList = this.memory.hangSpawnTaskList.filter(
-            configName => !this.memory.spawnTaskList.includes(configName)
+            configName => Memory.creepConfigs[configName] && !this.memory.spawnTaskList.includes(configName)
         )
     }
 

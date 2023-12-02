@@ -135,7 +135,8 @@ export function mountCreep() {
         if (enSource && (enSource instanceof Resource || enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
         const list = [
             ...this.room.commonContainers().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
-            ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY)
+            ...this.room.ruins().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
+            ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY),
         ]
         // 最后考虑别人的 storage
         const res = this.pos.findClosestByRange(list) || this.room.storage
@@ -237,7 +238,7 @@ declare global {
         goToRoom(roomName: string): boolean
         atExit(): boolean
         goAwayHostileCreeps(): boolean
-        findEnergySource(): StructureStorage | StructureContainer | Resource | undefined
+        findEnergySource(): StructureStorage | StructureContainer | Resource | Ruin | undefined
         gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode
         gainResourceFrom(from: Resource | TypeWithStore, resourceType: ResourceConstant): ScreepsReturnCode
         getConfig(): CreepConfig

@@ -65,7 +65,8 @@ export const remoteHelperLogic: CreepLogic = {
         const data = memData as RemoteHelperData
         const room = Game.rooms[data.targetRoomName]
         const ctrl = room?.myController()
-        if (ctrl && ctrl.level >= 5) return true
+        const storage = room?.storage
+        if (ctrl && storage && storage.my) return true
         return false
     }
 }

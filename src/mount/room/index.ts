@@ -61,20 +61,22 @@ export function mountRoom() {
             // 发布 extraUpgrader 判定
             const exUpgConfigName = calcConfigName(this.name, 'exUpg')
             if (!Memory.creepConfigs[exUpgConfigName]) {
-                if (this.storage?.my) {
-                    // 有 storage 判定 storage
-                    if (this.storage.highEnergy() && this.controller.level < 8)
-                        creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                            'exUpgrader', { onlyOnce: true }, 2)
-                    else if (this.storage.mediumHighEnergy() && this.controller.level < 8)
-                        creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                            'exUpgrader', { onlyOnce: true }, 1)
-                }
-                else {
-                    // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
-                    if (_.every(this.commonContainers(), obj => obj.store.getUsedCapacity() >= 1800)) {
-                        creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                            'exUpgrader', { onlyOnce: true }, 4)
+                if (this.controller.level < 8) {
+                    if (this.storage?.my) {
+                        // 有 storage 判定 storage
+                        if (this.storage.highEnergy())
+                            creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
+                                'exUpgrader', { onlyOnce: true }, 2)
+                        else if (!this.storage.lowEnergy())
+                            creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
+                                'exUpgrader', { onlyOnce: true }, 1)
+                    }
+                    else {
+                        // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
+                        if (_.every(this.commonContainers(), obj => obj.store.getUsedCapacity() >= 1800)) {
+                            creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
+                                'exUpgrader', { onlyOnce: true }, 4)
+                        }
                     }
                 }
             }
@@ -311,6 +313,11 @@ export function mountRoom() {
             creepApi.add<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer',
                 { standFlagName: transFlag.name }, 1, creepApi.LINKTRANSFER_PRIORITY)
         }
+    }
+
+    Room.prototype.makeExBuilder = function(num: number = 1) {
+        creepApi.add<BuilderData>(this.name, 'builder', `exBui`, 'builder' , { onlyOnce: true }, num)
+        return OK
     }
 
     Room.prototype.makeViewer = function(roomName: string, tough: number = 0) {
@@ -685,6 +692,7 @@ declare global {
         autoRegisterCreeps(): void
         registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
         attackRoom(roomName: string): OK
+        makeExBuilder(num: number): OK
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK
         makeCoreAttacker(roomName: string, attack?: number): OK

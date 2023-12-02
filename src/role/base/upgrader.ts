@@ -49,4 +49,10 @@ export const upgraderLogic: CreepLogic = {
         }
         return false
     },
+    hangSpawn(spawnRoom, memData) {
+        const ctrl = spawnRoom.controller
+        if (ctrl && ctrl.level >= 8 && ctrl.ticksToDowngrade >= 180_000)
+            return true
+        return false
+    }
 }

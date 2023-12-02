@@ -3,22 +3,11 @@ import { ToN, logConsole } from "utils/other"
 
 const PACK_TICK = 50
 const PACK_LIM = 12
-const ROOM_PACK = 60 // 3000 tick 存储一次
 
 declare global {
-    // interface RoomStat {
-    //     time: number
-    //     storageEnergy: number
-    //     RCLprogress: number
-    //     wallHits: number
-    // }
-    // interface RoomMemory {
-    //     nowStat?: RoomStat
-    //     lastStat?: RoomStat
-    // }
     interface PackStat {
         cpu: number
-        spawn: number
+        roomCpu: { [roomName: string]: number }
     }
     interface Memory {
         stats: {
@@ -26,13 +15,9 @@ declare global {
             cpu: number
             credits: number
             creditsIfSold: number
-            // storageEnergy: number
-            // RCLprogress: number
             GCLprogressPercent: number
             GPLprogressPercent: number
-            spawnCost: number
             [otherKey: string]: number
-            // R: { [roomName: string]: RoomStatGlobal }
         }
         packList: PackStat[]
         tempPack: PackStat
@@ -42,7 +27,7 @@ declare global {
 function emptyPack (): PackStat {
     return {
         cpu: 0,
-        spawn: 0,
+        roomCpu: {}
     }
 }
 
@@ -52,7 +37,7 @@ export function checkStatsMemory () {
 }
 
 export function addStat_spawn(b: BodyPartConstant[]) {
-    Memory.tempPack.spawn += calcBodyCost(b)
+    // Memory.tempPack.spawn += calcBodyCost(b)
 }
 
 function roomStat(room: Room) {
@@ -70,26 +55,7 @@ function roomStat(room: Room) {
     Memory.stats[`${room.name}_RCLprogress`] = RCLprogress
     Memory.stats[`${room.name}_wallHits`] = wallHits
     Memory.stats[`${room.name}_avgWallHits`] = avgWallHits
-    // // 输出
-    // const stat = room.memory.lastStat || room.memory.nowStat
-    // if (stat) {
-    //     const interval = Game.time - stat.time
-    //     Memory.stats[`${room.name}_storageEnergyPerTick`] = (storageEnergy - stat.storageEnergy) / interval
-    //     Memory.stats[`${room.name}_RCLprogressPerTick`] = RCLprogress < stat.RCLprogress
-    //         ? RCLprogress / interval
-    //         : (RCLprogress - stat.RCLprogress) / interval
-    //     Memory.stats[`${room.name}_wallHitsPerTick`] = (wallHits - stat.wallHits) / 100 / interval
-    // }
-    // // 存储
-    // if (Game.time % (ROOM_PACK * PACK_TICK) <= 0) {
-    //     room.memory.lastStat = room.memory.nowStat
-    //     room.memory.nowStat = {
-    //         time: Game.time,
-    //         storageEnergy: storageEnergy,
-    //         RCLprogress: RCLprogress,
-    //         wallHits: wallHits,
-    //     }
-    // }
+    Memory.stats[`${room.name}_cpu`] = _.sum(Memory.packList, p => p.roomCpu[room.name]) / (PACK_TICK * Memory.packList.length)
 }
 
 function globalStat() {
@@ -108,7 +74,6 @@ function globalStat() {
         GCLprogressPercent: Game.gcl.progress * 100 / Game.gcl.progressTotal,
         GPLprogressPercent: Game.gpl.progress * 100 / Game.gpl.progressTotal,
         cpu: _.sum(Memory.packList, p => p.cpu) / (PACK_TICK * Memory.packList.length),
-        spawnCost: _.sum(Memory.packList, p => p.spawn) / (PACK_TICK * Memory.packList.length),
     }
 }
 
