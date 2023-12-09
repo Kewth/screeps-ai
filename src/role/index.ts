@@ -15,6 +15,7 @@ import { claimKeeperLogic } from "./remote/claimKeeper";
 import { remoteHelperLogic } from "./remote/remoteHelper";
 import { roomAttakerLogic } from "./war/roomAttacker";
 import { claimerLogic } from "./remote/claimer";
+import { energySenderLogic } from "./remote/energySender";
 
 export const getRoleLogic: {
     [role in RoleConstant]: CreepLogic
@@ -36,6 +37,7 @@ export const getRoleLogic: {
     remoteHelper: remoteHelperLogic,
     roomAttacker: roomAttakerLogic,
     claimer: claimerLogic,
+    energySender: energySenderLogic,
 }
 
 // 用于类型检查 (TODO: find a better solution)
@@ -63,7 +65,8 @@ declare global {
         "claimKeeper" |
         "remoteHelper" |
         "roomAttacker" |
-        "claimer"
+        "claimer" |
+        "energySender"
     type CreepData =
         EmptyData |
         HarvesterData |
@@ -82,5 +85,6 @@ declare global {
         ClaimKeeperData |
         RemoteHelperData |
         RoomAttackerData |
-        ClaimerData
+        ClaimerData |
+        EnergySenderData
 }

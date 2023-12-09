@@ -9,6 +9,17 @@ declare global {
     }
 }
 
+type T = StructureStorage | StructureLink | undefined
+function calcFromAndTo (creep: Creep): [T, T] {
+    const upgradeLink = creep.room.myUpgradeLink()
+    const centralLink = creep.room.myCentralLink()
+    const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200 &&
+        centralLink !== undefined && centralLink.cooldown <= 7
+    const from = reverse ? creep.room.storage : centralLink
+    const to = reverse ? centralLink : creep.room.storage
+    return [from, to]
+}
+
 export const linkTransferLogic: CreepLogic = {
     prepare_stage: creep => {
         const data = creep.memory.data as LinkTransferData
@@ -22,37 +33,30 @@ export const linkTransferLogic: CreepLogic = {
         return true
     },
     source_stage: creep => {
-        // const data = creep.memory.data as LinkTransferData
         // 拿到就搬走
         if (creep.store.getUsedCapacity() > 0) return true
-        const upgradeLink = creep.room.myUpgradeLink()
-        const centralLink = creep.room.myCentralLink()
-        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200 &&
-            centralLink !== undefined && centralLink.cooldown <= 0
-        const from = reverse ? creep.room.storage : centralLink
-        const to = reverse ? centralLink : creep.room.storage
-        if (from && from.store[RESOURCE_ENERGY] > 0) {
+        const data = creep.memory.data as LinkTransferData
+        // 保证站到 flag 上
+        const standFlag = Game.flags[data.standFlagName]
+        if (!creep.pos.isEqualTo(standFlag.pos)) { creep.moveTo(standFlag); return false }
+        // 判断方向
+        const ft = calcFromAndTo(creep)
+        const from = ft[0]
+        const to = ft[1]
+        if (from && from.store[RESOURCE_ENERGY] > 0 && to && to.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
             const res = creep.withdraw(from, RESOURCE_ENERGY)
-            if (res == ERR_NOT_IN_RANGE)
-                creep.moveTo(from)
-            else if (res == OK) {
-                to && creep.moveTo(to)
-            }
-            else
+            if (res != OK)
                 logError(`cannot get energy: ${res}`, creep.name)
         }
         else
-            creep.sleep(5)
+            creep.sleep(3)
         return false
     },
     target_stage: creep => {
         if (creep.store.getUsedCapacity() <= 0) return true
-        const upgradeLink = creep.room.myUpgradeLink()
-        const centralLink = creep.room.myCentralLink()
-        const reverse = upgradeLink !== undefined && upgradeLink.store[RESOURCE_ENERGY] < 200 &&
-            centralLink !== undefined && centralLink.cooldown <= 0
-        const from = reverse ? creep.room.storage : centralLink
-        const to = reverse ? centralLink : creep.room.storage
+        const ft = calcFromAndTo(creep)
+        const from = ft[0]
+        const to = ft[1]
         if (to) {
             const res = creep.transfer(to, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)

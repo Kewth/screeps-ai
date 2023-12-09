@@ -64,12 +64,9 @@ export function mountRoom() {
                 if (this.controller.level < 8) {
                     if (this.storage?.my) {
                         // 有 storage 判定 storage
-                        if (this.storage.highEnergy())
+                        if (!this.storage.lowEnergy())
                             creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
                                 'exUpgrader', { onlyOnce: true }, 2)
-                        else if (!this.storage.lowEnergy())
-                            creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                                'exUpgrader', { onlyOnce: true }, 1)
                     }
                     else {
                         // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
@@ -317,6 +314,17 @@ export function mountRoom() {
 
     Room.prototype.makeExBuilder = function(num: number = 1) {
         creepApi.add<BuilderData>(this.name, 'builder', `exBui`, 'builder' , { onlyOnce: true }, num)
+        return OK
+    }
+
+    Room.prototype.makeEnergySender = function(roomName: string, num: number, sourceRoomName: string | undefined) {
+        creepApi.add<EnergySenderData>(this.name, 'energySender', `${roomName}_enSen`, {
+            move: 25,
+            carry: 25,
+        }, {
+            sourceRoomName: sourceRoomName || this.name,
+            targetRoomName: roomName,
+        }, num)
         return OK
     }
 
@@ -693,6 +701,7 @@ declare global {
         registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
         attackRoom(roomName: string): OK
         makeExBuilder(num: number): OK
+        makeEnergySender(roomName: string, num: number, sourceRoomName: string | undefined): OK
         makeViewer(roomName: string, tough?: number): OK
         makeReserver(roomName: string, tough?: number): OK
         makeCoreAttacker(roomName: string, attack?: number): OK
