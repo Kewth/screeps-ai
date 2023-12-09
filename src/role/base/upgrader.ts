@@ -2,15 +2,22 @@ import { logError } from "utils/other"
 
 declare global {
     interface UpgraderData extends EmptyData {
-        // energyFromLink?: boolean
+        energyFromLink?: boolean
     }
 }
 
 function calcFrom(creep: Creep) {
+    const data = creep.memory.data as UpgraderData
     const link = creep.room.myUpgradeLink()
-    if (link && link.store[RESOURCE_ENERGY] > 0) return link
+    if (link && link.store[RESOURCE_ENERGY] > 0) {
+        data.energyFromLink = true
+        return link
+    }
     const container = creep.room.upgradeContainers().find(obj => obj.store[RESOURCE_ENERGY] > 0)
-    if (container) return container
+    if (container) {
+        data.energyFromLink = undefined
+        return container
+    }
     creep.say('不想走路...')
     return creep.findEnergySource()
 }
@@ -33,6 +40,7 @@ export const upgraderLogic: CreepLogic = {
     },
     target_stage: creep => {
         if (creep.store[RESOURCE_ENERGY] <= 0) return true
+        const data = creep.memory.data as UpgraderData
         const to = creep.room.controller
         if (to) {
             const res = creep.upgradeController(to)
@@ -40,15 +48,15 @@ export const upgraderLogic: CreepLogic = {
                 creep.moveTo(to)
             else if (res == OK) {
                 // 把 link 搬到 container 增加 link 效率
-                // if (creep.store[RESOURCE_ENERGY] > 100) {
-                //     const container = creep.room.upgradeContainers().find(
-                //         obj => obj.store[RESOURCE_ENERGY] < 1500 && obj.pos.isNearTo(creep)
-                //     )
-                //     container && creep.transfer(container, RESOURCE_ENERGY)
-                // }
+                if (creep.store[RESOURCE_ENERGY] > 100 && data.energyFromLink) {
+                    const container = creep.room.upgradeContainers().find(
+                        obj => obj.store[RESOURCE_ENERGY] < 1500 && obj.pos.isNearTo(creep)
+                    )
+                    container && creep.transfer(container, RESOURCE_ENERGY, creep.store[RESOURCE_ENERGY] - 50)
+                }
                 // withdraw / upgrade
                 // 稳定后可以一直待在 target_stage
-                if (creep.store[RESOURCE_ENERGY] < 50) {
+                else if (creep.store[RESOURCE_ENERGY] < 50) {
                     const from = calcFrom(creep)
                     from && creep.gainResourceFrom(from, RESOURCE_ENERGY)
                 }
