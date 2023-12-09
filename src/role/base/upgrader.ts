@@ -2,6 +2,7 @@ import { logError } from "utils/other"
 
 declare global {
     interface UpgraderData extends EmptyData {
+        isExtra?: boolean
         energyFromLink?: boolean
     }
 }
@@ -71,5 +72,12 @@ export const upgraderLogic: CreepLogic = {
         if (ctrl && ctrl.level >= 8 && ctrl.ticksToDowngrade >= 180_000)
             return true
         return false
-    }
+    },
+    stopSpawn(spawnRoom, memData) {
+        const data = memData as UpgraderData
+        if (!data.isExtra) return false
+        if (!spawnRoom.storage) return true
+        if (spawnRoom.storage.lowEnergy()) return true
+        return false
+    },
 }

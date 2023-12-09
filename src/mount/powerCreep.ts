@@ -42,7 +42,11 @@ export function mountPowerCreep() {
     PowerCreep.prototype.work_usePower = function() {
         if (this.room === undefined) return undefined
         if (this.usePower(PWR_GENERATE_OPS) == OK) return undefined
-        const source = this.room.sources().find(s => !s.effects || s.effects.length <= 0)
+        const source = this.room.sources().find(s => {
+            if (!s.effects) return false
+            const effect = s.effects.find(e => e.effect == PWR_REGEN_SOURCE && e.ticksRemaining > 50)
+            return !effect
+        })
         if (source) {
             const resp = this.usePower(PWR_REGEN_SOURCE, source)
             if (resp == OK) return undefined

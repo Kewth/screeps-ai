@@ -58,7 +58,8 @@ export function mountTerminal() {
                 if (!otherCtrl) return
                 const otherTerm = otherRoom.terminal
                 // logConsole(`test ${this.room.name} ${otherRoom.name}: ${otherRoom.storage?.lowEnergy()} ${otherTerm?.highEnergy()}`)
-                if (otherRoom.storage?.lowEnergy() && otherTerm && !otherTerm.highEnergy() &&
+                if (otherRoom.storage && !otherRoom.storage.maybeEnoughEnergy() &&
+                    otherTerm && !otherTerm.highEnergy() &&
                     amount + Game.market.calcTransactionCost(amount, this.room.name, otherRoomName) <= localAmount
                 ) {
                     this.send(RESOURCE_ENERGY, amount, otherRoom.name, `energy from ${this.room.name}`)

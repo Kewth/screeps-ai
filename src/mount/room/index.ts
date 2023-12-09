@@ -66,13 +66,13 @@ export function mountRoom() {
                         // 有 storage 判定 storage
                         if (!this.storage.lowEnergy())
                             creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                                'exUpgrader', { onlyOnce: true }, 2)
+                                'exUpgrader', { isExtra: true }, 2)
                     }
                     else {
                         // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
                         if (_.every(this.commonContainers(), obj => obj.store.getUsedCapacity() >= 1800)) {
                             creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                                'exUpgrader', { onlyOnce: true }, 4)
+                                'exUpgrader', { isExtra: true }, 4)
                         }
                     }
                 }

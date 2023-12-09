@@ -53,8 +53,12 @@ export function mountFactory() {
         // 检查工作内容
         const storage = this.room.storage
         const ctrl = this.room.myController()
-        // 解压能量 TODO
-        if (storage?.lowEnergy()) {
+        // 解压能量 50 battery -> 500 energy
+        if (storage && !storage.mediumHighEnergy() && storage.store[RESOURCE_BATTERY] >= 10_000) {
+            const count = 20
+            mem.factoryProduct = RESOURCE_ENERGY
+            mem.factoryPrepareList = [{type: RESOURCE_BATTERY, amount: 50 * count}]
+            mem.factoryWorkCount = count
             return
         }
         // 压缩能量 600 energy -> 50 battery
@@ -80,6 +84,7 @@ export function mountFactory() {
 declare global {
     interface StructureFactory {
         lowEnergy(): boolean
+        // 正常情况 highEnergy 只可能在解压电池的时候出现
         highEnergy(): boolean
         resourceToStorage(): ResourceConstant | undefined
         resourceNeed(): ResourceConstant | undefined
