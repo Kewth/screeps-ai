@@ -147,11 +147,15 @@ declare global {
     }
     interface Memory {
         creepConfigs: { [name: string]: CreepConfig }
+        pixelActiveAmount: number
+        pixelActiveTotalPrice: number
     }
 }
 
 export function checkMemory() {
     if (!Memory.creepConfigs) Memory.creepConfigs = {}
+    if (!Memory.pixelActiveAmount) Memory.pixelActiveAmount = 0
+    if (!Memory.pixelActiveTotalPrice) Memory.pixelActiveTotalPrice = 0
     if (Game.time % 20 == 0) {
         for (const configName in Memory.creepConfigs) {
             if (Memory.creepConfigs[configName].live <= 0 && Memory.creepConfigs[configName].num <= 0)

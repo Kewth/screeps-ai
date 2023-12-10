@@ -1,24 +1,31 @@
 import { myMax, myMin } from "utils/other"
 
 export function marketWork() {
-    const roomName = 'E26S27'
-    if (!Game.rooms[roomName]) return
     market_pixel()
     market_energy()
 }
 
 function market_pixel() {
-    // const std_price = 35000
-    // const sell_price = 40000
-    // const buy_price = 30000
-    // const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
-    // if (buy && buy.price >= sell_price) {
-    //     Game.market.deal(buy.id, 10)
-    // }
-    // const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
-    // if (sell && sell.price <= buy_price && Game.market.credits >= 5_000_000) {
-    //     Game.market.deal(sell.id, 10)
-    // }
+    if (Memory.pixelActiveAmount && Game.time % 10 <= 0) {
+        const avgPrice = Memory.pixelActiveTotalPrice / Memory.pixelActiveAmount
+        const sellPrice = avgPrice * 1.1
+        const buyPrice = avgPrice * 0.9
+        // const amountLimit = 1000
+        const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
+        if (buy && buy.price > sellPrice && Memory.pixelActiveAmount > 20) {
+            if (Game.market.deal(buy.id, 10) == OK) {
+                Memory.pixelActiveAmount -= 10
+                Memory.pixelActiveTotalPrice -= 10 * avgPrice
+            }
+        }
+        const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
+        if (sell && sell.price < buyPrice && Game.market.credits >= 20_000_000) {
+            if (Game.market.deal(sell.id, 10) == OK) {
+                Memory.pixelActiveAmount += 10
+                Memory.pixelActiveTotalPrice += 10 * sell.price
+            }
+        }
+    }
 }
 
 function market_energy() {

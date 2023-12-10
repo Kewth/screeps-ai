@@ -1,5 +1,5 @@
 import { creepApi } from "creepApi"
-import { logConsole, logError } from "utils/other"
+import { logConsole, logError, myMax, myMin } from "utils/other"
 import { reSpawn } from "./room/spawn"
 
 // 控制台操作对象
@@ -73,6 +73,14 @@ const T = {
             totalAmount: amount,
             roomName: roomName
         })
+    },
+    pixel() {
+        const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
+        const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
+        logConsole(`Active Amount: ${Memory.pixelActiveAmount}`)
+        logConsole(`Average Price: ${Memory.pixelActiveTotalPrice / Memory.pixelActiveAmount}`)
+        if (buy) logConsole(`Max Buying Price: ${buy.price}`)
+        if (sell) logConsole(`Min Selling Price: ${sell.price}`)
     },
     mountRoom() {
         for (const roomName in Memory.rooms) {
