@@ -92,9 +92,11 @@ export function mountMarket() {
             }
             else {
                 const nowStore = ToN(this.storage?.store[order.resourceType as ResourceConstant])
-                // 以一定概率增加一点价格，库存越少概率越高
-                if (Math.random() < 1 - nowStore / Setting.STORAGE_MINERAL_HIGH)
-                    Game.market.changeOrderPrice(order.id, order.price * 1.01)
+                const storeRate = nowStore / Setting.STORAGE_MINERAL_HIGH
+                const prob = Math.exp(-storeRate * 5)
+                // 以一定概率增加大量价格，库存越少概率越高
+                if (Math.random() < prob)
+                    Game.market.changeOrderPrice(order.id, order.price * 1.05)
                 // 补货，新一轮监听
                 Game.market.extendOrder(order.id, Setting.FOCUS_ORDER_AMOUNT_PER)
                 focus.timeBegin = Game.time + 1

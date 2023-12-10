@@ -61,6 +61,10 @@ export const linkTransferLogic: CreepLogic = {
             const res = creep.transfer(to, RESOURCE_ENERGY)
             if (res == ERR_NOT_IN_RANGE)
                 creep.moveTo(to)
+            else if (res == ERR_FULL) {
+                // 送给 link 但是 link 已经满了 (在等 cooldown)
+                creep.sleep(2)
+            }
             else if (res == OK) { // 下一步是拿资源
                 from && creep.moveTo(from)
             }
