@@ -54,7 +54,7 @@ const getBodyConfigByAuto: {
     harvester: energy => {
         // 更多的 work, carry: 减少 cpu 消耗，能挖带 regen 的矿
         // 正常情况只会空着走路
-        if (energy >= 10000) return { work: 10, carry: 6, move: 5 } // RCL 8
+        if (energy >= 10000) return { work: 14, carry: 6, move: 7 } // RCL 8
         // 5 个 work 刚好满效率采矿
         if (energy >= 600) return { work: 5, carry: 1, move: 1 } // RCL 3
         if (energy >= 500) return { work: 4, carry: 1, move: 1 } // RCL 2

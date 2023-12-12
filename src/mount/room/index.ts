@@ -677,10 +677,11 @@ declare global {
         // getEnergySourceList(): energySourceType[]
         // getEnergyTargetList(): energyTargetType[]
 
-        market_mineralOrder(focus: FocusOrder): void
-        market_buyingOrder(focus: FocusOrder): void
-        init_mineralOrder(price: number): void
-        init_buyingOrder(price: number, resource: ResourceConstant, totalAmount: number): void
+        // market_mineralOrder(focus: FocusOrder): void
+        // market_sellingOrder(focus: FocusOrder): boolean
+        // market_buyingOrder(focus: FocusOrder): void
+        // init_mineralOrder(price: number): void
+        // init_buyingOrder(price: number, resource: ResourceConstant, totalAmount: number): void
 
         // 终端控制 creeps
         registerBase(): OK

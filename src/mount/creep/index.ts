@@ -180,7 +180,7 @@ export function mountCreep() {
                 // return OK
             const toCreep = myFirst(toPos.lookFor(LOOK_CREEPS)) || myFirst(toPos.lookFor(LOOK_POWER_CREEPS))
             if (toCreep && toCreep.memory.allowCross) {
-                logConsole(`${this.name} CROSS ${toCreep.name}`)
+                // logConsole(`${this.name} CROSS ${toCreep.name}`)
                 switch (dir) {
                     case LEFT: { toCreep._move(RIGHT); break }
                     case RIGHT: { toCreep._move(LEFT); break }

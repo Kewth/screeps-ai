@@ -72,8 +72,9 @@ declare global {
         id?: string
         timeBegin: number
         timeEnd?: number
+        amountPer: number
         amountLimit?: number
-        dead?: boolean
+        resource: ResourceConstant
     }
     interface RoomMemory {
         spawnTaskList: string[]
@@ -99,8 +100,9 @@ declare global {
         // 资源搬运任务
         resourceTaskList: ResourceTask[]
         // 自动处理的订单
-        mineralOrder?: FocusOrder
-        buyingOrder?: FocusOrder
+        // mineralOrder?: FocusOrder
+        sellingOrderList?: FocusOrder[]
+        buyingOrderList?: FocusOrder[]
         // upgrade block
         controllerBlockUntil?: number
         // 工厂相关

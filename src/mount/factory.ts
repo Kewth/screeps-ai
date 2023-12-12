@@ -71,9 +71,13 @@ export function mountFactory() {
         }
         // 压缩矿产 500 mineral + 200 energy -> 100 product
         const mineralType = this.room.mineral()?.mineralType
-        if (mineralType && storage && storage.store[mineralType] > Setting.STORAGE_MINERAL_HIGH) {
+        const compressType = mineralType ? compressResourceType(mineralType) : undefined
+        if (mineralType && compressType && storage && (
+            (storage.store[mineralType] > Setting.STORAGE_MINERAL_HIGH) ||
+            (storage.store[mineralType] > 10_000 && storage.store[compressType] <= 1_000)
+        )) {
             const count = 10
-            mem.factoryProduct = compressResourceType(mineralType)
+            mem.factoryProduct = compressType
             mem.factoryPrepareList = [{type: mineralType, amount: 500 * count}, {type: RESOURCE_ENERGY, amount: 200 * count}]
             mem.factoryWorkCount = count
             return

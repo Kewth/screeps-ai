@@ -33,9 +33,9 @@ export function mountTerminal() {
         })
         if (order !== undefined) return order.resourceType as ResourceConstant
         // 房间里挖的资源定量存储到 terminal
-        const mineralType = this.room.mineral()?.mineralType
-        if (mineralType && this.store[mineralType] < Setting.FOCUS_ORDER_AMOUNT_PER * 10 && storage.store[mineralType] > 0)
-            return mineralType
+        // const mineralType = this.room.mineral()?.mineralType
+        // if (mineralType && this.store[mineralType] < Setting.FOCUS_ORDER_AMOUNT_PER * 10 && storage.store[mineralType] > 0)
+        //     return mineralType
         return undefined
     }
     StructureTerminal.prototype.work = function () {
