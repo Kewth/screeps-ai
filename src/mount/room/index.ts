@@ -58,25 +58,6 @@ export function mountRoom() {
                 }
             } else
                 this.memory.noHarvesterTickCount = 0
-            // 发布 extraUpgrader 判定
-            const exUpgConfigName = calcConfigName(this.name, 'exUpg')
-            if (!Memory.creepConfigs[exUpgConfigName]) {
-                if (this.controller.level < 8) {
-                    if (this.storage?.my) {
-                        // 有 storage 判定 storage
-                        if (!this.storage.lowEnergy())
-                            creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                                'exUpgrader', { isExtra: true }, 2)
-                    }
-                    else {
-                        // 没 storage 判定 containers ，RCL 比较低，需要增加发布数量
-                        if (_.every(this.commonContainers(), obj => obj.store.getUsedCapacity() >= 1800)) {
-                            creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`,
-                                'exUpgrader', { isExtra: true }, 4)
-                        }
-                    }
-                }
-            }
             // tower 集中式逻辑
             this.work_tower()
             // link 集中式逻辑
@@ -309,6 +290,15 @@ export function mountRoom() {
         if (link && transFlag) {
             creepApi.add<LinkTransferData>(this.name, 'linkTransfer', `lTra`, 'linkTransfer',
                 { standFlagName: transFlag.name }, 1, creepApi.LINKTRANSFER_PRIORITY)
+        }
+        // 注册 extraUpgrader
+        if (ctrl.level < 8) {
+            if (this.storage?.my)
+                creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`, 'exUpgrader', { isExtra: true }, 2)
+            else {
+                // 没 storage 会判定 containers ，RCL 比较低，需要增加发布数量
+                creepApi.add<UpgraderData>(this.name, 'upgrader', `exUpg`, 'exUpgrader', { isExtra: true }, 4)
+            }
         }
     }
 
