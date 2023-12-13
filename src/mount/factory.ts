@@ -74,7 +74,7 @@ export function mountFactory() {
         const compressType = mineralType ? compressResourceType(mineralType) : undefined
         if (mineralType && compressType && storage && (
             (storage.store[mineralType] > Setting.STORAGE_MINERAL_HIGH) ||
-            (storage.store[mineralType] > 10_000 && storage.store[compressType] <= 1_000)
+            (storage.store[mineralType] / storage.store[compressType] > 10)
         )) {
             const count = 10
             mem.factoryProduct = compressType

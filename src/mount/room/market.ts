@@ -1,5 +1,4 @@
-import { Setting } from "setting"
-import { ToN, compressResourceType, logConsole, logError, marketConst2resourceConst, myMax } from "utils/other"
+import { ToN, compressResourceType, logError } from "utils/other"
 
 // function getOrder(room: Room, focus: FocusOrder) {
 //     if (focus.id) return Game.market.orders[focus.id]
@@ -16,69 +15,110 @@ import { ToN, compressResourceType, logConsole, logError, marketConst2resourceCo
 //     return order
 // }
 
-function findOrder(room: Room, resource: ResourceConstant, type: ORDER_SELL | ORDER_BUY) {
-    return Object.values(Game.market.orders).find(o =>
+function yesterdayPrice (resource: ResourceConstant) {
+    const hitstory = Game.market.getHistory(resource)
+    if (hitstory.length < 2) return  undefined
+    return hitstory[hitstory.length - 2].avgPrice
+}
+
+interface LogicalOrder {
+    id?: string // only real order has id
+    type: ORDER_BUY | ORDER_SELL
+    resourceType: ResourceConstant
+    price?: number
+    remainingAmount: number
+    // roomName: number
+}
+
+function findOrder(room: Room, resource: ResourceConstant, type: ORDER_SELL | ORDER_BUY): LogicalOrder {
+    const order = Object.values(Game.market.orders).find(o =>
         o.roomName == room.name
         && o.type == type
         && o.resourceType == resource
     )
+    return order ? {
+        id: order.id,
+        type: type,
+        resourceType: resource,
+        price: order.price,
+        remainingAmount: order.remainingAmount,
+    } : {
+        type: type,
+        resourceType: resource,
+        remainingAmount: 0,
+    }
 }
 
-function addSellingOrder (room: Room, resource: ResourceConstant, amount: number, order: Order | undefined, priceRatio: number) {
-    // const order = findOrder(room, resource, ORDER_SELL)
-    const hitstory = Game.market.getHistory(resource)
-    if (hitstory.length < 2) { logError('no enough history', room.name); return false }
-    const price = hitstory[hitstory.length - 2].avgPrice * priceRatio // yesterday
-    if (!order) {
-        const resp = Game.market.createOrder({
-            type: ORDER_SELL,
-            resourceType: resource,
-            price: price,
-            totalAmount: amount,
-            roomName: room.name,
-        })
-        if (resp != OK) { logError(`create Order get ${resp}`, room.name); return false }
+function changeOrder (room: Room, order: LogicalOrder, addAmount: number, newPrice: number, mixPrice: boolean = false) {
+    if (!order.id) {
+        if (addAmount > 0) {
+            const resp = Game.market.createOrder({
+                type: order.type,
+                resourceType: order.resourceType,
+                price: newPrice,
+                totalAmount: addAmount,
+                roomName: room.name,
+            })
+            if (resp != OK) { logError(`create Order get ${resp}`, room.name); return false }
+        }
     }
     else {
-        const totalPrice = order.remainingAmount * order.price + amount * price
-        const totalAmount = order.remainingAmount + amount
-        const coPrice = totalPrice / totalAmount
-        let resp = Game.market.extendOrder(order.id, amount)
-        if (resp != OK) { logError(`extend Order get ${resp}`, room.name); return false }
-        resp = Game.market.changeOrderPrice(order.id, coPrice)
-        if (resp != OK) { logError(`change Price get ${resp}`, room.name); return false }
+        if (!order.price) return false // real order must have price
+        if (mixPrice) {
+            const totalPrice = order.remainingAmount * order.price + addAmount * newPrice
+            const totalAmount = order.remainingAmount + addAmount
+            newPrice = totalPrice / totalAmount
+        }
+        if (newPrice != order.price) {
+            const resp = Game.market.changeOrderPrice(order.id, newPrice)
+            if (resp != OK) { logError(`change Price get ${resp}`, room.name); return false }
+        }
+        if (addAmount > 0) {
+            const resp = Game.market.extendOrder(order.id, addAmount)
+            if (resp != OK) { logError(`extend Order get ${resp}`, room.name); return false }
+        }
     }
     return true
 }
 
+function sell(room: Room, order: LogicalOrder, amountPlan: number, amountLimit: number): void {
+    if (order.type != ORDER_SELL) return
+    const sellAmount = amountLimit - order.remainingAmount
+    // 卖不动，降价不补货
+    if (sellAmount <= 0) {
+        order.price && changeOrder(room, order, 0, order.price * 0.995) // 随缘降价，降太多扰乱市场
+        return
+    }
+    // 可能需要补货，计算一下能不能补
+    const storeAmount = ToN(room.storage?.store[order.resourceType]) + ToN(room.terminal?.store[order.resourceType])
+    if (storeAmount < order.remainingAmount + amountPlan)
+        return
+    // 卖了一点点，原价补货
+    if (sellAmount < amountPlan)
+        order.price && changeOrder(room, order, sellAmount, order.price)
+    else { // 卖得不错
+        const yp = yesterdayPrice(order.resourceType)
+        if (yp)
+            changeOrder(room, order, amountPlan, yp, true)
+        else
+            order.price && changeOrder(room, order, amountPlan, order.price)
+    }
+}
+
 export function mountMarket() {
-    Room.prototype.work_market = function() {
-        if (Game.time % 100 <= 0) {
+    Room.prototype.work_market = function(force?: boolean) {
+        if (Game.time % 1000 <= 0 || force) {
             // 卖矿
             const mineralType = this.mineral()?.mineralType
             if (mineralType) {
                 const order = findOrder(this, mineralType, ORDER_SELL)
-                const remainAmount = ToN(order?.remainingAmount)
-                const storeAmount = ToN(this.storage?.store[mineralType]) + ToN(this.terminal?.store[mineralType])
-                if (storeAmount >= 1_000 && remainAmount <= 0) {
-                    addSellingOrder(this, mineralType, 1_000, order, 1.05)
-                }
-                else if (storeAmount - remainAmount > 100_000) {
-                    addSellingOrder(this, mineralType, 50, order, 0.95)
-                }
+                sell(this, order, 1000, 5000)
             }
             // 卖压缩矿
             const compressType = mineralType ? compressResourceType(mineralType) : undefined
             if (compressType) {
                 const order = findOrder(this, compressType, ORDER_SELL)
-                const remainAmount = ToN(order?.remainingAmount)
-                const storeAmount = ToN(this.storage?.store[compressType]) + ToN(this.terminal?.store[compressType])
-                if (storeAmount >= 100 && remainAmount <= 0) {
-                    addSellingOrder(this, compressType, 100, order, 1.05)
-                }
-                else if (storeAmount - remainAmount > 10_000) {
-                    addSellingOrder(this, compressType, 10, order, 0.95)
-                }
+                sell(this, order, 100, 2000)
             }
         }
     }

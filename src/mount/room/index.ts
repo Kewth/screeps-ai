@@ -665,7 +665,7 @@ declare global {
         work_tower(): void
         work_spawn(): void
         work_link(): void
-        work_market(): void
+        work_market(force?: boolean): void
         // getFocusWall(): StructureWall | undefined
         // stats(store: boolean): void
         // work_spawnCreep(): boolean

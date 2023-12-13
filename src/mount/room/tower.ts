@@ -6,8 +6,10 @@ export function mountTower() {
         // 集中攻击
         const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
         if (enemys.length > 0) {
-            const enemy = myMin(enemys, e => e.hits)
-            enemy && towers.forEach(tower => tower.attack(enemy))
+            const minHit = myMin(enemys.map(e => e.hits), x => x)
+            const fuck = enemys.filter(e => e.hits === minHit)
+            const enemy = fuck[Math.floor(Math.random() * fuck.length)]
+            towers.forEach(tower => tower.attack(enemy))
             return
         }
         // 维修
