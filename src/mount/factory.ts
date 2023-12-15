@@ -1,5 +1,5 @@
 import { Setting } from "setting"
-import { compressResourceType } from "utils/other"
+import { ToN, compressResourceType } from "utils/other"
 
 export function mountFactory() {
     StructureFactory.prototype.lowEnergy = function () {
@@ -42,45 +42,58 @@ export function mountFactory() {
             }
             return
         }
+        const storage = this.room.storage
         // 准备资源
         if (mem.factoryPrepareList) {
+            // 检查一下要是准备不了了就取消，防止卡死
+            if (Game.time % 10 <= 0 && _.any(mem.factoryPrepareList, pre =>
+                ToN(storage?.store[pre.type]) + this.store[pre.type] < pre.amount
+            )) {
+                mem.factoryPrepareList = undefined
+                mem.factoryWorkCount = undefined
+                mem.factoryProduct = undefined
+                return
+            }
+            // 检查是否准备完成
             if (_.all(mem.factoryPrepareList, pre => this.store[pre.type] >= pre.amount)) {
                 mem.factoryPrepareList = undefined
                 mem.factoryWorking = true
+                return
             }
             return
         }
         // 检查工作内容
-        const storage = this.room.storage
-        const ctrl = this.room.myController()
-        // 解压能量 50 battery -> 500 energy
-        if (storage && !storage.mediumHighEnergy() && storage.store[RESOURCE_BATTERY] >= 10_000) {
-            const count = 20
-            mem.factoryProduct = RESOURCE_ENERGY
-            mem.factoryPrepareList = [{type: RESOURCE_BATTERY, amount: 50 * count}]
-            mem.factoryWorkCount = count
-            return
-        }
-        // 压缩能量 600 energy -> 50 battery
-        if (ctrl && ctrl.level >= 8 && storage?.highEnergy()) {
-            const count = 10
-            mem.factoryProduct = RESOURCE_BATTERY
-            mem.factoryPrepareList = [{type: RESOURCE_ENERGY, amount: 600 * count}]
-            mem.factoryWorkCount = count
-            return
-        }
-        // 压缩矿产 500 mineral + 200 energy -> 100 product
-        const mineralType = this.room.mineral()?.mineralType
-        const compressType = mineralType ? compressResourceType(mineralType) : undefined
-        if (mineralType && compressType && storage && (
-            (storage.store[mineralType] > Setting.STORAGE_MINERAL_HIGH) ||
-            (storage.store[mineralType] / storage.store[compressType] > 10)
-        )) {
-            const count = 10
-            mem.factoryProduct = compressType
-            mem.factoryPrepareList = [{type: mineralType, amount: 500 * count}, {type: RESOURCE_ENERGY, amount: 200 * count}]
-            mem.factoryWorkCount = count
-            return
+        if (Game.time % 10 <= 0) {
+            const ctrl = this.room.myController()
+            // 解压能量 50 battery -> 500 energy
+            if (storage && !storage.mediumHighEnergy() && storage.store[RESOURCE_BATTERY] >= 10_000) {
+                const count = 20
+                mem.factoryProduct = RESOURCE_ENERGY
+                mem.factoryPrepareList = [{type: RESOURCE_BATTERY, amount: 50 * count}]
+                mem.factoryWorkCount = count
+                return
+            }
+            // 压缩能量 600 energy -> 50 battery
+            if (ctrl && ctrl.level >= 8 && storage?.highEnergy()) {
+                const count = 10
+                mem.factoryProduct = RESOURCE_BATTERY
+                mem.factoryPrepareList = [{type: RESOURCE_ENERGY, amount: 600 * count}]
+                mem.factoryWorkCount = count
+                return
+            }
+            // 压缩矿产 500 mineral + 200 energy -> 100 product
+            const mineralType = this.room.mineral()?.mineralType
+            const compressType = mineralType ? compressResourceType(mineralType) : undefined
+            if (mineralType && compressType && storage && (
+                (storage.store[mineralType] > Setting.STORAGE_MINERAL_HIGH) ||
+                (storage.store[mineralType] / storage.store[compressType] > 10)
+            )) {
+                const count = 10
+                mem.factoryProduct = compressType
+                mem.factoryPrepareList = [{type: mineralType, amount: 500 * count}, {type: RESOURCE_ENERGY, amount: 200 * count}]
+                mem.factoryWorkCount = count
+                return
+            }
         }
     }
 }
