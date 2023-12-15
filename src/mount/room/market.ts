@@ -108,6 +108,11 @@ function sell(room: Room, order: LogicalOrder, amountPlan: number, amountLimit: 
 export function mountMarket() {
     Room.prototype.work_market = function(force?: boolean) {
         if (Game.time % 1000 <= 0 || force) {
+            // 卖能量
+            if (this.controller && this.controller.level >= 8) {
+                const order = findOrder(this, RESOURCE_ENERGY, ORDER_SELL)
+                sell(this, order, 2000, 10000)
+            }
             // 卖矿
             const mineralType = this.mineral()?.mineralType
             if (mineralType) {
