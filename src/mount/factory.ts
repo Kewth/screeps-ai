@@ -63,7 +63,7 @@ export function mountFactory() {
             return
         }
         // 检查工作内容
-        if (Game.time % 10 <= 0) {
+        if (Game.time % 5 <= 0) {
             const ctrl = this.room.myController()
             // 解压能量 50 battery -> 500 energy
             if (storage && !storage.mediumHighEnergy() && storage.store[RESOURCE_BATTERY] >= 10_000) {

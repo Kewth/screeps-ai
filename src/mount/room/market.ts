@@ -1,4 +1,4 @@
-import { ToN, compressResourceType, logError } from "utils/other"
+import { ToN, compressResourceType, logConsole, logError } from "utils/other"
 
 // function getOrder(room: Room, focus: FocusOrder) {
 //     if (focus.id) return Game.market.orders[focus.id]
@@ -17,8 +17,14 @@ import { ToN, compressResourceType, logError } from "utils/other"
 
 function yesterdayPrice (resource: ResourceConstant) {
     const hitstory = Game.market.getHistory(resource)
-    if (hitstory.length < 2) return  undefined
+    if (hitstory.length < 2) return undefined
     return hitstory[hitstory.length - 2].avgPrice
+}
+
+function todayPrice (resource: ResourceConstant) {
+    const hitstory = Game.market.getHistory(resource)
+    if (hitstory.length < 1) return undefined
+    return hitstory[hitstory.length - 1].avgPrice
 }
 
 interface LogicalOrder {
@@ -81,29 +87,83 @@ function changeOrder (room: Room, order: LogicalOrder, addAmount: number, newPri
     return true
 }
 
-function sell(room: Room, order: LogicalOrder, amountPlan: number, amountLimit: number): void {
-    if (order.type != ORDER_SELL) return
-    const sellAmount = amountLimit - order.remainingAmount
-    // 卖不动，降价不补货
-    if (sellAmount <= 0) {
-        order.price && changeOrder(room, order, 0, order.price * 0.995) // 随缘降价，降太多扰乱市场
+function checkOrder(room: Room, order: LogicalOrder, amountPlan: number, amountLimit: number): void {
+    const difAmount = amountLimit - order.remainingAmount
+    // 没有成交，悲观
+    if (difAmount <= 0) {
+        const tp = todayPrice(order.resourceType)
+        // const mtp = tp ? tp * 0.9 : undefined
+        const mtp = tp
+        const op = order.price
+        const price = (order.type === ORDER_BUY)
+            ? ((mtp && op && mtp > op) ? op * 0.8 + mtp * 0.2 : op)
+            : ((mtp && op && mtp < op) ? op * 0.8 + mtp * 0.2 : op)
+        price && changeOrder(room, order, 0, price)
+        logConsole(`${room.name} ${order.type} ${order.resourceType} 悲观调价: ${order.price} -> ${price}`)
         return
     }
     // 可能需要补货，计算一下能不能补
-    const storeAmount = ToN(room.storage?.store[order.resourceType]) + ToN(room.terminal?.store[order.resourceType])
-    if (storeAmount < order.remainingAmount + amountPlan)
-        return
-    // 卖了一点点，原价补货
-    if (sellAmount < amountPlan)
-        order.price && changeOrder(room, order, sellAmount, order.price)
-    else { // 卖得不错
+    if (order.type === ORDER_SELL) {
+        const storeAmount = ToN(room.storage?.store[order.resourceType]) + ToN(room.terminal?.store[order.resourceType])
+        if (storeAmount < order.remainingAmount + amountPlan)
+            return
+    }
+    if (order.type === ORDER_BUY) {
+        if (Game.market.credits < 20_000_000)
+            return
+    }
+    // 成交了一点点，原价补货
+    if (difAmount < amountPlan) {
+        order.price && changeOrder(room, order, difAmount, order.price)
+        logConsole(`${room.name} ${order.type} ${order.resourceType} 原价补货 ${difAmount}`)
+    }
+    // 成交量不错，乐观
+    else {
         const yp = yesterdayPrice(order.resourceType)
-        if (yp)
-            changeOrder(room, order, amountPlan, yp, true)
-        else
+        const tp = todayPrice(order.resourceType)
+        let price = (order.type == ORDER_BUY)
+            ? (yp && tp && yp < tp) ? yp : tp
+            : (yp && tp && yp > tp) ? yp : tp
+        if (price) {
+            if (difAmount >= amountLimit) // 起步，再乐观点
+                price *= (order.type == ORDER_BUY) ? 0.8 : 1.2
+            changeOrder(room, order, amountPlan, price, true)
+            logConsole(`${room.name} ${order.type} ${order.resourceType} 混合补货 ${amountPlan} 价格 ${price}`)
+        }
+        else {
             order.price && changeOrder(room, order, amountPlan, order.price)
+            logConsole(`${room.name} ${order.type} ${order.resourceType} 原价补货 ${amountPlan}`)
+        }
     }
 }
+
+// function sell(room: Room, order: LogicalOrder, amountPlan: number, amountLimit: number): void {
+//     if (order.type != ORDER_SELL) return
+//     const sellAmount = amountLimit - order.remainingAmount
+//     // 卖不动，尝试降价不补货
+//     if (sellAmount <= 0) {
+//         const tp = todayPrice(order.resourceType)
+//         const op = order.price
+//         const price = (tp && op && tp < op) ? op * 0.8 + tp * 0.2 : op
+//         price && changeOrder(room, order, 0, price)
+//         return
+//     }
+//     // 可能需要补货，计算一下能不能补
+//     const storeAmount = ToN(room.storage?.store[order.resourceType]) + ToN(room.terminal?.store[order.resourceType])
+//     if (storeAmount < order.remainingAmount + amountPlan)
+//         return
+//     // 卖了一点点，原价补货
+//     if (sellAmount < amountPlan)
+//         order.price && changeOrder(room, order, sellAmount, order.price)
+//     // 卖得不错，根据历史价格补货
+//     else {
+//         const yp = yesterdayPrice(order.resourceType)
+//         const tp = todayPrice(order.resourceType)
+//         const price = (yp && tp && yp > tp) ? yp : tp
+//         if (price) changeOrder(room, order, amountPlan, price, true)
+//         else order.price && changeOrder(room, order, amountPlan, order.price)
+//     }
+// }
 
 export function mountMarket() {
     Room.prototype.work_market = function(force?: boolean) {
@@ -111,19 +171,27 @@ export function mountMarket() {
             // 卖能量
             if (this.controller && this.controller.level >= 8) {
                 const order = findOrder(this, RESOURCE_ENERGY, ORDER_SELL)
-                sell(this, order, 2000, 10000)
+                if (this.storage?.highEnergy())
+                    checkOrder(this, order, 10_000, 50_000)
+                else
+                    checkOrder(this, order, 2_000, 20_000)
             }
             // 卖矿
             const mineralType = this.mineral()?.mineralType
             if (mineralType) {
                 const order = findOrder(this, mineralType, ORDER_SELL)
-                sell(this, order, 1000, 5000)
+                checkOrder(this, order, 1000, 10_000)
             }
             // 卖压缩矿
             const compressType = mineralType ? compressResourceType(mineralType) : undefined
             if (compressType) {
                 const order = findOrder(this, compressType, ORDER_SELL)
-                sell(this, order, 100, 2000)
+                checkOrder(this, order, 100, 2000)
+            }
+            // 买抛瓦
+            if (this.myPowerSpawn() && this.storage?.mediumHighEnergy()) {
+                const order = findOrder(this, RESOURCE_POWER, ORDER_BUY)
+                checkOrder(this, order, 1000, 10_000)
             }
         }
     }

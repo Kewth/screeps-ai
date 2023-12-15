@@ -24,7 +24,7 @@ export function mountPowerSpawn() {
             if (storage.highEnergy())
                 this.processPower()
             else if (storage.mediumHighEnergy())
-                this.processPower()
+                Game.time % 2 <= 0 && this.processPower()
             else if (!storage.lowEnergy())
                 Game.time % 5 <= 0 && this.processPower()
         }
