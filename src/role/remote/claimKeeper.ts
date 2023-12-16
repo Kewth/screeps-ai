@@ -32,14 +32,24 @@ export const claimKeeperLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as ClaimKeeperData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as ClaimKeeperData
         const targetRoom = Game.rooms[data.targetRoomName]
-        if (!targetRoom) return false // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
+        if (!targetRoom) return 'spawn' // 没有视野
+        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return 'hang' // 房间里有危险
         const ctrl = targetRoom.myController()
-        if (!ctrl) return true // 没有控制器或者控制器不是自己的
-        if (ctrl.ticksToDowngrade >= 5000) return true // 离降级还远
-        return false
+        if (!ctrl) return 'hang' // 没有控制器或者控制器不是自己的
+        if (ctrl.ticksToDowngrade >= 5000) return 'hang' // 离降级还远
+        return 'spawn'
     }
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as ClaimKeeperData
+    //     const targetRoom = Game.rooms[data.targetRoomName]
+    //     if (!targetRoom) return false // 没有视野
+    //     if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
+    //     const ctrl = targetRoom.myController()
+    //     if (!ctrl) return true // 没有控制器或者控制器不是自己的
+    //     if (ctrl.ticksToDowngrade >= 5000) return true // 离降级还远
+    //     return false
+    // }
 }

@@ -24,12 +24,20 @@ export function reSpawn(memory: CreepMemory) {
     const logic = getRoleLogic[memory.role]
     logic.death_stage && logic.death_stage(memory)
     // 要传 memory.data (creep 处理过的) 而不是 config.data (预定义的)
-    if (config.data.onlyOnce || (logic.stopSpawn && logic.stopSpawn(spawnRoom, memory.data)))
-        creepApi.dec(memory.configName)
-    else if (logic.hangSpawn && logic.hangSpawn(spawnRoom, memory.data))
-        spawnRoom && spawnRoom.addHangSpawnTask(memory.configName)
-    else
-        spawnRoom && spawnRoom.addSpawnTask(memory.configName)
+    let checkRes: CheckSpawnResult = 'spawn'
+    if (config.data.onlyOnce)
+        checkRes = 'stop'
+    else if (logic.checkSpawn)
+        checkRes = logic.checkSpawn(spawnRoom, memory.data)
+    if (checkRes === 'stop') creepApi.dec(memory.configName)
+    if (checkRes === 'hang') spawnRoom && spawnRoom.addHangSpawnTask(memory.configName)
+    if (checkRes === 'spawn') spawnRoom && spawnRoom.addSpawnTask(memory.configName)
+    // if (config.data.onlyOnce || (logic.stopSpawn && logic.stopSpawn(spawnRoom, memory.data)))
+    //     creepApi.dec(memory.configName)
+    // else if (logic.hangSpawn && logic.hangSpawn(spawnRoom, memory.data))
+    //     spawnRoom && spawnRoom.addHangSpawnTask(memory.configName)
+    // else
+    //     spawnRoom && spawnRoom.addSpawnTask(memory.configName)
 }
 
 // export function addSpawnTaskByConfigName(configName: string) {
@@ -59,12 +67,20 @@ export function mountSpawn() {
         this.memory.hangSpawnTaskList.forEach(configName => {
             const config = Memory.creepConfigs[configName]
             if (config) {
-                // 结束挂起判定
                 const logic = getRoleLogic[config.role]
-                if (!logic.hangSpawn || !logic.hangSpawn(this, config.data)) {
+                let checkRes: CheckSpawnResult = 'spawn'
+                if (logic.checkSpawn)
+                    checkRes = logic.checkSpawn(this, config.data)
+                if (checkRes === 'stop') creepApi.remove(configName)
+                if (checkRes === 'spawn') {
                     const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
                     if (bodyConf) this.memory.spawnTaskList.push(configName)
                 }
+                // 结束挂起判定
+                // else if (!logic.hangSpawn || !logic.hangSpawn(this, config.data)) {
+                //     const bodyConf = parseGeneralBodyConf(config.gBodyConf, this.energyCapacityAvailable)
+                //     if (bodyConf) this.memory.spawnTaskList.push(configName)
+                // }
             }
         })
         // 清理

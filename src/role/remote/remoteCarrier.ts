@@ -129,13 +129,22 @@ export const remoteCarrierLogic: CreepLogic = {
             }
         }
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as RemoteCarrierData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as RemoteCarrierData
         const containerFlag = Game.flags[data.containerFlagName]
-        if (!containerFlag) return true // 没有旗帜 (?)
+        if (!containerFlag) return 'hang' // 没有旗帜 (?)
         const targetRoom = Game.rooms[containerFlag.pos.roomName]
-        if (!targetRoom) return true // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
-        return false
-    }
+        if (!targetRoom) return 'hang' // 没有视野
+        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return 'hang' // 房间里有危险
+        return 'spawn'
+    },
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as RemoteCarrierData
+    //     const containerFlag = Game.flags[data.containerFlagName]
+    //     if (!containerFlag) return true // 没有旗帜 (?)
+    //     const targetRoom = Game.rooms[containerFlag.pos.roomName]
+    //     if (!targetRoom) return true // 没有视野
+    //     if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
+    //     return false
+    // }
 }

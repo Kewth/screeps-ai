@@ -109,16 +109,28 @@ export const keeperAttackerLogic: CreepLogic = {
         if (!targetFlag) return false
         return stage(creep, targetFlag)
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as KeeperAttackerData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as KeeperAttackerData
         const guardFlag = Game.flags[data.guardFlagNames[0]]
-        if (!guardFlag) return true // 没有旗帜 (?)
+        if (!guardFlag) return 'hang' // 没有旗帜 (?)
         const targetRoom = Game.rooms[guardFlag.pos.roomName]
-        if (!targetRoom) return true // 没有视野
+        if (!targetRoom) return 'hang' // 没有视野
         const creeps = targetRoom.enemyOrInvaderCreeps()
         const totalBodyCount = _.sum(creeps, obj => obj.body.length)
-        if (totalBodyCount > 25) return true // 大型 invader 小队，打不过
-        if (targetRoom.invaderCore()) return true // invader core 打不过
-        return false
+        if (totalBodyCount > 25) return 'hang' // 大型 invader 小队，打不过
+        if (targetRoom.invaderCore()) return 'hang' // invader core 打不过
+        return 'spawn'
     },
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as KeeperAttackerData
+    //     const guardFlag = Game.flags[data.guardFlagNames[0]]
+    //     if (!guardFlag) return true // 没有旗帜 (?)
+    //     const targetRoom = Game.rooms[guardFlag.pos.roomName]
+    //     if (!targetRoom) return true // 没有视野
+    //     const creeps = targetRoom.enemyOrInvaderCreeps()
+    //     const totalBodyCount = _.sum(creeps, obj => obj.body.length)
+    //     if (totalBodyCount > 25) return true // 大型 invader 小队，打不过
+    //     if (targetRoom.invaderCore()) return true // invader core 打不过
+    //     return false
+    // },
 }

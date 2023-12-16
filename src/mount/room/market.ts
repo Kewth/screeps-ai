@@ -191,7 +191,7 @@ export function mountMarket() {
             // 买抛瓦
             if (this.myPowerSpawn() && this.storage?.mediumHighEnergy()) {
                 const order = findOrder(this, RESOURCE_POWER, ORDER_BUY)
-                checkOrder(this, order, 1000, 10_000)
+                checkOrder(this, order, 500, 10_000)
             }
         }
     }

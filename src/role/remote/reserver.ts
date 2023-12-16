@@ -29,16 +29,28 @@ export const reserverLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as ReserverData
-        if (data.onlyOnce) return false // 自己是一次性的话就同时担任 view 的任务，不需要目标视野
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as ReserverData
+        if (data.onlyOnce) return 'spawn' // 自己是一次性的话就同时担任 view 的任务，不需要目标视野
         const targetRoom = Game.rooms[data.targetRoomName]
-        if (!targetRoom) return true // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
-        if (!targetRoom.controller) return true // 没有控制器 (?)
+        if (!targetRoom) return 'hang' // 没有视野
+        if (targetRoom.enemyOrInvaderCreeps().length > 0) return 'hang' // 房间里有危险
+        if (!targetRoom.controller) return 'hang' // 没有控制器 (?)
         const reservation = targetRoom.controller.reservation
-        if (reservation && reservation.username == 'Kewth' && reservation.ticksToEnd >= 2500) return true // 预定充足
-        if (targetRoom.controller.my) return true // 已经被 claim 了
-        return false
+        if (reservation && reservation.username == 'Kewth' && reservation.ticksToEnd >= 2500) return 'hang' // 预定充足
+        if (targetRoom.controller.my) return 'hang' // 已经被 claim 了
+        return 'spawn'
     },
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as ReserverData
+    //     if (data.onlyOnce) return false // 自己是一次性的话就同时担任 view 的任务，不需要目标视野
+    //     const targetRoom = Game.rooms[data.targetRoomName]
+    //     if (!targetRoom) return true // 没有视野
+    //     if (targetRoom.enemyOrInvaderCreeps().length > 0) return true // 房间里有危险
+    //     if (!targetRoom.controller) return true // 没有控制器 (?)
+    //     const reservation = targetRoom.controller.reservation
+    //     if (reservation && reservation.username == 'Kewth' && reservation.ticksToEnd >= 2500) return true // 预定充足
+    //     if (targetRoom.controller.my) return true // 已经被 claim 了
+    //     return false
+    // },
 }

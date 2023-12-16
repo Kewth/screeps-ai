@@ -53,20 +53,31 @@ export const remoteHelperLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as RemoteHelperData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as RemoteHelperData
         const room = Game.rooms[data.targetRoomName]
-        if (!room) return true
-        if (room.enemyOrInvaderCreeps().length > 0) return true
-        if (!room.myController()) return true
-        return false
+        if (!room) return 'hang'
+        const ctrl = room.myController()
+        const storage = room.storage
+        if (ctrl && storage && storage.my) return 'stop'
+        if (room.enemyOrInvaderCreeps().length > 0) return 'hang'
+        if (!room.myController()) return 'hang'
+        return 'spawn'
     },
-    stopSpawn: (spawnRoom, memData) => {
-        const data = memData as RemoteHelperData
-        const room = Game.rooms[data.targetRoomName]
-        const ctrl = room?.myController()
-        const storage = room?.storage
-        if (ctrl && storage && storage.my) return true
-        return false
-    }
+    //hangSpawn: (spawnRoom, memData) => {
+    //    const data = memData as RemoteHelperData
+    //    const room = Game.rooms[data.targetRoomName]
+    //    if (!room) return true
+    //    if (room.enemyOrInvaderCreeps().length > 0) return true
+    //    if (!room.myController()) return true
+    //    return false
+    //},
+    //stopSpawn: (spawnRoom, memData) => {
+    //    const data = memData as RemoteHelperData
+    //    const room = Game.rooms[data.targetRoomName]
+    //    const ctrl = room?.myController()
+    //    const storage = room?.storage
+    //    if (ctrl && storage && storage.my) return true
+    //    return false
+    //}
 }

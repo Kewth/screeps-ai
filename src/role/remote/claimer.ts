@@ -42,16 +42,25 @@ export const claimerLogic: CreepLogic = {
         creep.sleep(100)
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as ClaimerData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as ClaimerData
+        if (data.jobDone) return 'stop'
         const spawnFlag = Game.flags[data.spawnFlagName]
         const roomMemory = Memory.rooms[spawnFlag.pos.roomName]
         if (roomMemory && roomMemory.controllerBlockUntil && roomMemory.controllerBlockUntil > Game.time + 500)
-            return true
-        return false
+            return 'hang'
+        return 'spawn'
     },
-    stopSpawn: (spawnRoom, memData) => {
-        const data = memData as ClaimerData
-        return data.jobDone ? true : false
-    },
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as ClaimerData
+    //     const spawnFlag = Game.flags[data.spawnFlagName]
+    //     const roomMemory = Memory.rooms[spawnFlag.pos.roomName]
+    //     if (roomMemory && roomMemory.controllerBlockUntil && roomMemory.controllerBlockUntil > Game.time + 500)
+    //         return true
+    //     return false
+    // },
+    // stopSpawn: (spawnRoom, memData) => {
+    //     const data = memData as ClaimerData
+    //     return data.jobDone ? true : false
+    // },
 }

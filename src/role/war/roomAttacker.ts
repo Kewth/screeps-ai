@@ -92,8 +92,12 @@ export const roomAttakerLogic: CreepLogic = {
         data.jobDone = true
         return false
     },
-    stopSpawn: (spawnRoom, memData) => {
-        const data = memData as RoomAttackerData
-        return data.jobDone ? true : false
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as RoomAttackerData
+        return data.jobDone ? 'stop' : 'spawn'
     },
+    // stopSpawn: (spawnRoom, memData) => {
+    //     const data = memData as RoomAttackerData
+    //     return data.jobDone ? true : false
+    // },
 }

@@ -17,12 +17,20 @@ export const viewerLogic: CreepLogic = {
         creep.moveTo(new RoomPosition(25, 25, data.targetRoomName))
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as ViewerData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as ViewerData
         const targetRoom = Game.rooms[data.targetRoomName]
-        if (targetRoom) return true // 已经有视野
+        if (targetRoom) return 'hang' // 已经有视野
         const mem = Memory.rooms[data.targetRoomName]
-        if (mem && mem.notSafeUntil && Game.time < mem.notSafeUntil) return true // 房间记录不安全
-        return false
+        if (mem && mem.notSafeUntil && Game.time < mem.notSafeUntil) return 'hang' // 房间记录不安全
+        return 'spawn'
     }
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as ViewerData
+    //     const targetRoom = Game.rooms[data.targetRoomName]
+    //     if (targetRoom) return true // 已经有视野
+    //     const mem = Memory.rooms[data.targetRoomName]
+    //     if (mem && mem.notSafeUntil && Game.time < mem.notSafeUntil) return true // 房间记录不安全
+    //     return false
+    // }
 }

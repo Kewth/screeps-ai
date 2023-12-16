@@ -55,9 +55,14 @@ export const builderLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
+    checkSpawn: (spawnRoom, mixData) => {
         const totNeed = _.sum(spawnRoom.myConstructionSites(), obj => obj.progressTotal - obj.progress)
-        if (totNeed <= 3000) return true // 没工地了或者工地太小 (修几条路交给 repairer 来干就可以)
-        return false
+        if (totNeed <= 3000) return 'hang' // 没工地了或者工地太小 (修几条路交给 repairer 来干就可以)
+        return 'spawn'
     }
+    // hangSpawn: (spawnRoom, mixData) => {
+    //     const totNeed = _.sum(spawnRoom.myConstructionSites(), obj => obj.progressTotal - obj.progress)
+    //     if (totNeed <= 3000) return true // 没工地了或者工地太小 (修几条路交给 repairer 来干就可以)
+    //     return false
+    // }
 }

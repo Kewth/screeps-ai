@@ -36,18 +36,28 @@ export const energySenderLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as EnergySenderData
-        const room = Game.rooms[data.sourceRoomName]
-        if (!room) return true
-        if (!room.storage) return true
-        if (room.storage.lowEnergy()) return true
-        return false
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as EnergySenderData
+        const tRoom = Game.rooms[data.targetRoomName]
+        if (tRoom?.terminal?.my)  return 'stop'
+        const sRoom = Game.rooms[data.sourceRoomName]
+        if (!sRoom) return 'hang'
+        if (!sRoom.storage) return 'hang'
+        if (sRoom.storage.lowEnergy()) return 'hang'
+        return 'spawn'
     },
-    stopSpawn: (spawnRoom, memData) => {
-        const data = memData as EnergySenderData
-        const room = Game.rooms[data.targetRoomName]
-        if (room?.terminal?.my) return true
-        return false
-    }
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as EnergySenderData
+    //     const room = Game.rooms[data.sourceRoomName]
+    //     if (!room) return true
+    //     if (!room.storage) return true
+    //     if (room.storage.lowEnergy()) return true
+    //     return false
+    // },
+    // stopSpawn: (spawnRoom, memData) => {
+    //     const data = memData as EnergySenderData
+    //     const room = Game.rooms[data.targetRoomName]
+    //     if (room?.terminal?.my) return true
+    //     return false
+    // }
 }

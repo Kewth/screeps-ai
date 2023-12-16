@@ -8,6 +8,7 @@ declare global {
     interface PackStat {
         cpu: number
         roomCpu: { [roomName: string]: number }
+        roomCreepCpu: { [roomName: string]: number }
     }
     interface Memory {
         stats: {
@@ -27,7 +28,8 @@ declare global {
 function emptyPack (): PackStat {
     return {
         cpu: 0,
-        roomCpu: {}
+        roomCpu: {},
+        roomCreepCpu: {},
     }
 }
 
@@ -56,6 +58,7 @@ function roomStat(room: Room) {
     Memory.stats[`${room.name}_wallHits`] = wallHits
     Memory.stats[`${room.name}_avgWallHits`] = avgWallHits
     Memory.stats[`${room.name}_cpu`] = _.sum(Memory.packList, p => p.roomCpu[room.name]) / (PACK_TICK * Memory.packList.length)
+    Memory.stats[`${room.name}_creepCpu`] = _.sum(Memory.packList, p => p.roomCreepCpu[room.name]) / (PACK_TICK * Memory.packList.length)
 }
 
 function globalStat() {

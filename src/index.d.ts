@@ -19,13 +19,15 @@ declare namespace NodeJS {
 // 半永久 creep: 有 hangSpawn 没有 stopSpawn 在特殊情况被挂起并暂停孵化
 // 非永久 creep: 没有 hangSpawn 有 stopSpawn 在条件达成后停止孵化
 // 一次性 creep: data.onlyOnce 设置为 true ，只要死了就停止孵化
+type CheckSpawnResult = 'spawn' | 'hang' | 'stop'
 interface CreepLogic {
   prepare_stage?: (creep: Creep) => boolean
   source_stage?: (creep: Creep) => boolean
   target_stage?: (creep: Creep) => boolean
   death_stage?: (memory: CreepMemory) => void
-  hangSpawn?: (spawnRoom: Room, data: CreepData) => boolean
-  stopSpawn?: (spawnRoom: Room, data: CreepData) => boolean
+  // hangSpawn?: (spawnRoom: Room, data: CreepData) => boolean
+  // stopSpawn?: (spawnRoom: Room, data: CreepData) => boolean
+  checkSpawn?: (spawnRoom: Room, mixData: CreepData) => CheckSpawnResult
 }
 
 type TypeWithStore = Tombstone | StructureStorage | StructureContainer |

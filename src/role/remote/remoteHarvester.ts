@@ -83,13 +83,22 @@ export const remoteHarvesterLogic: CreepLogic = {
         creep.build(sites[0])
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as RemoteHarvesterData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as RemoteHarvesterData
         const workFlag = Game.flags[data.workFlagName]
-        if (!workFlag) return true // 没有旗帜 (?)
+        if (!workFlag) return 'hang' // 没有旗帜 (?)
         const targetRoom = Game.rooms[workFlag.pos.roomName]
-        if (!targetRoom) return true // 没有视野
-        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
-        return false
+        if (!targetRoom) return 'hang' // 没有视野
+        if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return 'hang' // 房间里有危险
+        return 'spawn'
     }
+    // hangSpawn: (spawnRoom, memData) => {
+    //     const data = memData as RemoteHarvesterData
+    //     const workFlag = Game.flags[data.workFlagName]
+    //     if (!workFlag) return true // 没有旗帜 (?)
+    //     const targetRoom = Game.rooms[workFlag.pos.roomName]
+    //     if (!targetRoom) return true // 没有视野
+    //     if (targetRoom.enemyOrInvaderCreeps().length > 0 || targetRoom.invaderCore()) return true // 房间里有危险
+    //     return false
+    // }
 }

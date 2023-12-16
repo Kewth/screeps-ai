@@ -67,23 +67,38 @@ export const upgraderLogic: CreepLogic = {
         }
         return false
     },
-    hangSpawn(spawnRoom, memData) {
-        const data = memData as UpgraderData
+    checkSpawn(spawnRoom, mixData) {
+        const data = mixData as UpgraderData
+        const ctrl = spawnRoom.controller
         if (data.isExtra) {
+            if (ctrl && ctrl.level >= 8) return 'stop'
             if (spawnRoom.storage?.my)
-                return spawnRoom.storage.lowEnergy()
+                return spawnRoom.storage.lowEnergy() ? 'hang' : 'spawn'
             else
-                return _.any(spawnRoom.commonContainers(), obj => obj.store.getUsedCapacity() < 1800)
+                return _.any(spawnRoom.commonContainers(), obj => obj.store.getUsedCapacity() < 1800) ? 'hang' : 'spawn'
         }
-        const ctrl = spawnRoom.controller
-        if (!ctrl) return true
+        if (!ctrl) return 'hang'
         if (ctrl.level >= 8 && ctrl.ticksToDowngrade >= 180_000)
-            return true
-        return false
-    },
-    stopSpawn(spawnRoom, memData) {
-        const data = memData as UpgraderData
-        const ctrl = spawnRoom.controller
-        return Boolean(data.isExtra && ctrl && ctrl.level >= 8)
-    },
+            return 'hang'
+        return 'spawn'
+    }
+    // hangSpawn(spawnRoom, mixData) {
+    //     const data = mixData as UpgraderData
+    //     if (data.isExtra) {
+    //         if (spawnRoom.storage?.my)
+    //             return spawnRoom.storage.lowEnergy()
+    //         else
+    //             return _.any(spawnRoom.commonContainers(), obj => obj.store.getUsedCapacity() < 1800)
+    //     }
+    //     const ctrl = spawnRoom.controller
+    //     if (!ctrl) return true
+    //     if (ctrl.level >= 8 && ctrl.ticksToDowngrade >= 180_000)
+    //         return true
+    //     return false
+    // },
+    // stopSpawn(spawnRoom, memData) {
+    //     const data = memData as UpgraderData
+    //     const ctrl = spawnRoom.controller
+    //     return Boolean(data.isExtra && ctrl && ctrl.level >= 8)
+    // },
 }

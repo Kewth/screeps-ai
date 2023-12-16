@@ -83,11 +83,18 @@ export const harvesterLogic: CreepLogic = {
         source && creep.harvest(source)
         return false
     },
-    hangSpawn: (spawnRoom, memData) => {
-        const data = memData as HarvesterData
+    checkSpawn: (spawnRoom, mixData) => {
+        const data = mixData as HarvesterData
         const source = Game.getObjectById(data.sourceID)
-        if (!source) return true
-        if (source instanceof Mineral && source.mineralAmount <= 0) return true
-        return false
-    }
+        if (!source) return 'stop'
+        if (source instanceof Mineral && source.mineralAmount <= 0) return 'hang'
+        return 'spawn'
+    },
+    // hangSpawn: (spawnRoom, mixData) => {
+    //     const data = mixData as HarvesterData
+    //     const source = Game.getObjectById(data.sourceID)
+    //     if (!source) return true
+    //     if (source instanceof Mineral && source.mineralAmount <= 0) return true
+    //     return false
+    // }
 }
