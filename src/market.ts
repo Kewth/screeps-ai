@@ -12,17 +12,21 @@ function market_pixel() {
         const buyPrice = avgPrice * 0.9
         // const amountLimit = 1000
         const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
-        if (buy && buy.price > sellPrice && Memory.pixelActiveAmount > 20) {
-            if (Game.market.deal(buy.id, 10) == OK) {
-                Memory.pixelActiveAmount -= 10
-                Memory.pixelActiveTotalPrice -= 10 * avgPrice
+        if (buy && buy.price > sellPrice && Memory.pixelActiveAmount > 50) {
+            const amount = 10
+            if (Game.market.deal(buy.id, amount) == OK) {
+                Memory.pixelActiveTotalPrice += amount * (buy.price - avgPrice)
+                const newAvgPrice = Memory.pixelActiveTotalPrice / Memory.pixelActiveAmount
+                Memory.pixelActiveAmount -= amount
+                Memory.pixelActiveTotalPrice -= amount * newAvgPrice
             }
         }
         const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
         if (sell && sell.price < buyPrice && Game.market.credits >= 20_000_000) {
-            if (Game.market.deal(sell.id, 10) == OK) {
-                Memory.pixelActiveAmount += 10
-                Memory.pixelActiveTotalPrice += 10 * sell.price
+            const amount = 10
+            if (Game.market.deal(sell.id, amount) == OK) {
+                Memory.pixelActiveAmount += amount
+                Memory.pixelActiveTotalPrice += amount * sell.price
             }
         }
     }

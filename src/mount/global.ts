@@ -74,7 +74,12 @@ const T = {
             roomName: roomName
         })
     },
-    pixel() {
+    pixel(extend?: number) {
+        if (extend !== undefined) {
+            const avgPrice = Memory.pixelActiveTotalPrice / Memory.pixelActiveAmount
+            Memory.pixelActiveTotalPrice += extend * avgPrice
+            Memory.pixelActiveAmount += extend
+        }
         const buy = myMax(Game.market.getAllOrders({ type: ORDER_BUY, resourceType: PIXEL }), obj => obj.price)
         const sell = myMin(Game.market.getAllOrders({ type: ORDER_SELL, resourceType: PIXEL }), obj => obj.price)
         logConsole(`Active Amount: ${Memory.pixelActiveAmount}`)

@@ -173,8 +173,14 @@ export function mountMarket() {
                 const order = findOrder(this, RESOURCE_ENERGY, ORDER_SELL)
                 if (this.storage?.highEnergy())
                     checkOrder(this, order, 10_000, 50_000)
-                else
-                    checkOrder(this, order, 2_000, 20_000)
+                else if (this.storage?.mediumHighEnergy())
+                    checkOrder(this, order, 5_000, 20_000)
+            }
+            // 卖电池
+            if (this.controller && this.controller.level >= 8
+                && this.storage && this.storage.store[RESOURCE_BATTERY] > 100_000) {
+                const order = findOrder(this, RESOURCE_BATTERY, ORDER_SELL)
+                checkOrder(this, order, 50, 1000)
             }
             // 卖矿
             const mineralType = this.mineral()?.mineralType
