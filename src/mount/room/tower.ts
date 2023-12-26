@@ -1,7 +1,7 @@
-import { isEnemyOrInvader, isEvil, myMin } from "utils/other"
+import { isEvil, myMin } from "utils/other"
 
-export function mountTower() {
-    Room.prototype.work_tower = function() {
+export default class RoomExtensionTower extends Room {
+    public work_tower() {
         const towers = this.myTowers()
         // 集中攻击
         const enemys = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
@@ -44,5 +44,11 @@ export function mountTower() {
                 free_tower.heal(creep)
             }
         })
+    }
+}
+
+declare global {
+    interface Room {
+        work_tower(): void
     }
 }

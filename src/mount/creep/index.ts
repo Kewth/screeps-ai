@@ -1,10 +1,14 @@
 import { reSpawn } from "mount/room/spawn"
+import RoomPositionExtension from "mount/roomPosition"
 import { getRoleLogic } from "role"
 import { Setting } from "setting"
 import { ToN, anyStore, logConsole, logError, myFirst } from "utils/other"
 
-export function mountCreep() {
-    Creep.prototype.work = function() {
+export default class CreepExtension extends Creep {
+    /**
+     * 工作逻辑
+     */
+    public work(): void {
         if (this.spawning) {
             this.updateReadyUsedTime()
             return
@@ -44,10 +48,12 @@ export function mountCreep() {
             reSpawn(this.memory)
     }
 
-    Creep.prototype.moveAway = function(pos: RoomPosition) {
-        // let dx = this.pos.x - pos.x
-        // let dy = this.pos.y - pos.y
-        // return this.moveTo(this.pos.x + dx, this.pos.y + dy)
+    /**
+     * 远离目标
+     * @param pos
+     * @returns
+     */
+    public moveAway(pos: RoomPosition) {
         let x = 2 * this.pos.x - pos.x
         let y = 2 * this.pos.y - pos.y
         if (x >= 50) x = 49
@@ -57,13 +63,20 @@ export function mountCreep() {
         return this.moveTo(x, y)
     }
 
-    Creep.prototype.moveRandom = function() {
+    /**
+     * 随机移动
+     * @returns
+     */
+    public moveRandom() {
         const directions: DirectionConstant[] = [TOP, RIGHT, LEFT, BOTTOM, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT]
         const direction = directions[Math.floor(Math.random() * directions.length)];
         return this.move(direction)
     }
 
-    Creep.prototype.updateReadyUsedTime = function() {
+    /**
+     * 更新准备时间
+     */
+    public updateReadyUsedTime() {
         if (!this.memory.readyUsedTime || this.memory.readyUsedTime <= 0)
             this.memory.readyUsedTime = 0
         this.memory.readyUsedTime++
@@ -71,33 +84,84 @@ export function mountCreep() {
             this.memory.readyUsedTime = 200
     }
 
-    // Creep.prototype.goToRoomByFlag = function(flagName: string | undefined) {
-    //     const flag = flagName && Game.flags[flagName]
-    //     if (!flag) {
-    //         logError('no flag', this.name)
-    //         return false
-    //     }
-    //     // 走到 flag 所在房间
-    //     if (this.room != flag.room || this.atExit()) {
-    //         this.moveTo(flag)
-    //         return false
-    //     }
-    //     return true
-    // }
+    private farPathSave (path: RoomPosition[]): void {
+        const mem = this.memory
+        mem.farPath = path.map(pos => pos.serialize()).join() + ','
+    }
 
-    Creep.prototype.goToRoom = function(roomName: string) {
-        if (this.room.name != roomName) {
-            this.moveTo(new RoomPosition(25, 25, roomName))
-            return false
+    private farPathGoal (): RoomPosition | undefined {
+        const mem = this.memory
+        if (!mem.farPath) return undefined
+        const pos = new RoomPosition(25, 25, this.room.name)
+        const index = mem.farPath.indexOf(',')
+        return pos.deserializeFrom(mem.farPath.slice(0, index))
+    }
+
+    private farPathShift (): void {
+        const mem = this.memory
+        if (!mem.farPath) return
+        const index = mem.farPath.indexOf(',')
+        mem.farPath = mem.farPath.slice(index + 1)
+    }
+
+    /**
+     * 远程寻路，尝试避开危险的房间
+     */
+    public goToRoom (targetRoomName: string) {
+        const mem = this.memory
+        if (this.room.name == targetRoomName) {
+            delete mem.farPath
+            delete mem.farPathStayTime
+            return true
         }
-        return true
+        const goal = this.farPathGoal()
+        if (goal && this.pos.isEqualTo(goal)) {
+            this.farPathShift()
+            delete mem.farPathStayTime
+        }
+        if (mem.farPath === undefined || (mem.farPathStayTime && mem.farPathStayTime >= 10)) {
+            const pathRes = PathFinder.search(this.pos, { pos: new RoomPosition(25, 25, targetRoomName), range: 25 }, {
+                maxOps: 4000,
+                roomCallback: roomName => {
+                    // 绕过不安全房间
+                    const mem = Memory.rooms[roomName]
+                    if (mem && mem.notSafeUntil && Game.time < mem.notSafeUntil)
+                        return false
+                    // 设置 costs
+                    const costs = new PathFinder.CostMatrix
+                    this.room.roads().forEach(road => {
+                        costs.set(road.pos.x, road.pos.y, 1)
+                    })
+                    this.room.structures().forEach(struct => {
+                        if (struct.structureType === STRUCTURE_ROAD)
+                            costs.set(struct.pos.x, struct.pos.y, 1)
+                        else if (struct.structureType !== STRUCTURE_CONTAINER &&
+                            (struct.structureType !== STRUCTURE_RAMPART || !struct.my))
+                            costs.set(struct.pos.x, struct.pos.y, 255)
+                    })
+                    return costs
+                }
+            })
+            if (pathRes.incomplete)
+                logError(`cannot find a complete path to ${targetRoomName}`, this.name)
+            this.farPathSave(pathRes.path)
+            delete mem.farPathStayTime
+        }
+        const newGoal = this.farPathGoal()
+        newGoal && this.move(this.pos.getDirectionTo(newGoal))
+        if (global.visual) {
+            // if (mem.farPath) {
+            //     const points = mem.farPath.split(',').map(
+            //         s => RoomPositionExtension.deserialize(s)
+            //     ).filter(pos => pos.roomName == this.room.name)
+            //     this.room.visual.poly(points)
+            // }
+        }
+        mem.farPathStayTime = ToN(mem.farPathStayTime) + 1
+        return false
     }
 
-    Creep.prototype.atExit = function() {
-        return this.pos.x == 0 || this.pos.y == 0 || this.pos.x == 49 || this.pos.y == 49
-    }
-
-    Creep.prototype.goAwayHostileCreeps = function () {
+    public goAwayHostileCreeps(): boolean {
         const hostileCreeps = this.pos.findInRange(FIND_HOSTILE_CREEPS, 5)
         if (hostileCreeps.length > 0) {
             // if (hostileCreeps.length > 1) logError("Too many hostileCreeps", this.name)
@@ -107,43 +171,26 @@ export function mountCreep() {
         return false
     }
 
-    // Creep.prototype.getEnergy = function(with_priority: boolean) {
-    //     let id = this.memory.energySourceID
-    //     if (!id) {
-    //         id = calcEnergySource(this, with_priority)
-    //         if (!id) return
-    //         this.room.memory.energySourceLocks[id]--
-    //         this.memory.energySourceID = id
-    //     }
-    //     const source = Game.getObjectById(id)
-    //     if (source && this.withdraw(source, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
-    //         this.moveTo(source)
-    // }
-
-    // Creep.prototype.releaseEnergySource = function() {
-    //     if (this.memory.energySourceID) {
-    //         this.room.memory.energySourceLocks[this.memory.energySourceID]--
-    //         this.memory.energySourceID = undefined
-    //     }
-    // }
-
-    Creep.prototype.findEnergySource = function() {
+    public findEnergySource () {
         // 优先使用自己的 storage
         if (this.room.storage?.my && !this.room.storage.almostNoEnergy())
             return this.room.storage
         const enSource = this.memory.energySourceID && Game.getObjectById(this.memory.energySourceID)
-        if (enSource && (enSource instanceof Resource || enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
+        if (enSource && (enSource instanceof Resource
+            ? enSource.amount >= 50
+            : enSource.store[RESOURCE_ENERGY] >= 50)) return enSource
         const list = [
             ...this.room.commonContainers().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
             ...this.room.ruins().filter(obj => obj.store[RESOURCE_ENERGY] >= 500),
-            ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY),
+            ...this.room.dropResources().filter(obj => obj.resourceType == RESOURCE_ENERGY && obj.amount >= 200),
         ]
         // 最后考虑别人的 storage
         const res = this.pos.findClosestByRange(list) || this.room.storage
         this.memory.energySourceID = res?.id
         return res || undefined
     }
-    Creep.prototype.gainAnyResourceFrom = function(from: Resource | TypeWithStore) {
+
+    public gainAnyResourceFrom (from: Resource | TypeWithStore) {
         if (from instanceof Resource)
             return this.pickup(from)
         if (from instanceof Creep)
@@ -151,7 +198,8 @@ export function mountCreep() {
         const resource = anyStore(from)
         return resource ? this.withdraw(from, resource) : ERR_NOT_ENOUGH_RESOURCES
     }
-    Creep.prototype.gainResourceFrom = function(from: Resource | TypeWithStore, resourceType: ResourceConstant) {
+
+    public gainResourceFrom(from: Resource | TypeWithStore, resourceType: ResourceConstant) {
         if (from instanceof Resource)
             return resourceType == from.resourceType ? this.pickup(from) : ERR_NOT_ENOUGH_RESOURCES
         if (from instanceof Creep)
@@ -159,14 +207,14 @@ export function mountCreep() {
         return this.withdraw(from, resourceType)
     }
 
-    Creep.prototype.getConfig = function() {
+    public getConfig () {
         return Memory.creepConfigs[this.memory.configName]
     }
 
 
-    Creep.prototype._move = Creep.prototype.move
-    Creep.prototype.move = function(dir: DirectionConstant): CreepMoveReturnCode {
-        this.memory.allowCross = undefined
+    public move (dir: DirectionConstant): CreepMoveReturnCode {
+        if (this.memory.allowCross)
+            this.memory.allowCross = undefined
         let toX = this.pos.x
         let toY = this.pos.y
         if (dir == LEFT || dir == BOTTOM_LEFT || dir == TOP_LEFT) toX --
@@ -195,7 +243,8 @@ export function mountCreep() {
         }
         return this._move(dir)
     }
-    Creep.prototype.goTo = function(target: {pos: RoomPosition}) {
+
+    public goTo (target: {pos: RoomPosition}) {
         return this.moveTo(target, {
             ignoreCreeps: true,
             costCallback: function(roomName, martrix) {
@@ -211,17 +260,20 @@ export function mountCreep() {
         })
     }
 
-    Creep.prototype.sleep = function(time: number) {
+    public sleep (time: number) {
         // sleep 范围包括本 tick
         this.memory.sleepUntil = Game.time + time
         this.say(`摸鱼咯:${time}`, true)
-        this.memory.allowCross = true // 会在下次移动的时候自动被修改为 undefined
+        if (this.memory.allowCross === undefined)
+            this.memory.allowCross = true // 会在下次移动的时候自动被修改为 undefined
     }
-    Creep.prototype.sleepRemain = function() {
+
+    public sleepRemain () {
         const d = ToN(this.memory.sleepUntil) - Game.time
         return d > 0 ? d : 0
     }
-    Creep.prototype.sleeping = function() {
+
+    public sleeping () {
         return this.sleepRemain() > 0
     }
 }
@@ -236,7 +288,6 @@ declare global {
         // releaseEnergySource(): void
         // goToRoomByFlag(flagName: string | undefined): boolean
         goToRoom(roomName: string): boolean
-        atExit(): boolean
         goAwayHostileCreeps(): boolean
         findEnergySource(): StructureStorage | StructureContainer | Resource | Ruin | undefined
         gainAnyResourceFrom(from: Resource | TypeWithStore): ScreepsReturnCode

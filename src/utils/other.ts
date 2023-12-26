@@ -105,12 +105,12 @@ export function ToN(x: number | undefined | null) {
     return x ? x : 0
 }
 
-export function myMin<T> (list: T[], func: (obj: T) => any): T | undefined {
-    const res = _.min(list, func)
+export function myMin<T> (list: T[], func?: (obj: T) => any): T | undefined {
+    const res = func ? _.min(list, func) : _.min(list)
     return res === Infinity ? undefined : res
 }
-export function myMax<T> (list: T[], func: (obj: T) => any): T | undefined {
-    const res = _.max(list, func)
+export function myMax<T> (list: T[], func?: (obj: T) => any): T | undefined {
+    const res = func ? _.max(list, func) : _.max(list)
     return res === -Infinity ? undefined : res
 }
 

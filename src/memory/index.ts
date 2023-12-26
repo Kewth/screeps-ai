@@ -22,11 +22,15 @@ declare global {
         // 是否站定
         // standing?: boolean
         // 是否允对穿
+        // 设置为 false 表示强制禁止对穿
         allowCross?: boolean
         // 摸鱼
         sleepUntil?: number
         // cpu 消耗
         cpuCost: number
+        // 远程寻路存储
+        farPath?: string
+        farPathStayTime?: number
     }
 }
 
@@ -111,6 +115,8 @@ declare global {
         factoryPrepareList?: {type: ResourceConstant, amount: number}[]
         factoryWorking?: boolean
         factorySending?: boolean
+        // 建造计划
+        buildingPlans?: { [key: number]: BuildableStructureConstant }
     }
 }
 

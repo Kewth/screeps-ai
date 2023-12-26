@@ -1,10 +1,20 @@
-import { logError } from "utils/other"
+import { logError, myMax } from "utils/other"
 
 declare global {
     interface RemoteHelperData extends EmptyData {
         targetRoomName: string
         toID?: Id<ConstructionSite | StructureController>
+        sourceID?: Id<Source>
     }
+}
+
+function calcSource (creep: Creep) {
+    const data = creep.memory.data as RemoteHelperData
+    let source = data.sourceID && Game.getObjectById(data.sourceID)
+    if (!source) source =
+        myMax(creep.room.sources(), s => s.energy)
+    data.sourceID = source?.id
+    return source
 }
 
 function calcTo (creep: Creep) {
@@ -23,7 +33,15 @@ export const remoteHelperLogic: CreepLogic = {
         return creep.goToRoom(data.targetRoomName)
     },
     source_stage: creep => {
-        if (creep.store.getFreeCapacity() <= 0) return true
+        const useSource = creep.room.mySpawns().length <= 0
+        // 不是挖矿的话拿到能量就走，因为自己容量比较大，一直等会影响其他爬爬的能量获取
+        if (creep.store.getFreeCapacity() <= 0 ||
+            (!useSource && creep.store[RESOURCE_ENERGY] > 0)
+        ) {
+            const data = creep.memory.data as RemoteHelperData
+            delete data.sourceID
+            return true
+        }
         // 使用别人剩下的 storage
         const storage = creep.room.storage
         const from = storage && storage.store[RESOURCE_ENERGY] > 0 ? storage : creep.findEnergySource()
@@ -34,9 +52,13 @@ export const remoteHelperLogic: CreepLogic = {
             else if (resp != OK)
                 logError(`cannot get energy: ${resp}`, creep.name)
         }
-        else {
-            // TODO: 挖矿
-            logError(`no source`, creep.name)
+        else if (useSource) {
+            const source = calcSource(creep)
+            if (source) {
+                const resp = creep.harvest(source)
+                if (resp == ERR_NOT_IN_RANGE)
+                    creep.moveTo(source)
+            }
         }
         return false
     },
@@ -56,28 +78,10 @@ export const remoteHelperLogic: CreepLogic = {
     checkSpawn: (spawnRoom, mixData) => {
         const data = mixData as RemoteHelperData
         const room = Game.rooms[data.targetRoomName]
-        if (!room) return 'hang'
-        const ctrl = room.myController()
+        if (!room || !room.myController()) return 'hang'
         const storage = room.storage
-        if (ctrl && storage && storage.my) return 'stop'
+        if (storage && storage.my) return 'stop'
         if (room.enemyOrInvaderCreeps().length > 0) return 'hang'
-        if (!room.myController()) return 'hang'
         return 'spawn'
     },
-    //hangSpawn: (spawnRoom, memData) => {
-    //    const data = memData as RemoteHelperData
-    //    const room = Game.rooms[data.targetRoomName]
-    //    if (!room) return true
-    //    if (room.enemyOrInvaderCreeps().length > 0) return true
-    //    if (!room.myController()) return true
-    //    return false
-    //},
-    //stopSpawn: (spawnRoom, memData) => {
-    //    const data = memData as RemoteHelperData
-    //    const room = Game.rooms[data.targetRoomName]
-    //    const ctrl = room?.myController()
-    //    const storage = room?.storage
-    //    if (ctrl && storage && storage.my) return true
-    //    return false
-    //}
 }

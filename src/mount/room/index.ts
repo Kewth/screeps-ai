@@ -1,5 +1,4 @@
-import { PrintTable, ToN, calcConfigName, isEnemyOrInvader, isEvil, logConsole, logError, myFirst, strLim } from "utils/other"
-import { mountTower } from "./tower"
+import { PrintTable, ToN, calcConfigName, isEnemy, isEnemyOrInvader, isEvil, isInvader, logConsole, logError, myFirst, strLim } from "utils/other"
 import { mountLink } from "./link"
 import { mountSpawn } from "./spawn"
 import { creepApi } from "creepApi"
@@ -7,24 +6,29 @@ import { calcBodyCost, makeBody, parseGeneralBodyConf, unionBodyConf } from "uti
 import { mountMarket } from "./market"
 import { Setting } from "setting"
 
-// TODO: 缓存在没有值 (undefined) 的时候等同于没有缓存，不太合理
-export function mountRoom() {
-    mountTower()
-    mountLink()
-    mountSpawn()
-    mountMarket()
-
-    Room.prototype.work = function() {
+export default class RoomExtension extends Room {
+    /**
+     * 工作逻辑
+     */
+    public work() {
         // 检查入侵
-        const invaders = this.find(FIND_HOSTILE_CREEPS, { filter: isEvil })
+        // const dangerousCreep = this.hostileCreeps().find(
+        //     c => isEvil(c) && c.body.find(b => b.type === ATTACK || b.type === RANGED_ATTACK) !== undefined
+        // )
+        const invader = this.hostileCreeps().find(isInvader)
         const invaderCores = this.find(FIND_STRUCTURES, {
-            filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 0
+            filter: obj => obj.structureType == STRUCTURE_INVADER_CORE && obj.level >= 1
         })
-        if (invaders.length > 0 || invaderCores.length > 0) {
+        if (this.controller?.owner && isEnemy({ owner: this.controller.owner })) {
+            // 设置 notSafeUntil
+            this.memory.notSafeUntil = Game.time + 10_000
+        }
+        else if (invader || invaderCores.length > 0) {
             // 设置 notSafeUntil
             if (!this.memory.notSafeUntil || Game.time >= this.memory.notSafeUntil)
                 this.memory.notSafeUntil = Game.time + 1505
-        } else {
+        }
+        else {
             // 复位 notSafeUntil
             delete this.memory.notSafeUntil
         }
@@ -36,6 +40,12 @@ export function mountRoom() {
             // 自动注册
             if (Game.time % 1000 <= 0)
                 this.autoRegisterCreeps()
+            // 画图
+            if (global.visual)
+                this.drawVisual()
+            // 检查建造计划
+            if (Game.time % 1000 <= 0)
+                this.checkBuilding()
             // 紧急发布 filler 判定
             const filConfigName = calcConfigName(this.name, `fil`)
             if (Memory.creepConfigs[filConfigName] && !this.myCreeps().find(obj => obj.memory.role == 'filler')) {
@@ -75,37 +85,68 @@ export function mountRoom() {
         }
     }
 
-    // Room.prototype.stats = function(store: boolean) {
-    //     // 统计
-    //     const storageEnergy = this.storage ?
-    //         this.storage.store.getUsedCapacity(RESOURCE_ENERGY) :
-    //         0
-    //     const RCLprogress = this.controller ?
-    //         this.controller.progress :
-    //         0
-    //     const WallHits = _.sum(this.walls(), obj => obj.hits) + _.sum(this.myRamparts(), obj => obj.hits)
-    //     // 输出
-    //     const stat = this.memory.lastStat ? this.memory.lastStat : this.memory.nowStat
-    //     if (stat) {
-    //         const interval = Game.time - stat.time
-    //         logConsole(
-    //             `${this.name}-stats(${interval} ticks):` +
-    //             ` storage/T=${(storageEnergy - stat.storageEnergy) / interval}` +
-    //             ` upgrade/T=${(RCLprogress - stat.RCLprogress) / interval}` +
-    //             ` wall/T=${(WallHits - stat.WallHits) / 100 / interval}`
-    //         )
-    //     }
-    //     // 存储
-    //     if (store) {
-    //         this.memory.lastStat = this.memory.nowStat
-    //         this.memory.nowStat = {
-    //             time: Game.time,
-    //             storageEnergy: storageEnergy,
-    //             RCLprogress: RCLprogress,
-    //             WallHits: WallHits,
-    //         }
-    //     }
-    // }
+    /**
+     * 在房间内添加视觉效果
+     */
+    private drawVisual() {
+        if (this.memory.buildingPlans) {
+            for (const pos in this.memory.buildingPlans) {
+                const x = Number(pos) >> 6
+                const y = Number(pos) & 63
+                const type = this.memory.buildingPlans[pos]
+                if (type === STRUCTURE_EXTENSION)
+                    this.visual.text('🟠', x, y)
+                if (type === STRUCTURE_TOWER)
+                    this.visual.text('🗼', x, y, { font: 1.3 })
+                if (type === STRUCTURE_STORAGE)
+                    this.visual.text('🥡', x, y, { font: 1.3 })
+            }
+        }
+        this.myConstructionSites().forEach(struct => {
+            if (struct.structureType === STRUCTURE_ROAD)
+                this.visual.text('🚧', struct.pos)
+            if (struct.structureType === STRUCTURE_CONTAINER)
+                this.visual.text('📦', struct.pos, { font: 1.3 })
+        })
+        this.commonContainers().forEach(c => this.visual.text('📤', c.pos, { font: 1.3 }))
+        this.upgradeContainers().forEach(c => this.visual.text('📥', c.pos, { font: 1.3 }))
+    }
+
+    /**
+     * 手动调用：添加一个建造计划，该计划会在满足条件的时候自动建造工地
+     * @param type 建造类型或者 undefined 表示删除
+     * @param x x 坐标
+     * @param y y 坐标
+     */
+    private addBuilding(type: BuildableStructureConstant | undefined, x: number, y: number) {
+        if (!this.memory.buildingPlans)
+            this.memory.buildingPlans = {}
+        if (type === undefined)
+            delete this.memory.buildingPlans[x << 6 | y]
+        else
+            this.memory.buildingPlans[x << 6 | y] = type
+    }
+
+    /**
+     * 周期调用：检查建造计划并尝试建造工地
+     */
+    private checkBuilding() {
+        if (this.memory.buildingPlans) {
+            for (const pos in this.memory.buildingPlans) {
+                const x = Number(pos) >> 6
+                const y = Number(pos) & 63
+                const type = this.memory.buildingPlans[pos]
+                new RoomPosition(x, y, this.name).createConstructionSite(type)
+            }
+        }
+    }
+}
+
+// TODO: 缓存在没有值 (undefined) 的时候等同于没有缓存，不太合理
+export function mountRoom() {
+    mountLink()
+    mountSpawn()
+    mountMarket()
 
     Room.prototype.addSpawnTask = function(configName: string) {
         if (this.memory.spawnTaskList.includes(configName)) return ERR_NAME_EXISTS
@@ -119,19 +160,6 @@ export function mountRoom() {
         this.memory.hangSpawnTaskList.push(configName)
         return OK
     }
-
-    // Room.prototype.getEnergySourceList = function() {
-    //     roomUpdateEnergyTransfer(this)
-    //     return energySourceList[this.name]
-    // }
-    // Room.prototype.getEnergyTargetList = function() {
-    //     roomUpdateEnergyTransfer(this)
-    //     return energyTargetList[this.name]
-    // }
-
-    // Room.prototype.spawnEnergyLimit = function() {
-    //     return this.spawns().length * 300 + this.extensions().length * 50
-    // }
 
     Room.prototype.registerBase = function() {
         // 注册 harvester
@@ -232,12 +260,12 @@ export function mountRoom() {
     }
 
     Room.prototype.registerNewRoom = function(roomName: string, numClaim: number,
-        numTough: number, numHeal: number) {
+        numTough: number, numHeal: number, numHelper: number) {
         // 注册 claimer
         const spawnFlag = Game.flags[`${roomName}_spawn`]
-        if (numClaim === undefined) return OK
-        if (numTough === undefined) return OK
-        if (numHeal === undefined) return OK
+        if (numClaim === undefined) return ERR_INVALID_ARGS
+        if (numTough === undefined) return ERR_INVALID_ARGS
+        if (numHeal === undefined) return ERR_INVALID_ARGS
         if (spawnFlag) {
             creepApi.add<ClaimerData>(this.name, 'claimer', `${roomName}_claim`, {
                 tough: numTough,
@@ -249,10 +277,12 @@ export function mountRoom() {
             }, 1)
             creepApi.add<RemoteHelperData>(this.name, 'remoteHelper', `${roomName}_rHel`, 'remoteHelper', {
                 targetRoomName: roomName,
-            }, 3)
+            }, numHelper)
             logConsole('注册成功')
+            return OK
         }
-        return OK
+        else
+            return ERR_NOT_FOUND
     }
 
     Room.prototype.attackRoom = function(roomName: string) {
@@ -273,6 +303,9 @@ export function mountRoom() {
     Room.prototype.autoRegisterCreeps = function() {
         const ctrl = this.myController()
         if (!ctrl) return
+        // 注册基础爬爬
+        if (!creepApi.has(this.name, 'har0'))
+            this.registerBase()
         // 注册 collector
         if (this.storage && this.storage.my) {
             creepApi.add<CollectorData>(this.name, 'collector', `col`, 'collector', {}, 1, creepApi.COLLECTOR_PRIORITY)
@@ -662,7 +695,6 @@ export function mountRoom() {
 declare global {
     interface Room {
         work(): void
-        work_tower(): void
         work_spawn(): void
         work_link(): void
         work_market(force?: boolean): void
@@ -689,7 +721,7 @@ declare global {
         registerRemoteSourceRoom(roomName: string): OK
         registerRemoteSourceKeeperRoom(roomName: string): OK
         autoRegisterCreeps(): void
-        registerNewRoom(roomName: string, pioneerClaim: number, pioneerTough: number, pioneerHeal: number): OK
+        registerNewRoom(roomName: string, numClaim: number, numTough: number, numHeal: number, numHelper: number): OK | ERR_INVALID_ARGS | ERR_NOT_FOUND
         attackRoom(roomName: string): OK
         makeExBuilder(num: number): OK
         makeEnergySender(roomName: string, num: number, sourceRoomName: string | undefined): OK

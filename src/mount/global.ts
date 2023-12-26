@@ -98,6 +98,12 @@ const T = {
     capi() {
         return creepApi
     },
+    visual() {
+        if (global.visual)
+            global.visual = undefined
+        else
+            global.visual = true
+    },
     tmp() {
     },
 }

@@ -12,6 +12,7 @@ declare namespace NodeJS {
   interface Global {
     cache: Cache
     log: any
+    visual: boolean | undefined
   }
 }
 

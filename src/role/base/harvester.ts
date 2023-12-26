@@ -13,6 +13,7 @@ declare global {
 export const harvesterLogic: CreepLogic = {
     // prepare: 移动到 source 周边，优先站在 container 上
     prepare_stage: creep => {
+        creep.memory.allowCross = false
         const data = creep.memory.data as HarvesterData
         const source = Game.getObjectById(data.sourceID)
         if (!source) { logError('no source', creep.name); return false }
